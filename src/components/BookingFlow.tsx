@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { format, addMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isToday, addDays, getDay } from 'date-fns'
 import { ChevronLeft, ChevronRight, Clock, Check } from 'lucide-react'
 import { fetchSlots } from '@/app/actions'
+import { sendConfirmationEmail } from '@/app/actions/emails'
 import { createClient } from '@/utils/supabase/client' // For submitting the booking
 import clsx from 'clsx'
 
@@ -95,6 +96,9 @@ export default function BookingFlow({
             })
 
             if (error) throw error
+
+            // Trigger Email
+            await sendConfirmationEmail(data.id)
 
             setCompleted(true)
         } catch (e: any) {

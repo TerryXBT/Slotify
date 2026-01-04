@@ -1,0 +1,374 @@
+'use client'
+
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { Plus, X, Copy, Clock, Check } from 'lucide-react'
+import { createAvailabilityRule, updateAvailabilityRule, deleteAvailabilityRule } from './actions'
+
+// Monday-first order
+const DAYS = [
+    { id: 1, label: 'Monday', short: 'M', color: 'bg-blue-600' },
+    { id: 2, label: 'Tuesday', short: 'T', color: 'bg-blue-600' },
+    { id: 3, label: 'Wednesday', short: 'W', color: 'bg-blue-600' },
+    { id: 4, label: 'Thursday', short: 'T', color: 'bg-blue-600' },
+    { id: 5, label: 'Friday', short: 'F', color: 'bg-blue-600' },
+    { id: 6, label: 'Saturday', short: 'S', color: 'bg-blue-600' },
+    { id: 0, label: 'Sunday', short: 'S', color: 'bg-blue-600' },
+]
+
+// Generate time options in 15-minute intervals
+const generateTimeOptions = () => {
+    const options = []
+    for (let hour = 0; hour < 24; hour++) {
+        for (let minute = 0; minute < 60; minute += 15) {
+            const h = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour
+            const period = hour < 12 ? 'am' : 'pm'
+            const minuteStr = minute.toString().padStart(2, '0')
+            const hourStr = hour.toString().padStart(2, '0')
+            const time24 = `${hourStr}:${minuteStr}`
+            const timeLabel = `${h}:${minuteStr} ${period}`
+            options.push({ value: time24, label: timeLabel })
+        }
+    }
+    return options
+}
+
+const TIME_OPTIONS = generateTimeOptions()
+
+interface AvailabilityRule {
+    id: string
+    day_of_week: number
+    start_time_local: string
+    end_time_local: string
+}
+
+interface LocalRule {
+    id: string | null
+    day_of_week: number
+    start_time: string
+    end_time: string
+}
+
+export default function AvailabilityTab({ availabilityRules }: { availabilityRules: AvailabilityRule[] }) {
+    const router = useRouter()
+
+    const [localRules, setLocalRules] = useState<LocalRule[]>(
+        availabilityRules.map(r => ({
+            id: r.id,
+            day_of_week: r.day_of_week,
+            start_time: r.start_time_local.slice(0, 5),
+            end_time: r.end_time_local.slice(0, 5)
+        }))
+    )
+
+    const [hasChanges, setHasChanges] = useState(false)
+    const [saving, setSaving] = useState(false)
+    const [showSuccess, setShowSuccess] = useState(false)
+    const [copyModalOpen, setCopyModalOpen] = useState(false)
+    const [copySourceDay, setCopySourceDay] = useState<number | null>(null)
+    const [selectedDays, setSelectedDays] = useState<number[]>([])
+
+    const handleAddDay = (dayOfWeek: number) => {
+        setLocalRules([...localRules, {
+            id: null,
+            day_of_week: dayOfWeek,
+            start_time: '08:00',
+            end_time: '20:00'
+        }])
+        setHasChanges(true)
+    }
+
+    const handleDeleteRule = (index: number) => {
+        setLocalRules(localRules.filter((_, i) => i !== index))
+        setHasChanges(true)
+    }
+
+    const handleTimeChange = (index: number, field: 'start_time' | 'end_time', value: string) => {
+        const newRules = [...localRules]
+        newRules[index][field] = value
+        setLocalRules(newRules)
+        setHasChanges(true)
+    }
+
+    const openCopyModal = (dayOfWeek: number) => {
+        setCopySourceDay(dayOfWeek)
+        setSelectedDays([])
+        setCopyModalOpen(true)
+    }
+
+    const handleApplyCopy = () => {
+        if (copySourceDay === null) return
+
+        const sourceRules = localRules.filter(r => r.day_of_week === copySourceDay)
+        let newRules = localRules.filter(r => !selectedDays.includes(r.day_of_week))
+
+        selectedDays.forEach(day => {
+            sourceRules.forEach(rule => {
+                newRules.push({
+                    id: null,
+                    day_of_week: day,
+                    start_time: rule.start_time,
+                    end_time: rule.end_time
+                })
+            })
+        })
+
+        setLocalRules(newRules)
+        setHasChanges(true)
+        setCopyModalOpen(false)
+    }
+
+    const handleSave = async () => {
+        setSaving(true)
+
+        try {
+            const existingIds = new Set(localRules.map(r => r.id).filter(id => id !== null))
+            for (const oldRule of availabilityRules) {
+                if (!existingIds.has(oldRule.id)) {
+                    await deleteAvailabilityRule(oldRule.id)
+                }
+            }
+
+            for (const rule of localRules) {
+                const formData = new FormData()
+                formData.append('start_time', rule.start_time)
+                formData.append('end_time', rule.end_time)
+
+                if (rule.id === null) {
+                    formData.append('day_of_week', rule.day_of_week.toString())
+                    await createAvailabilityRule(formData)
+                } else {
+                    await updateAvailabilityRule(rule.id, formData)
+                }
+            }
+
+            setHasChanges(false)
+            setShowSuccess(true)
+            setTimeout(() => setShowSuccess(false), 3000)
+            router.refresh()
+        } catch (error) {
+            console.error('Save error:', error)
+        } finally {
+            setSaving(false)
+        }
+    }
+
+    const rulesByDay = DAYS.map(day => ({
+        ...day,
+        rules: localRules.filter(r => r.day_of_week === day.id)
+    }))
+
+    return (
+        <div className="max-w-3xl pb-24">
+            {/* Success Toast */}
+            {showSuccess && (
+                <div className="fixed top-4 right-4 z-50 bg-green-500 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 animate-slide-in">
+                    <Check className="w-5 h-5" />
+                    <span className="font-semibold">Availability saved successfully!</span>
+                </div>
+            )}
+
+            <div className="mb-8">
+                <h2 className="text-2xl font-bold text-white mb-2">Weekly Hours</h2>
+                <p className="text-gray-500
+                    Set when you are typically available for meetings
+                </p>
+            </div>
+
+            {hasChanges && (
+                <div className="mb-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-2xl flex items-center justify-between animate-fade-in">
+                    <div className="flex items-center gap-3 text-blue-800
+                        <Clock className="w-5 h-5" />
+                        <span className="font-semibold">You have unsaved changes</span>
+                    </div>
+                    <button
+                        onClick={handleSave}
+                        disabled={saving}
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-3 rounded-xl transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
+                    >
+                        {saving ? (
+                            <span className="flex items-center gap-2">
+                                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                </svg>
+                                Saving...
+                            </span>
+                        ) : (
+                            'Save Changes'
+                        )}
+                    </button>
+                </div>
+            )}
+
+            <div className="space-y-4">
+                {rulesByDay.map(day => (
+                    <div key={day.id} className="flex items-start gap-4">
+                        <div className={`w-12 h-12 rounded-full ${day.color} flex items-center justify-center text-white font-bold text-lg flex-shrink-0 shadow-md`}>
+                            {day.short}
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                            {day.rules.length === 0 ? (
+                                <button
+                                    onClick={() => handleAddDay(day.id)}
+                                    className="flex items-center gap-2 text-gray-500 hover:text-blue-600 transition-colors py-2 group"
+                                >
+                                    <span className="text-base font-medium">Unavailable</span>
+                                    <Plus className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                                </button>
+                            ) : (
+                                <div className="space-y-3">
+                                    {day.rules.map((rule, ruleIndex) => {
+                                        const globalIndex = localRules.indexOf(rule)
+                                        return (
+                                            <div key={globalIndex} className="flex items-center gap-3 bg-black p-3 rounded-xl">
+                                                <select
+                                                    value={rule.start_time}
+                                                    onChange={(e) => handleTimeChange(globalIndex, 'start_time', e.target.value)}
+                                                    className="flex-1 px-4 py-2.5 bg-white border-2 border-gray-700 rounded-lg text-sm font-semibold text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer transition-all"
+                                                >
+                                                    {TIME_OPTIONS.map(opt => (
+                                                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                                    ))}
+                                                </select>
+
+                                                <span className="text-gray-400 font-bold">→</span>
+
+                                                <select
+                                                    value={rule.end_time}
+                                                    onChange={(e) => handleTimeChange(globalIndex, 'end_time', e.target.value)}
+                                                    className="flex-1 px-4 py-2.5 bg-white border-2 border-gray-700 rounded-lg text-sm font-semibold text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer transition-all"
+                                                >
+                                                    {TIME_OPTIONS.map(opt => (
+                                                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                                    ))}
+                                                </select>
+
+                                                <div className="flex items-center gap-2">
+                                                    <button
+                                                        onClick={() => handleDeleteRule(globalIndex)}
+                                                        className="p-2 hover:bg-red-50 rounded-lg transition-colors group"
+                                                        title="Remove"
+                                                    >
+                                                        <X className="w-5 h-5 text-gray-400 group-hover:text-red-500 transition-colors" />
+                                                    </button>
+
+                                                    {ruleIndex === 0 && (
+                                                        <>
+                                                            <button
+                                                                onClick={() => handleAddDay(day.id)}
+                                                                className="p-2 hover:bg-blue-50 rounded-lg transition-colors group"
+                                                                title="Add time slot"
+                                                            >
+                                                                <Plus className="w-5 h-5 text-gray-400 group-hover:text-blue-500 transition-colors" />
+                                                            </button>
+
+                                                            <button
+                                                                onClick={() => openCopyModal(day.id)}
+                                                                className="p-2 hover:bg-purple-50 rounded-lg transition-colors group"
+                                                                title="Copy to other days"
+                                                            >
+                                                                <Copy className="w-5 h-5 text-gray-400 group-hover:text-purple-500 transition-colors" />
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Copy Modal */}
+            {copyModalOpen && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+                    <div className="bg-[#1C1C1E] rounded-2xl p-6 max-w-sm w-full shadow-2xl animate-slide-up">
+                        <h3 className="text-lg font-bold text-white mb-1">Copy times to...</h3>
+                        <p className="text-sm text-gray-500 mb-6">Select which days to copy this schedule to</p>
+
+                        <div className="space-y-2 mb-6 max-h-80 overflow-y-auto">
+                            {DAYS.map(day => (
+                                <label key={day.id} className="flex items-center justify-between cursor-pointer hover:bg-black p-3 rounded-xl transition-colors group">
+                                    <span className="text-white font-medium group-hover:text-blue-600 transition-colors">{day.label}</span>
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedDays.includes(day.id)}
+                                        onChange={(e) => {
+                                            if (e.target.checked) {
+                                                setSelectedDays([...selectedDays, day.id])
+                                            } else {
+                                                setSelectedDays(selectedDays.filter(d => d !== day.id))
+                                            }
+                                        }}
+                                        className="w-5 h-5 rounded border-2 border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                                    />
+                                </label>
+                            ))}
+                        </div>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setCopyModalOpen(false)}
+                                className="flex-1 px-4 py-3 bg-[#1C1C1E] text-white font-bold rounded-xl hover:bg-gray-200 transition-all active:scale-95"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleApplyCopy}
+                                disabled={selectedDays.length === 0}
+                                className="flex-1 px-4 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
+                            >
+                                Apply
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <style jsx>{`
+                @keyframes slide-in {
+                    from {
+                        transform: translateX(100%);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
+                }
+                @keyframes slide-up {
+                    from {
+                        transform: translateY(20px);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: translateY(0);
+                        opacity: 1;
+                    }
+                }
+                @keyframes fade-in {
+                    from {
+                        opacity: 0;
+                    }
+                    to {
+                        opacity: 1;
+                    }
+                }
+                .animate-slide-in {
+                    animation: slide-in 0.3s ease-out;
+                }
+                .animate-slide-up {
+                    animation: slide-up 0.3s ease-out;
+                }
+                .animate-fade-in {
+                    animation: fade-in 0.2s ease-out;
+                }
+            `}</style>
+        </div>
+    )
+}
