@@ -1,14 +1,12 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { updateProfile, signOut, createService, updateService, deleteService } from './actions'
-import { Plus, X, Copy, Check, Edit, Trash2, Share2, ChevronRight, Camera, Upload } from 'lucide-react'
+import { signOut, createService, updateService, deleteService } from './actions'
+import { Plus, X, Copy, Check, Edit, Trash2, Share2, ChevronRight, MapPin, Video } from 'lucide-react'
 import { createAvailabilityRule, updateAvailabilityRule, deleteAvailabilityRule } from './actions'
-import { createClient } from '@/utils/supabase/client'
-import Cropper from 'react-easy-crop'
-import getCroppedImg, { Area } from '@/utils/cropImage'
+import clsx from 'clsx'
 
 // Monday-first order
 const DAYS = [
@@ -58,19 +56,9 @@ export default function ProfileTab({ profile, services, availabilityRules }: { p
     const router = useRouter()
     const [showSuccess, setShowSuccess] = useState(false)
     const [copiedServiceId, setCopiedServiceId] = useState<string | null>(null)
-    const [editingProfile, setEditingProfile] = useState(false)
     const [editingService, setEditingService] = useState<string | null>(null)
     const [isCreatingService, setIsCreatingService] = useState(false)
-    const [uploading, setUploading] = useState(false)
-    const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url || '')
-
-    // Crop state
-    const [cropModalOpen, setCropModalOpen] = useState(false)
-    const [imageSrc, setImageSrc] = useState<string | null>(null)
-    const [crop, setCrop] = useState({ x: 0, y: 0 })
-    const [zoom, setZoom] = useState(1)
-    const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null)
-    const [originalFile, setOriginalFile] = useState<File | null>(null)
+    const [serviceLocationType, setServiceLocationType] = useState('physical')
 
     // Availability state
     const [localRules, setLocalRules] = useState<LocalRule[]>(
@@ -86,80 +74,11 @@ export default function ProfileTab({ profile, services, availabilityRules }: { p
     const [copySourceDay, setCopySourceDay] = useState<number | null>(null)
     const [selectedDays, setSelectedDays] = useState<number[]>([])
 
-    const onCropComplete = useCallback((croppedArea: Area, croppedAreaPixels: Area) => {
-        setCroppedAreaPixels(croppedAreaPixels)
-    }, [])
-
     const handleShareService = (serviceId: string) => {
         const link = `${typeof window !== 'undefined' ? window.location.origin : ''}/book/${profile.username}/${serviceId}`
         navigator.clipboard.writeText(link)
         setCopiedServiceId(serviceId)
         setTimeout(() => setCopiedServiceId(null), 2000)
-    }
-
-    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0]
-        if (!file) return
-
-        // Check file size (max 5MB)
-        if (file.size > 5 * 1024 * 1024) {
-            alert('File size must be less than 5MB')
-            return
-        }
-
-        // Check file type
-        if (!file.type.startsWith('image/')) {
-            alert('Please upload an image file')
-            return
-        }
-
-        setOriginalFile(file)
-        const reader = new FileReader()
-        reader.addEventListener('load', () => {
-            setImageSrc(reader.result as string)
-            setCropModalOpen(true)
-        })
-        reader.readAsDataURL(file)
-    }
-
-    const handleCropSave = async () => {
-        if (!imageSrc || !croppedAreaPixels || !originalFile) return
-
-        setUploading(true)
-        try {
-            // Get cropped image blob
-            const croppedBlob = await getCroppedImg(imageSrc, croppedAreaPixels)
-
-            // Upload to Supabase
-            const supabase = createClient()
-            const { data: { user } } = await supabase.auth.getUser()
-            if (!user) return
-
-            const fileExt = originalFile.name.split('.').pop()
-            const fileName = `${user.id}/${Date.now()}.${fileExt}`
-
-            const { data, error: uploadError } = await supabase.storage
-                .from('avatars')
-                .upload(fileName, croppedBlob, {
-                    upsert: true,
-                    contentType: 'image/jpeg'
-                })
-
-            if (uploadError) throw uploadError
-
-            const { data: { publicUrl } } = supabase.storage
-                .from('avatars')
-                .getPublicUrl(fileName)
-
-            setAvatarUrl(publicUrl)
-            setCropModalOpen(false)
-            setImageSrc(null)
-        } catch (error) {
-            console.error('Upload error:', error)
-            alert('Failed to upload avatar')
-        } finally {
-            setUploading(false)
-        }
     }
 
     const handleAddDay = (dayOfWeek: number) => {
@@ -233,19 +152,6 @@ export default function ProfileTab({ profile, services, availabilityRules }: { p
         router.refresh()
     }
 
-    const handleProfileSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault()
-        const formData = new FormData(e.currentTarget)
-        if (avatarUrl) {
-            formData.append('avatar_url', avatarUrl)
-        }
-        await updateProfile(formData)
-        setShowSuccess(true)
-        setTimeout(() => setShowSuccess(false), 2000)
-        setEditingProfile(false)
-        router.refresh()
-    }
-
     const handleServiceSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
         const formData = new FormData(e.currentTarget)
@@ -289,14 +195,13 @@ export default function ProfileTab({ profile, services, availabilityRules }: { p
 
             {/* Profile Section - Clickable */}
             <div className="mt-6">
-                <button
-                    type="button"
-                    onClick={() => setEditingProfile(true)}
-                    className="w-full px-6 py-4 flex items-center gap-4 hover:bg-gray-900/50 transition-colors"
+                <Link
+                    href="/app/settings/profile"
+                    className="w-full px-6 py-4 flex items-center gap-4 hover:bg-gray-900/50 transition-colors block"
                 >
-                    {avatarUrl || profile.avatar_url ? (
+                    {profile.avatar_url ? (
                         <img
-                            src={avatarUrl || profile.avatar_url}
+                            src={profile.avatar_url}
                             alt="Avatar"
                             className="w-16 h-16 rounded-full object-cover shadow-md"
                         />
@@ -312,7 +217,7 @@ export default function ProfileTab({ profile, services, availabilityRules }: { p
                         <p className="text-sm text-gray-400">@{profile.username}</p>
                     </div>
                     <ChevronRight className="w-5 h-5 text-gray-500" />
-                </button>
+                </Link>
             </div>
 
             {/* Booking Page Section */}
@@ -397,301 +302,28 @@ export default function ProfileTab({ profile, services, availabilityRules }: { p
                 </div>
             </div>
 
-            {/* Availability Section */}
-            <div className="mt-6">
-                <div className="px-6 py-2">
-                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Weekly Hours</h3>
-                </div>
-
-                {rulesByDay.map((day, index) => (
-                    <div key={day.id} className={index > 0 ? 'border-t border-gray-800' : ''}>
-                        <div className="px-6 py-3">
-                            <div className="flex items-center gap-3">
-                                <span className="text-white font-medium w-24">{day.label}</span>
-                                <div className="flex-1">
-                                    {day.rules.length === 0 ? (
-                                        <button
-                                            type="button"
-                                            onClick={() => handleAddDay(day.id)}
-                                            className="text-gray-500 text-sm hover:text-blue-500 transition-colors"
-                                        >
-                                            Unavailable
-                                        </button>
-                                    ) : (
-                                        <div className="space-y-2">
-                                            {day.rules.map((rule, ruleIndex) => {
-                                                const globalIndex = localRules.indexOf(rule)
-                                                return (
-                                                    <div key={globalIndex} className="flex items-center gap-2">
-                                                        <select
-                                                            value={rule.start_time}
-                                                            onChange={(e) => handleTimeChange(globalIndex, 'start_time', e.target.value)}
-                                                            className="px-2 py-1 text-sm bg-gray-900 border border-gray-800 rounded-lg text-white"
-                                                        >
-                                                            {TIME_OPTIONS.map(opt => (
-                                                                <option key={opt.value} value={opt.value}>{opt.label}</option>
-                                                            ))}
-                                                        </select>
-
-                                                        <span className="text-gray-600 text-sm">-</span>
-
-                                                        <select
-                                                            value={rule.end_time}
-                                                            onChange={(e) => handleTimeChange(globalIndex, 'end_time', e.target.value)}
-                                                            className="px-2 py-1 text-sm bg-gray-900 border border-gray-800 rounded-lg text-white"
-                                                        >
-                                                            {TIME_OPTIONS.map(opt => (
-                                                                <option key={opt.value} value={opt.value}>{opt.label}</option>
-                                                            ))}
-                                                        </select>
-
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => handleDeleteRule(globalIndex)}
-                                                            className="p-1 hover:bg-gray-800 rounded transition-colors"
-                                                        >
-                                                            <X className="w-4 h-4 text-gray-500" />
-                                                        </button>
-
-                                                        {ruleIndex === 0 && (
-                                                            <>
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => handleAddDay(day.id)}
-                                                                    className="p-1 hover:bg-gray-800 rounded transition-colors"
-                                                                >
-                                                                    <Plus className="w-4 h-4 text-gray-500" />
-                                                                </button>
-
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => openCopyModal(day.id)}
-                                                                    className="p-1 hover:bg-gray-800 rounded transition-colors"
-                                                                >
-                                                                    <Copy className="w-4 h-4 text-gray-500" />
-                                                                </button>
-                                                            </>
-                                                        )}
-                                                    </div>
-                                                )
-                                            })}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                ))}
-            </div>
-
-            {/* Sign Out */}
+            {/* Availability Section - Link to dedicated page */}
             <div className="mt-6 border-t border-gray-800">
-                <button
-                    type="button"
-                    onClick={handleSignOut}
-                    className="w-full px-6 py-4 text-red-500 font-medium text-left hover:bg-gray-900/50 transition-colors"
+                <Link
+                    href="/app/settings/availability"
+                    className="w-full px-6 py-4 flex items-center gap-4 hover:bg-gray-900/50 transition-colors block"
                 >
-                    Sign Out
-                </button>
-            </div>
-
-            {/* Crop Modal */}
-            {cropModalOpen && imageSrc && (
-                <div className="fixed inset-0 bg-black/95 z-[60] flex flex-col">
-                    <div className="flex items-center justify-between p-4 border-b border-gray-800">
-                        <h3 className="text-lg font-bold text-white">Adjust Photo</h3>
-                        <button
-                            onClick={() => {
-                                setCropModalOpen(false)
-                                setImageSrc(null)
-                            }}
-                            className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
-                        >
-                            <X className="w-5 h-5 text-white" />
-                        </button>
-                    </div>
-
-                    <div className="flex-1 relative">
-                        <Cropper
-                            image={imageSrc}
-                            crop={crop}
-                            zoom={zoom}
-                            aspect={1}
-                            cropShape="round"
-                            showGrid={false}
-                            onCropChange={setCrop}
-                            onZoomChange={setZoom}
-                            onCropComplete={onCropComplete}
-                        />
-                    </div>
-
-                    <div className="p-6 border-t border-gray-800">
-                        <div className="mb-4">
-                            <label className="block text-sm text-gray-400 mb-2">Zoom</label>
-                            <input
-                                type="range"
-                                min={1}
-                                max={3}
-                                step={0.1}
-                                value={zoom}
-                                onChange={(e) => setZoom(Number(e.target.value))}
-                                className="w-full"
-                            />
+                    <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                            <h3 className="font-medium text-white">Weekly Hours</h3>
+                            {rulesByDay.every(d => d.rules.length === 0) && (
+                                <span className="px-2 py-0.5 text-xs font-medium bg-orange-900/30 text-orange-400 rounded-full">
+                                    Not Set
+                                </span>
+                            )}
                         </div>
-                        <button
-                            onClick={handleCropSave}
-                            disabled={uploading}
-                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition-colors disabled:opacity-50"
-                        >
-                            {uploading ? 'Uploading...' : 'Save'}
-                        </button>
+                        <p className="text-sm text-gray-400 mt-1">
+                            Manage your weekly availability
+                        </p>
                     </div>
-                </div>
-            )}
-
-            {/* Profile Edit Modal */}
-            {editingProfile && (
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-[#1C1C1E] rounded-2xl p-6 max-w-md w-full shadow-2xl">
-                        <h3 className="text-lg font-bold text-white mb-6">Edit Profile</h3>
-
-                        <form onSubmit={handleProfileSubmit} className="space-y-4">
-                            <div className="flex flex-col items-center mb-4">
-                                <div className="relative group">
-                                    {avatarUrl || profile.avatar_url ? (
-                                        <img
-                                            src={avatarUrl || profile.avatar_url}
-                                            alt="Avatar"
-                                            className="w-20 h-20 rounded-full object-cover shadow-md"
-                                        />
-                                    ) : (
-                                        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-3xl font-bold shadow-md">
-                                            {profile.full_name?.[0] || profile.username[0].toUpperCase()}
-                                        </div>
-                                    )}
-                                    <label className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
-                                        <Camera className="w-6 h-6 text-white" />
-                                        <input
-                                            type="file"
-                                            accept="image/*"
-                                            onChange={handleFileSelect}
-                                            className="hidden"
-                                            disabled={uploading}
-                                        />
-                                    </label>
-                                </div>
-                                <p className="text-xs text-gray-500 mt-2">
-                                    Click to upload photo
-                                </p>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-2">Display Name</label>
-                                <input
-                                    type="text"
-                                    name="full_name"
-                                    defaultValue={profile.full_name || ''}
-                                    className="w-full px-4 py-3 border border-gray-700 rounded-xl bg-gray-900 text-white placeholder:text-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    placeholder="Enter your display name"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-2">Username</label>
-                                <div className="px-4 py-3 border border-gray-700 rounded-xl bg-gray-900/50 text-gray-500">
-                                    @{profile.username}
-                                </div>
-                                <p className="text-xs text-gray-500 mt-1">Username cannot be changed (used in booking URLs)</p>
-                            </div>
-
-                            <div className="border-t border-gray-700 pt-4">
-                                <h4 className="text-sm font-semibold text-gray-300 mb-3">Booking Page Information</h4>
-
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-400 mb-2">Bio</label>
-                                        <textarea
-                                            name="bio"
-                                            defaultValue={profile.bio || ''}
-                                            maxLength={200}
-                                            rows={3}
-                                            className="w-full px-4 py-3 border border-gray-700 rounded-xl bg-gray-900 text-white placeholder:text-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                                            placeholder="Tell clients about yourself (max 200 chars)"
-                                        />
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-400 mb-2">Location</label>
-                                            <input
-                                                type="text"
-                                                name="location"
-                                                defaultValue={profile.location || ''}
-                                                className="w-full px-4 py-3 border border-gray-700 rounded-xl bg-gray-900 text-white placeholder:text-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                                placeholder="City"
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-400 mb-2">Phone</label>
-                                            <input
-                                                type="tel"
-                                                name="phone"
-                                                defaultValue={profile.phone || ''}
-                                                className="w-full px-4 py-3 border border-gray-700 rounded-xl bg-gray-900 text-white placeholder:text-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                                placeholder="Phone number"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-400 mb-2">Contact Email</label>
-                                        <input
-                                            type="email"
-                                            name="email"
-                                            defaultValue={profile.email || ''}
-                                            className="w-full px-4 py-3 border border-gray-700 rounded-xl bg-gray-900 text-white placeholder:text-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                            placeholder="contact@example.com"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-400 mb-2">Cancellation Policy</label>
-                                        <textarea
-                                            name="cancellation_policy"
-                                            defaultValue={profile.cancellation_policy || ''}
-                                            maxLength={500}
-                                            rows={3}
-                                            className="w-full px-4 py-3 border border-gray-700 rounded-xl bg-gray-900 text-white placeholder:text-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                                            placeholder="e.g., Cancel 24 hours before for free, otherwise 50% charge"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="flex gap-3 pt-4">
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setEditingProfile(false)
-                                        setAvatarUrl(profile.avatar_url || '')
-                                    }}
-                                    className="flex-1 px-4 py-3 bg-gray-800 text-white font-medium rounded-xl hover:bg-gray-700 transition-colors"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={uploading}
-                                    className="flex-1 px-4 py-3 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50"
-                                >
-                                    Save
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
+                    <ChevronRight className="w-5 h-5 text-gray-500" />
+                </Link>
+            </div>
 
             {/* Service Modal */}
             {(isCreatingService || editingService) && (
@@ -737,6 +369,54 @@ export default function ProfileTab({ profile, services, availabilityRules }: { p
                                         className="w-full px-3 py-2 border border-gray-700 rounded-lg bg-gray-900 text-white"
                                     />
                                 </div>
+                            </div>
+
+                            {/* Location Type */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-400 mb-2">Service Type</label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setServiceLocationType('physical')}
+                                        className={clsx(
+                                            'p-3 rounded-lg font-medium transition-all flex items-center justify-center gap-2',
+                                            serviceLocationType === 'physical'
+                                                ? 'bg-blue-600 text-white'
+                                                : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                                        )}
+                                    >
+                                        <MapPin className="w-4 h-4" />
+                                        In-Person
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setServiceLocationType('online')}
+                                        className={clsx(
+                                            'p-3 rounded-lg font-medium transition-all flex items-center justify-center gap-2',
+                                            serviceLocationType === 'online'
+                                                ? 'bg-blue-600 text-white'
+                                                : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                                        )}
+                                    >
+                                        <Video className="w-4 h-4" />
+                                        Online
+                                    </button>
+                                </div>
+                                <input type="hidden" name="location_type" value={serviceLocationType} />
+                            </div>
+
+                            {/* Location Field */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-400 mb-1">
+                                    {serviceLocationType === 'physical' ? 'Location' : 'Meeting Link'}
+                                </label>
+                                <input
+                                    type="text"
+                                    name="default_location"
+                                    defaultValue={editingService ? services.find(s => s.id === editingService)?.default_location : ''}
+                                    className="w-full px-3 py-2 border border-gray-700 rounded-lg bg-gray-900 text-white"
+                                    placeholder={serviceLocationType === 'physical' ? 'e.g., Downtown Studio, 123 Main St' : 'e.g., https://meet.google.com/...'}
+                                />
                             </div>
 
                             <div className="flex gap-3 pt-2">

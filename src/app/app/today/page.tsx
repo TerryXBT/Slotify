@@ -56,65 +56,60 @@ export default async function TodayPage() {
     const freeHours = Math.max(0, Math.floor(freeMinutes / 60))
 
     return (
-        <div className="min-h-screen bg-black font-sans pb-24 text-gray-100 overflow-y-auto">
+        <div className="min-h-screen bg-black font-sans pb-24 text-gray-100">
 
             {/* Header */}
-            <header className="sticky top-0 z-30 bg-white/90 dark:bg-[#1C1C1E]/90 backdrop-blur-md px-5 pt-12 pb-2">
+            <header className="sticky top-0 z-30 bg-black/95 backdrop-blur-xl border-b border-gray-800/50 px-4 pt-3 pb-3">
                 <div className="flex justify-between items-start mb-4">
                     <div>
-                        <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                            {format(now, 'MMM d • EEEE')}
+                        <p className="text-[13px] font-semibold text-gray-500 uppercase tracking-wide">
+                            {format(now, 'MMM d • EEEE').toUpperCase()}
                         </p>
-                        <h1 className="text-2xl font-bold tracking-tight mt-1 text-white">
+                        <h1 className="text-[28px] font-bold tracking-tight mt-0.5 text-white leading-tight">
                             Good Morning, {profile.full_name?.split(' ')[0] || 'Pro'}
                         </h1>
                     </div>
-                    <div className="relative">
-                        {/* Avatar */}
+                    <Link href="/app/settings" className="relative active:scale-95 transition-transform">
                         {profile.avatar_url ? (
                             <img
                                 src={profile.avatar_url}
                                 alt="Profile"
-                                className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm"
+                                className="w-11 h-11 rounded-full object-cover shadow-lg"
                             />
                         ) : (
-                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg border-2 border-white shadow-sm">
+                            <div className="w-11 h-11 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-[18px] shadow-lg">
                                 {profile.full_name?.[0] || profile.username[0].toUpperCase()}
                             </div>
                         )}
-                        {/* Notification Dot */}
                         {needsAction.length > 0 && (
-                            <span className="absolute top-0 right-0 w-3 h-3 bg-red-500 border-2 border-white rounded-full"></span>
+                            <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-red-500 border-2 border-black rounded-full"></span>
                         )}
-                    </div>
+                    </Link>
                 </div>
 
-                <div className="mb-6">
-                    <p className="text-xl font-semibold text-gray-200">
-                        {totalBookingsCount} bookings today
-                    </p>
-                    <p className="text-base font-medium text-gray-500 mt-1">
-                        You have {freeHours} hours of free time.
+                <div className="mb-4">
+                    <p className="text-[15px] text-gray-400">
+                        You have <span className="text-white font-semibold">{freeHours} hours</span> of free time.
                     </p>
                 </div>
 
-                <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
-                    <Link href="/app/busy/new" className="flex items-center gap-2 px-5 py-3 bg-[#1C1C1E] rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] text-blue-600 font-medium whitespace-nowrap active:scale-95 transition-transform border border-transparent">
-                        <Plus className="w-5 h-5" />
+                <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 -mx-1 px-1">
+                    <Link href="/app/busy/new" className="flex items-center gap-2 px-4 py-2.5 bg-[#1C1C1E] rounded-xl text-blue-500 text-[15px] font-semibold whitespace-nowrap active:scale-95 transition-all">
+                        <Plus className="w-[18px] h-[18px]" />
                         Busy Block
                     </Link>
-                    <Link href="/app/reschedule" className="flex items-center gap-2 px-5 py-3 bg-[#1C1C1E] rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] text-gray-300 font-medium whitespace-nowrap active:scale-95 transition-transform border border-transparent">
-                        <Clock className="w-5 h-5" />
+                    <Link href="/app/reschedule" className="flex items-center gap-2 px-4 py-2.5 bg-[#1C1C1E] rounded-xl text-gray-300 text-[15px] font-semibold whitespace-nowrap active:scale-95 transition-all">
+                        <Clock className="w-[18px] h-[18px]" />
                         Reschedule
                     </Link>
-                    <Link href="/app/settings" className="flex items-center gap-2 px-5 py-3 bg-[#1C1C1E] rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] text-gray-300 font-medium whitespace-nowrap active:scale-95 transition-transform border border-transparent">
-                        <SettingsIcon className="w-5 h-5" />
+                    <Link href="/app/settings" className="flex items-center gap-2 px-4 py-2.5 bg-[#1C1C1E] rounded-xl text-gray-300 text-[15px] font-semibold whitespace-nowrap active:scale-95 transition-all">
+                        <SettingsIcon className="w-[18px] h-[18px]" />
                         Settings
                     </Link>
-                </div >
-            </header >
+                </div>
+            </header>
 
-            <main className="px-5 space-y-8 mt-2">
+            <main className="px-4 space-y-6 mt-4">
 
                 {/* SECTION 1: Needs Action */}
                 {needsAction.length > 0 && (
@@ -164,85 +159,80 @@ export default async function TodayPage() {
                 <section>
                     <div className="flex items-center gap-2 mb-3">
                         <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                        <h2 className="text-lg font-bold text-white">Up Next</h2>
+                        <h2 className="text-[17px] font-semibold text-white">Up Next</h2>
                     </div>
 
                     {nextBooking ? (
-                        <div className="bg-[#1C1C1E] rounded-3xl p-5 shadow-lg shadow-gray-200/50 border border-gray-800 relative overflow-hidden">
-                            <div className="absolute left-0 top-0 bottom-0 w-2 bg-blue-500"></div>
-                            <div className="flex justify-between items-start pl-3 mb-4">
-                                <div>
-                                    <h3 className="text-2xl font-bold text-white leading-tight">{nextBooking.client_name}</h3>
-                                    <p className="text-blue-500 font-semibold text-base mt-1">{nextBooking.services?.name}</p>
+                        <div className="bg-[#1C1C1E] rounded-2xl p-4 border border-gray-800/50 relative overflow-hidden">
+                            <div className="flex justify-between items-start mb-4">
+                                <div className="flex-1">
+                                    <h3 className="text-[20px] font-bold text-white leading-tight">{nextBooking.client_name}</h3>
+                                    <p className="text-blue-500 font-medium text-[15px] mt-0.5">{nextBooking.services?.name}</p>
                                 </div>
-                                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-green-100 text-green-700 text-xs font-bold uppercase tracking-wider">
+                                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-900/30 text-green-400 text-[11px] font-bold uppercase tracking-wide">
                                     <CheckCircle className="w-3 h-3" />
                                     Confirmed
                                 </div>
                             </div>
 
-                            <div className="pl-3 grid gap-3 mb-5">
+                            <div className="grid gap-3 mb-4">
                                 <div className="flex items-center gap-3 text-gray-200">
-                                    <div className="w-8 h-8 rounded-lg bg-[#1C1C1E] flex items-center justify-center text-gray-500">
-                                        <Clock className="w-5 h-5" />
+                                    <div className="w-9 h-9 rounded-xl bg-gray-800/50 flex items-center justify-center">
+                                        <Clock className="w-[18px] h-[18px] text-gray-400" />
                                     </div>
                                     <div>
-                                        <span className="text-lg font-bold block leading-none">{format(new Date(nextBooking.start_at), 'h:mm a')}</span>
-                                        <span className="text-sm text-gray-500 font-medium">Until {format(new Date(nextBooking.end_at), 'h:mm a')} ({nextBooking.services?.duration_minutes}m)</span>
+                                        <span className="text-[17px] font-semibold block leading-tight text-white">{format(new Date(nextBooking.start_at), 'h:mm a')}</span>
+                                        <span className="text-[13px] text-gray-500">Until {format(new Date(nextBooking.end_at), 'h:mm a')} · {nextBooking.services?.duration_minutes}m</span>
                                     </div>
                                 </div>
-                                {/* Location Dummy */}
                                 <div className="flex items-center gap-3 text-gray-200">
-                                    <div className="w-8 h-8 rounded-lg bg-[#1C1C1E] flex items-center justify-center text-gray-500">
-                                        <MapPin className="w-5 h-5" />
+                                    <div className="w-9 h-9 rounded-xl bg-gray-800/50 flex items-center justify-center">
+                                        <MapPin className="w-[18px] h-[18px] text-gray-400" />
                                     </div>
                                     <div>
-                                        <span className="text-base font-semibold block leading-tight">Downtown Studio</span>
-                                        <span className="text-sm text-gray-500 font-medium">Room 4B</span>
+                                        <span className="text-[15px] font-medium block leading-tight text-white">Downtown Studio</span>
+                                        <span className="text-[13px] text-gray-500">Room 4B</span>
                                     </div>
                                 </div>
-                            </div >
+                            </div>
 
-                            {
-                                nextBooking.notes && (
-                                    <div className="pl-3 mb-6">
-                                        <div className="bg-black border border-gray-100 rounded-xl p-4 flex gap-3">
-                                            <StickyNote className="w-5 h-5 text-gray-400" />
-                                            <p className="text-sm text-gray-300 italic font-medium leading-relaxed">
-                                                "{nextBooking.notes}"
-                                            </p>
-                                        </div>
+                            {nextBooking.notes && (
+                                <div className="mb-4">
+                                    <div className="bg-gray-800/30 rounded-xl p-3 flex gap-2.5">
+                                        <StickyNote className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                                        <p className="text-[13px] text-gray-300 leading-relaxed">
+                                            "{nextBooking.notes}"
+                                        </p>
                                     </div>
-                                )
-                            }
+                                </div>
+                            )}
 
-                            <div className="pl-3 flex gap-3">
-                                <Link href={`/app/bookings/${nextBooking.id}`} className="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-4 rounded-xl font-bold text-base shadow-md shadow-blue-500/20 active:scale-[0.98] transition-all flex justify-center items-center gap-2">
+                            <div className="flex gap-2">
+                                <Link href={`/app/bookings/${nextBooking.id}`} className="flex-1 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white py-3 rounded-xl font-semibold text-[15px] active:scale-[0.98] transition-all flex justify-center items-center gap-2">
                                     Check In
                                 </Link>
-                                <button className="w-14 flex items-center justify-center bg-black text-gray-600 border border-gray-700 rounded-xl hover:bg-[#1C1C1E] active:scale-95 transition-all">
-                                    <MessageSquare className="w-6 h-6" />
+                                <button className="w-11 h-11 flex items-center justify-center bg-gray-800/50 text-gray-400 rounded-xl hover:bg-gray-700/50 active:scale-95 transition-all">
+                                    <MessageSquare className="w-[18px] h-[18px]" />
                                 </button>
-                                <button className="w-14 flex items-center justify-center bg-black text-gray-600 border border-gray-700 rounded-xl hover:bg-[#1C1C1E] active:scale-95 transition-all">
-                                    <Phone className="w-6 h-6" />
+                                <button className="w-11 h-11 flex items-center justify-center bg-gray-800/50 text-gray-400 rounded-xl hover:bg-gray-700/50 active:scale-95 transition-all">
+                                    <Phone className="w-[18px] h-[18px]" />
                                 </button>
                             </div>
-                        </div >
+                        </div>
                     ) : (
-                        <div className="text-center py-10 bg-[#1C1C1E] rounded-3xl border border-dashed border-gray-200">
-                            <p className="text-gray-500 font-medium">No upcoming bookings.</p>
-                        </div >
-                    )
-                    }
-                </section >
+                        <div className="text-center py-12 bg-[#1C1C1E] rounded-2xl border border-dashed border-gray-800">
+                            <p className="text-gray-500 text-[15px]">No upcoming bookings.</p>
+                        </div>
+                    )}
+                </section>
 
                 {/* SECTION: Services */}
-                < section >
+                <section>
                     <div className="flex items-center justify-between mb-3">
-                        <h2 className="text-lg font-bold text-white">Services</h2>
+                        <h2 className="text-[17px] font-semibold text-white">Services</h2>
                         <Link
                             href="/app/settings?tab=services"
-                            className="text-sm font-semibold text-blue-600 hover:underline"
+                            className="text-[15px] font-semibold text-blue-500 active:opacity-70 transition-opacity"
                         >
                             Manage
                         </Link>
@@ -262,66 +252,65 @@ export default async function TodayPage() {
                                 {/* Add New Service Button */}
                                 <Link
                                     href="/app/settings?tab=services"
-                                    className="flex items-center justify-center gap-2 bg-[#1C1C1E] rounded-2xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-dashed border-gray-300 hover:border-blue-500 hover:bg-blue-50 transition-all"
+                                    className="flex items-center justify-center gap-2 bg-[#1C1C1E] rounded-2xl p-4 border border-dashed border-gray-700 hover:border-blue-500 active:scale-95 transition-all"
                                 >
-                                    <Plus className="w-5 h-5 text-blue-600 dark:text-blue-500" />
-                                    <span className="text-sm font-semibold text-blue-600">Add New Service</span>
+                                    <Plus className="w-[18px] h-[18px] text-blue-500" />
+                                    <span className="text-[15px] font-semibold text-blue-500">Add New Service</span>
                                 </Link>
                             </div >
                         ) : (
-                            <div className="text-center py-8 bg-gray-900 rounded-2xl border border-dashed border-gray-200">
-                                <p className="text-gray-500 font-medium mb-3">No services yet</p>
-                                < Link
+                            <div className="text-center py-10 bg-[#1C1C1E] rounded-2xl border border-dashed border-gray-800">
+                                <p className="text-gray-500 text-[15px] mb-3">No services yet</p>
+                                <Link
                                     href="/app/settings?tab=services"
-                                    className="inline-flex items-center gap-2 text-blue-600 font-semibold text-sm hover:underline"
+                                    className="inline-flex items-center gap-2 text-blue-500 font-semibold text-[15px] active:opacity-70 transition-opacity"
                                 >
-                                    <Plus className="w-4 h-4" />
+                                    <Plus className="w-[18px] h-[18px]" />
                                     Create your first service
-                                </Link >
-                            </div >
+                                </Link>
+                            </div>
                         )
                     }
                 </section >
 
                 {/* SECTION 3: Rest of Today */}
-                {
-                    restOfToday.length > 0 && (
-                        <section>
-                            <h2 className="text-lg font-bold text-white mb-4">Rest of Today</h2>
-                            <div className="space-y-4">
-                                {restOfToday.map((b: any) => (
-                                    <div key={b.id} className="bg-[#1C1C1E] rounded-2xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-transparent flex items-center gap-4">
-                                        <div className="flex flex-col items-center justify-center w-16 text-center border-r border-gray-800 pr-4">
-                                            <span className="text-base font-bold text-white">
-                                                {format(new Date(b.start_at), 'h:mm')}
-                                            </span>
-                                            <span className="text-xs font-semibold text-gray-500 uppercase">
-                                                {format(new Date(b.start_at), 'a')}
-                                            </span>
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex justify-between items-start mb-1">
-                                                <h4 className="text-base font-bold text-white truncate">{b.client_name}</h4>
-                                                <span className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-green-50 text-green-600 text-xxs font-bold uppercase">
-                                                    Confirmed
-                                                </span>
-                                            </div>
-                                            <p className="text-sm text-gray-500 font-medium truncate">{b.services?.name}</p>
-                                        </div>
-                                        <Link href={`/app/bookings/${b.id}`} className="w-10 h-10 rounded-full bg-black flex items-center justify-center text-gray-400\">\n                                            <ChevronRight className="w-6 h-6" />
-                                        </Link>
+                {restOfToday.length > 0 && (
+                    <section>
+                        <h2 className="text-[17px] font-semibold text-white mb-3">Rest of Today</h2>
+                        <div className="space-y-2">
+                            {restOfToday.map((b: any) => (
+                                <div key={b.id} className="bg-[#1C1C1E] rounded-2xl p-3.5 border border-gray-800/50 flex items-center gap-3">
+                                    <div className="flex flex-col items-center justify-center w-14 text-center border-r border-gray-800 pr-3">
+                                        <span className="text-[15px] font-semibold text-white">
+                                            {format(new Date(b.start_at), 'h:mm')}
+                                        </span>
+                                        <span className="text-[11px] font-medium text-gray-500 uppercase">
+                                            {format(new Date(b.start_at), 'a')}
+                                        </span>
                                     </div>
-                                ))}
-                            </div>
-                        </section >
-                    )
-                }
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex justify-between items-start mb-0.5">
+                                            <h4 className="text-[15px] font-semibold text-white truncate">{b.client_name}</h4>
+                                            <span className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-green-900/30 text-green-400 text-[10px] font-bold uppercase tracking-wide">
+                                                Confirmed
+                                            </span>
+                                        </div>
+                                        <p className="text-[13px] text-gray-500 truncate">{b.services?.name}</p>
+                                    </div>
+                                    <Link href={`/app/bookings/${b.id}`} className="w-9 h-9 rounded-full bg-gray-800/50 flex items-center justify-center text-gray-400 active:scale-95 transition-transform">
+                                        <ChevronRight className="w-[18px] h-[18px]" />
+                                    </Link>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+                )}
 
-                <div className="text-center mt-10 mb-8">
-                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-200 text-gray-400 mb-3">
-                        <CalendarIcon className="w-6 h-6" />
+                <div className="text-center mt-8 mb-6">
+                    <div className="inline-flex items-center justify-center w-11 h-11 rounded-full bg-gray-800/50 text-gray-500 mb-2">
+                        <CalendarIcon className="w-5 h-5" />
                     </div>
-                    <p className="text-gray-500 font-medium text-sm">That's all for today.</p>
+                    <p className="text-gray-500 text-[13px]">That's all for today.</p>
                 </div>
 
             </main >
