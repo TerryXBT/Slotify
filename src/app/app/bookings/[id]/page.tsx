@@ -43,136 +43,138 @@ export default async function BookingDetailPage({
     const endDate = new Date(booking.end_at)
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-black font-sans pb-24 text-gray-900 dark:text-gray-100">
+        <div className="min-h-screen bg-black text-white font-sans pb-32">
 
             {/* Header */}
-            <header className="sticky top-0 z-30 bg-white/90 dark:bg-[#1C1C1E]/90 backdrop-blur-md px-5 pt-12 pb-4 flex items-center justify-between">
-                <Link href="/app/today" className="w-10 h-10 flex items-center justify-center -ml-2 rounded-full hover:bg-gray-200 transition-colors">
-                    <ArrowLeft className="w-6 h-6 text-blue-600 dark:text-blue-500" />
+            <header className="sticky top-0 z-30 bg-black/80 backdrop-blur-xl border-b border-white/5 px-4 pt-12 pb-3 flex items-center justify-between">
+                <Link href="/app/today" className="flex items-center justify-center w-10 h-10 -ml-2 rounded-full active:bg-white/10 transition-colors">
+                    <ArrowLeft className="w-5 h-5 text-blue-500" />
                 </Link>
-                <h1 className="text-lg font-bold">Booking Details</h1>
-                <button className="w-10 h-10 flex items-center justify-center -mr-2 rounded-full hover:bg-gray-200 transition-colors">
-                    <MoreHorizontal className="w-6 h-6 text-blue-600 dark:text-blue-500" />
+                <div className="font-semibold text-[17px]">Booking Details</div>
+                <button className="flex items-center justify-center w-10 h-10 -mr-2 rounded-full active:bg-white/10 transition-colors">
+                    <MoreHorizontal className="w-5 h-5 text-blue-500" />
                 </button>
             </header>
 
-            <main className="px-5 space-y-6">
+            <main className="px-4 max-w-lg mx-auto space-y-6 pt-6">
 
-                {/* Status Card */}
-                <div className="flex flex-col items-center py-6">
-                    <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center mb-4">
-                        <User className="w-10 h-10 text-gray-400" />
+                {/* Profile Section */}
+                <div className="flex flex-col items-center">
+                    <div className="w-20 h-20 bg-zinc-800 rounded-full flex items-center justify-center mb-4 text-2xl font-bold text-gray-400">
+                        {booking.client_name?.[0]}
                     </div>
-                    <h2 className="text-2xl font-bold">{booking.client_name}</h2>
-                    <div className="flex items-center gap-2 mt-1">
-                        <p className="text-gray-500 font-medium">{booking.services?.name}</p>
-                        <StatusBadge status={booking.status} />
+                    <h2 className="text-[22px] font-bold tracking-tight mb-1">{booking.client_name}</h2>
+                    <div className="flex items-center gap-2 text-[15px] text-gray-400">
+                        <span>{booking.services?.name}</span>
+                        <span className="w-1 h-1 rounded-full bg-gray-600" />
+                        <span className="capitalize text-green-500 font-medium">{booking.status}</span>
                     </div>
                 </div>
 
-                {/* Action Buttons */}
-                <div className="grid grid-cols-3 gap-4">
-                    <a href={`mailto:${booking.client_email}`} className="flex flex-col items-center justify-center gap-2 bg-[#1C1C1E] p-3 rounded-xl shadow-sm border border-gray-800 active:scale-95 transition-transform">
+                {/* Quick Actions */}
+                <div className="grid grid-cols-3 gap-3">
+                    <a href={`mailto:${booking.client_email}`} className="flex flex-col items-center gap-2 bg-[#1C1C1E] p-4 rounded-[14px] active:bg-zinc-800 transition-colors">
                         <Mail className="w-6 h-6 text-blue-500" />
-                        <span className="text-xs font-medium">Email</span>
+                        <span className="text-[11px] font-medium text-blue-500">Email</span>
                     </a>
-                    <a href={`tel:${booking.client_phone || ''}`} className={`flex flex-col items-center justify-center gap-2 bg-[#1C1C1E] p-3 rounded-xl shadow-sm border border-gray-800 active:scale-95 transition-transform ${!booking.client_phone && 'opacity-50 cursor-not-allowed'}`}>
+                    <a href={`tel:${booking.client_phone || ''}`} className={`flex flex-col items-center gap-2 bg-[#1C1C1E] p-4 rounded-[14px] active:bg-zinc-800 transition-colors ${!booking.client_phone && 'opacity-50 pointer-events-none'}`}>
                         <Phone className="w-6 h-6 text-blue-500" />
-                        <span className="text-xs font-medium">Call</span>
+                        <span className="text-[11px] font-medium text-blue-500">Call</span>
                     </a>
-                    <button className="flex flex-col items-center justify-center gap-2 bg-[#1C1C1E] p-3 rounded-xl shadow-sm border border-gray-800 active:scale-95 transition-transform">
+                    <button className="flex flex-col items-center gap-2 bg-[#1C1C1E] p-4 rounded-[14px] active:bg-zinc-800 transition-colors">
                         <MessageSquare className="w-6 h-6 text-blue-500" />
-                        <span className="text-xs font-medium">Message</span>
+                        <span className="text-[11px] font-medium text-blue-500">Message</span>
                     </button>
                 </div>
 
-                {/* Details List */}
-                <div className="bg-[#1C1C1E] rounded-2xl shadow-sm border border-gray-800 overflow-hidden">
-                    <div className="p-4 border-b border-gray-800 flex items-center gap-4">
-                        <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
-                            <Calendar className="w-5 h-5" />
+                {/* Info Group */}
+                <div className="bg-[#1C1C1E] rounded-[14px] overflow-hidden">
+                    {/* Date */}
+                    <div className="flex items-center p-4 border-b border-white/5 active:bg-white/5 transition-colors">
+                        <div className="w-8 flex justify-center mr-3">
+                            <Calendar className="w-5 h-5 text-gray-400" />
                         </div>
-                        <div>
-                            <label className="text-xs font-bold text-gray-500 uppercase">Date</label>
-                            <div className="font-semibold">{format(startDate, 'EEEE, MMMM d, yyyy')}</div>
+                        <div className="flex-1">
+                            <div className="text-[15px] text-gray-400 mb-0.5">Date</div>
+                            <div className="text-[17px] font-normal">{format(startDate, 'EEEE, MMMM d, yyyy')}</div>
                         </div>
                     </div>
-                    <div className="p-4 border-b border-gray-800 flex items-center gap-4">
-                        <div className="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center text-orange-600">
-                            <Clock className="w-5 h-5" />
+
+                    {/* Time */}
+                    <div className="flex items-center p-4 border-b border-white/5 active:bg-white/5 transition-colors">
+                        <div className="w-8 flex justify-center mr-3">
+                            <Clock className="w-5 h-5 text-gray-400" />
                         </div>
-                        <div>
-                            <label className="text-xs font-bold text-gray-500 uppercase">Time</label>
-                            <div className="font-semibold">
+                        <div className="flex-1">
+                            <div className="text-[15px] text-gray-400 mb-0.5">Time</div>
+                            <div className="text-[17px] font-normal">
                                 {format(startDate, 'h:mm a')} - {format(endDate, 'h:mm a')}
-                                <span className="text-gray-500 font-normal ml-1">({booking.services?.duration_minutes} min)</span>
                             </div>
                         </div>
                     </div>
-                    {/* Location / Meeting Link */}
+
+                    {/* Location / Link */}
                     {(booking.meeting_location || booking.services?.default_location) && (
-                        <div className="p-4 flex items-center gap-4">
-                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${booking.services?.location_type === 'online'
-                                    ? 'bg-blue-50 text-blue-600'
-                                    : 'bg-purple-50 text-purple-600'
-                                }`}>
+                        <div className="flex items-center p-4 active:bg-white/5 transition-colors">
+                            <div className="w-8 flex justify-center mr-3">
                                 {booking.services?.location_type === 'online' ? (
-                                    <Video className="w-5 h-5" />
+                                    <Video className="w-5 h-5 text-gray-400" />
                                 ) : (
-                                    <MapPin className="w-5 h-5" />
+                                    <MapPin className="w-5 h-5 text-gray-400" />
                                 )}
                             </div>
-                            <div className="flex-1 min-w-0">
-                                <label className="text-xs font-bold text-gray-500 uppercase">
+                            <div className="flex-1 overflow-hidden">
+                                <div className="text-[15px] text-gray-400 mb-0.5">
                                     {booking.services?.location_type === 'online' ? 'Meeting Link' : 'Location'}
-                                </label>
+                                </div>
                                 {booking.services?.location_type === 'online' ? (
                                     <a
                                         href={booking.meeting_location || booking.services?.default_location}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 truncate"
+                                        className="text-[17px] text-blue-500 flex items-center gap-1 truncate"
                                     >
-                                        {booking.meeting_location || booking.services?.default_location}
-                                        <ExternalLink className="w-4 h-4 flex-shrink-0" />
+                                        Join Meeting
+                                        <ExternalLink className="w-3 h-3 opacity-60" />
                                     </a>
                                 ) : (
-                                    <div className="font-semibold truncate">
+                                    <div className="text-[17px] truncate">
                                         {booking.meeting_location || booking.services?.default_location}
                                     </div>
                                 )}
                             </div>
                         </div>
                     )}
-                </div >
+                </div>
 
-                {/* Client Notes */}
-                {
-                    booking.notes && (
-                        <div className="bg-[#1C1C1E] rounded-2xl shadow-sm border border-gray-800 p-5">
-                            <h3 className="font-bold mb-2 text-white">Client Notes</h3>
-                            <p className="text-gray-600 italic">"{booking.notes}"</p>
-                        </div>
-                    )
-                }
+                {/* Notes Group */}
+                {booking.notes && (
+                    <div className="bg-[#1C1C1E] rounded-[14px] p-4">
+                        <div className="text-[15px] text-gray-400 mb-2">Notes</div>
+                        <p className="text-[17px] leading-relaxed">{booking.notes}</p>
+                    </div>
+                )}
 
-                {/* Management Actions */}
-                <div className="pt-4 space-y-3">
-                    <Link href={`/app/bookings/${booking.id}/reschedule`} className="w-full flex items-center justify-center gap-2 bg-[#1C1C1E] text-white font-bold py-4 rounded-xl border border-gray-200 shadow-sm active:scale-[0.98] transition-all">
-                        <RefreshCw className="w-5 h-5" />
+                {/* Footer Actions */}
+                <div className="space-y-3 pt-4">
+                    <Link
+                        href={`/app/bookings/${booking.id}/reschedule`}
+                        className="flex items-center justify-center w-full bg-[#1C1C1E] text-blue-500 font-semibold text-[17px] py-[14px] rounded-[14px] active:opacity-70 transition-opacity"
+                    >
                         Reschedule Booking
                     </Link>
 
                     <form action={cancelBookingAsPro}>
                         <input type="hidden" name="bookingId" value={booking.id} />
-                        <button type="submit" className="w-full flex items-center justify-center gap-2 bg-red-50 text-red-600 font-bold py-4 rounded-xl border border-transparent active:scale-[0.98] transition-all">
-                            <Ban className="w-5 h-5" />
+                        <button
+                            type="submit"
+                            className="flex items-center justify-center w-full bg-[#1C1C1E] text-[#FF453A] font-semibold text-[17px] py-[14px] rounded-[14px] active:opacity-70 transition-opacity"
+                        >
                             Cancel Booking
                         </button>
                     </form>
                 </div>
-
-            </main >
-        </div >
+            </main>
+        </div>
     )
 }

@@ -1,9 +1,9 @@
-import { createClient } from '@/utils/supabase/server'
+import { createAdminClient } from '@/utils/supabase/admin'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
     try {
-        const supabase = await createClient()
+        const supabase = createAdminClient()
 
         const body = await request.json()
         const {
@@ -25,15 +25,47 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        // Check for overlapping bookings
-        const { data: existingBookings } = await supabase
+        // Validate Service & Provider
+        const { data: service } = await supabase
+            .from('services')
+            .select('id, provider_id, is_active')
+            .eq('id', service_id)
+            .single()
+
+        if (!service) {
+            return NextResponse.json(
+                { error: 'Service not found' },
+                { status: 404 }
+            )
+        }
+
+        if (service.provider_id !== provider_id) {
+            return NextResponse.json(
+                { error: 'Service does not belong to this provider' },
+                { status: 400 }
+            )
+        }
+
+        if (!service.is_active) {
+            console.log('Service is not active:', service_id)
+            return NextResponse.json(
+                { error: 'This service is currently not available for booking' },
+                { status: 400 }
+            )
+        }
+
+        // Check for overlapping bookings (Robust Logic)
+        // start_at < existing_end AND end_at > existing_start
+        const { data: conflict } = await supabase
             .from('bookings')
             .select('id')
             .eq('provider_id', provider_id)
-            .eq('status', 'confirmed')
-            .or(`and(start_at.lte.${start_at},end_at.gt.${start_at}),and(start_at.lt.${end_at},end_at.gte.${end_at})`)
+            .neq('status', 'cancelled') // Ignore cancelled bookings
+            .lt('start_at', end_at)
+            .gt('end_at', start_at)
+            .limit(1)
 
-        if (existingBookings && existingBookings.length > 0) {
+        if (conflict && conflict.length > 0) {
             return NextResponse.json(
                 { error: 'This time slot is no longer available' },
                 { status: 409 }
@@ -42,6 +74,7 @@ export async function POST(request: NextRequest) {
 
         // Create booking
         const { data: booking, error } = await supabase
+            // @ts-ignore
             .from('bookings')
             .insert({
                 provider_id,

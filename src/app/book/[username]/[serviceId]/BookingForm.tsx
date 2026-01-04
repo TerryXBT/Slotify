@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { format, addDays, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, parse, addMinutes, isBefore, startOfDay, addMonths, subMonths } from 'date-fns'
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Globe } from 'lucide-react'
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isToday, addMinutes, startOfDay, addMonths, subMonths } from 'date-fns'
+import { ChevronLeft, ChevronRight, Globe, Loader2 } from 'lucide-react'
+import { getAvailableSlots } from '@/app/actions/availability'
 
 interface Availability {
     day_of_week: number
@@ -31,61 +32,44 @@ export default function BookingForm({ service, providerId, providerName, availab
     const [notes, setNotes] = useState('')
 
     // Get available times for selected date
-    const getAvailableTimesForDate = (date: Date) => {
-        const dayOfWeek = date.getDay()
-
-        // If no availability rules, default to 8am-8pm
-        if (availability.length === 0) {
-            const times: string[] = []
-            const startTime = parse('08:00:00', 'HH:mm:ss', date)
-            const endTime = parse('20:00:00', 'HH:mm:ss', date)
-
-            let current = startTime
-            while (isBefore(current, endTime)) {
-                times.push(format(current, 'h:mma'))
-                current = addMinutes(current, service.duration_minutes)
-            }
-            return times
-        }
-
-        const dayAvailability = availability.filter(a => a.day_of_week === dayOfWeek)
-
-        if (dayAvailability.length === 0) return []
-
-        const times: string[] = []
-        dayAvailability.forEach(slot => {
-            const startTime = parse(slot.start_time_local, 'HH:mm:ss', date)
-            const endTime = parse(slot.end_time_local, 'HH:mm:ss', date)
-
-            let current = startTime
-            while (isBefore(current, endTime)) {
-                times.push(format(current, 'h:mma'))
-                current = addMinutes(current, service.duration_minutes)
-            }
-        })
-
-        return times
-    }
-
-    const isDateAvailable = (date: Date) => {
-        // If no availability rules at all, all dates are available
-        if (availability.length === 0) return date >= startOfDay(new Date())
-
-        // Otherwise, check if this day of week has rules
-        const dayOfWeek = date.getDay()
-        return availability.some(a => a.day_of_week === dayOfWeek) && date >= startOfDay(new Date())
-    }
+    const [availableTimes, setAvailableTimes] = useState<string[]>([])
+    const [loadingSlots, setLoadingSlots] = useState(false)
 
     // Generate calendar days
     const monthStart = startOfMonth(currentMonth)
     const monthEnd = endOfMonth(currentMonth)
     const calendarDays = eachDayOfInterval({ start: monthStart, end: monthEnd })
 
-    const handleDateSelect = (date: Date) => {
-        if (!isDateAvailable(date)) return
+    const handleDateSelect = async (date: Date) => {
+        // Optimistic UI update
         setSelectedDate(date)
         setSelectedTime(null)
         setStep('time')
+
+        // Fetch slots
+        setLoadingSlots(true)
+        setAvailableTimes([])
+
+        try {
+            // Adjust for Client TZ -> Provider Rule matching (via simple ISO date YYYY-MM-DD)
+            // Ideally we pass the full date or handle TZ explicitly.
+            const dateStr = format(date, 'yyyy-MM-dd')
+            const result = await getAvailableSlots(service.id, providerId, dateStr, service.duration_minutes)
+            if (result.slots) {
+                setAvailableTimes(result.slots)
+            }
+        } catch (error) {
+            console.error('Failed to fetch slots', error)
+        } finally {
+            setLoadingSlots(false)
+        }
+    }
+
+    const isDateAvailable = (date: Date) => {
+        // We don't know for sure without asking server, but we can do a high-level check
+        // Or we just allow clicking any future date.
+        // For better UX, we could pre-fetch busy days, but for now allow clicking.
+        return date >= startOfDay(new Date())
     }
 
     const handleTimeSelect = (time: string) => {
@@ -101,12 +85,12 @@ export default function BookingForm({ service, providerId, providerName, availab
 
         try {
             const startAt = new Date(selectedDate)
-            const timeMatch = selectedTime.match(/(\d+):(\d+)(am|pm)/)
+            const timeMatch = selectedTime.match(/(\d+):(\d+)(am|pm)/i)
             if (!timeMatch) return
 
             let hours = parseInt(timeMatch[1])
             const minutes = parseInt(timeMatch[2])
-            const period = timeMatch[3]
+            const period = timeMatch[3].toLowerCase()
 
             if (period === 'pm' && hours !== 12) hours += 12
             if (period === 'am' && hours === 12) hours = 0
@@ -143,31 +127,29 @@ export default function BookingForm({ service, providerId, providerName, availab
         }
     }
 
-    const availableTimes = selectedDate ? getAvailableTimesForDate(selectedDate) : []
-
     return (
         <div>
             {/* Step 1: Select Date */}
             {step === 'date' && (
-                <div>
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white text-center mb-6">
+                <div className="max-w-[300px] mx-auto">
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white text-center mb-4">
                         Select a Day
                     </h2>
 
                     {/* Month Navigation */}
-                    <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center justify-between mb-4">
                         <button
                             onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-                            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+                            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
                         >
                             <ChevronLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                         </button>
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                        <h3 className="text-base font-medium text-gray-900 dark:text-white">
                             {format(currentMonth, 'MMMM yyyy')}
                         </h3>
                         <button
                             onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-                            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+                            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
                         >
                             <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                         </button>
@@ -175,15 +157,15 @@ export default function BookingForm({ service, providerId, providerName, availab
 
                     {/* Calendar Grid */}
                     <div className="mb-4">
-                        <div className="grid grid-cols-7 gap-2 mb-2">
+                        <div className="grid grid-cols-7 gap-1 mb-1">
                             {['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'].map(day => (
-                                <div key={day} className="text-center text-xs font-semibold text-gray-600 dark:text-gray-400 py-2">
+                                <div key={day} className="text-center text-[10px] font-medium text-gray-500 dark:text-gray-400 py-1">
                                     {day}
                                 </div>
                             ))}
                         </div>
 
-                        <div className="grid grid-cols-7 gap-2">
+                        <div className="grid grid-cols-7 gap-1">
                             {/* Add empty cells for days before month starts */}
                             {Array.from({ length: (monthStart.getDay() + 6) % 7 }).map((_, i) => (
                                 <div key={`empty-${i}`} />
@@ -199,12 +181,13 @@ export default function BookingForm({ service, providerId, providerName, availab
                                         onClick={() => handleDateSelect(date)}
                                         disabled={!available || isPast}
                                         className={`
-                                            aspect-square rounded-full flex items-center justify-center text-sm font-semibold transition-all
+                                            w-9 h-9 mx-auto rounded-full flex items-center justify-center text-xs font-medium transition-all
                                             ${available && !isPast
                                                 ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40'
                                                 : 'text-gray-300 dark:text-gray-700 cursor-not-allowed'
                                             }
-                                            ${isToday(date) && 'ring-2 ring-blue-500'}
+                                            ${isToday(date) && 'ring-1 ring-blue-500'}
+                                            ${selectedDate && date.getTime() === selectedDate.getTime() ? 'bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-600 dark:text-white' : ''}
                                         `}
                                     >
                                         {format(date, 'd')}
@@ -214,10 +197,10 @@ export default function BookingForm({ service, providerId, providerName, availab
                         </div>
                     </div>
 
-                    <div className="text-center text-sm text-gray-500 dark:text-gray-400 mt-6">
-                        <div className="flex items-center justify-center gap-2">
-                            <Globe className="w-4 h-4" />
-                            <span>Time Zone: {Intl.DateTimeFormat().resolvedOptions().timeZone}</span>
+                    <div className="text-center text-xs text-gray-400 dark:text-gray-500 mt-4">
+                        <div className="flex items-center justify-center gap-1.5">
+                            <Globe className="w-3.5 h-3.5" />
+                            <span>{Intl.DateTimeFormat().resolvedOptions().timeZone}</span>
                         </div>
                     </div>
                 </div>
@@ -257,7 +240,12 @@ export default function BookingForm({ service, providerId, providerName, availab
                         Duration: {service.duration_minutes} min
                     </p>
 
-                    {availableTimes.length > 0 ? (
+                    {loadingSlots ? (
+                        <div className="flex flex-col items-center justify-center py-12 text-gray-500 dark:text-gray-400">
+                            <Loader2 className="w-8 h-8 animate-spin mb-2" />
+                            <p>Loading available slots...</p>
+                        </div>
+                    ) : availableTimes.length > 0 ? (
                         <div className="space-y-2 max-h-96 overflow-y-auto">
                             {availableTimes.map(time => (
                                 <button

@@ -1,7 +1,9 @@
 'use client'
 
-import { Clock, Copy, Check } from 'lucide-react'
+import { MoreHorizontal, Link as LinkIcon, Edit, CheckCircle } from 'lucide-react'
 import { useState } from 'react'
+import ServiceActionsSheet, { ActionItem } from './ServiceActionsSheet'
+import Link from 'next/link'
 
 interface Service {
     id: string
@@ -18,75 +20,90 @@ interface ServiceCardProps {
 }
 
 export default function ServiceCard({ service, username }: ServiceCardProps) {
-    const [copied, setCopied] = useState(false)
+    const [isSheetOpen, setIsSheetOpen] = useState(false)
+    const [showToast, setShowToast] = useState(false)
 
     const handleCopyLink = async () => {
         const bookingUrl = `${window.location.origin}/book/${username}/${service.id}`
         await navigator.clipboard.writeText(bookingUrl)
-        setCopied(true)
-        setTimeout(() => setCopied(false), 2000)
+
+        // Show local toast
+        setShowToast(true)
+        setTimeout(() => setShowToast(false), 3000)
     }
 
+    const actions: ActionItem[] = [
+        {
+            label: 'Copy Booking Link',
+            icon: <LinkIcon className="w-5 h-5" />,
+            onClick: handleCopyLink
+        },
+        {
+            label: 'Edit Service',
+            icon: <Edit className="w-5 h-5" />,
+            onClick: () => {
+                // TODO: Navigate to edit page
+                window.location.href = `/app/settings?tab=services`
+            }
+        }
+    ]
+
     return (
-        <div className="bg-[#1C1C1E] rounded-2xl p-4 border border-gray-800/50 transition-all">
-            {/* Header */}
-            <div className="flex items-start justify-between mb-3">
-                <div className="flex-1 min-w-0">
-                    <h3 className="text-[17px] font-bold text-white mb-0.5 leading-tight">
-                        {service.name}
-                    </h3>
-                    {service.description && (
-                        <p className="text-[13px] text-gray-400 line-clamp-2 mt-1">
-                            {service.description}
-                        </p>
-                    )}
-                </div>
-                <span className={`ml-3 flex-shrink-0 px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide ${service.is_active
-                        ? 'bg-green-900/30 text-green-400'
-                        : 'bg-gray-800 text-gray-500'
-                    }`}>
-                    {service.is_active ? 'Active' : 'Inactive'}
-                </span>
-            </div>
+        <>
+            <div
+                onClick={() => setIsSheetOpen(true)}
+                className="bg-[#1C1C1E] rounded-2xl p-4 border border-gray-800/50 active:bg-gray-800/50 transition-colors cursor-pointer relative overflow-hidden"
+            >
+                <div className="flex items-center justify-between gap-4">
 
-            {/* Details & Action */}
-            <div className="flex items-center justify-between pt-3 border-t border-gray-800/50">
-                <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-1.5 text-gray-300">
-                        <Clock className="w-[14px] h-[14px] text-gray-500" />
-                        <span className="text-[13px] font-medium">{service.duration_minutes} min</span>
-                    </div>
-                    <div className="w-px h-3.5 bg-gray-700"></div>
-                    {service.price_cents !== null && service.price_cents !== undefined && (
-                        <div className="flex items-center gap-1.5 text-gray-300">
-                            <span className="text-[13px] font-medium">
-                                {service.price_cents === 0 ? 'Free' : `$${(service.price_cents / 100).toFixed(2)}`}
+                    {/* Left: Info */}
+                    <div className="flex-1 min-w-0">
+                        <h3 className="text-[17px] font-semibold text-white leading-tight mb-1 truncate">
+                            {service.name}
+                        </h3>
+                        <div className="flex items-center gap-1.5 text-[15px] text-gray-400">
+                            <span>
+                                {service.duration_minutes > 1440
+                                    ? 'Custom Duration'
+                                    : `${service.duration_minutes} min`}
                             </span>
-                        </div>
-                    )}
-                </div>
 
-                <button
-                    onClick={handleCopyLink}
-                    disabled={copied}
-                    className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[13px] font-semibold transition-all ${copied
-                            ? 'bg-green-900/30 text-green-400'
-                            : 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white active:scale-95'
-                        }`}
-                >
-                    {copied ? (
-                        <>
-                            <Check className="w-[14px] h-[14px]" />
-                            Copied
-                        </>
-                    ) : (
-                        <>
-                            <Copy className="w-[14px] h-[14px]" />
-                            Copy Link
-                        </>
-                    )}
-                </button>
+                            {service.price_cents !== null && service.price_cents !== undefined && (
+                                <>
+                                    <span className="text-gray-600">•</span>
+                                    <span>
+                                        {service.price_cents === 0 ? 'Free' : `$${(service.price_cents / 100).toFixed(2)}`}
+                                    </span>
+                                </>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Right: Menu */}
+                    <div className="flex items-center gap-3 flex-shrink-0">
+                        <div className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-800/50 text-gray-400">
+                            <MoreHorizontal className="w-5 h-5" />
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
+
+            <ServiceActionsSheet
+                isOpen={isSheetOpen}
+                onClose={() => setIsSheetOpen(false)}
+                actions={actions}
+                title={service.name}
+            />
+
+            {/* Local Toast */}
+            {showToast && (
+                <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                    <div className="bg-white/10 backdrop-blur-xl border border-white/10 text-white px-4 py-3 rounded-full shadow-2xl flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4 text-green-400" />
+                        <span className="text-[14px] font-semibold">Link Copied</span>
+                    </div>
+                </div>
+            )}
+        </>
     )
 }
