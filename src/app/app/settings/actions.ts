@@ -33,7 +33,7 @@ export async function updateProfile(formData: FormData) {
     if (email) updateData.email = email
     if (cancellationPolicy) updateData.cancellation_policy = cancellationPolicy
 
-    const { error } = await adminClient
+    const { error } = await (adminClient as any)
         .from('profiles')
         .update(updateData)
         .eq('id', user.id)
@@ -94,7 +94,7 @@ export async function createService(formData: FormData) {
 
     const adminClient = createAdminClient()
 
-    const { error } = await adminClient
+    const { error } = await (adminClient as any)
         .from('services')
         .insert({
             provider_id: user.id,
@@ -150,7 +150,7 @@ export async function updateService(id: string, formData: FormData) {
 
     const adminClient = createAdminClient()
 
-    const { error } = await adminClient
+    const { error } = await (adminClient as any)
         .from('services')
         .update({
             name,
@@ -184,7 +184,7 @@ export async function deleteService(id: string) {
         const adminClient = createAdminClient()
 
         // Soft delete: set deleted_at timestamp
-        const { error } = await adminClient
+        const { error } = await (adminClient as any)
             .from('services')
             .update({ deleted_at: new Date().toISOString() })
             .eq('id', id)
@@ -216,7 +216,7 @@ export async function restoreService(id: string) {
         const adminClient = createAdminClient()
 
         // Clear deleted_at to restore
-        const { error } = await adminClient
+        const { error } = await (adminClient as any)
             .from('services')
             .update({ deleted_at: null })
             .eq('id', id)
@@ -288,7 +288,7 @@ export async function toggleServiceActive(id: string, isActive: boolean) {
 
     const adminClient = createAdminClient()
 
-    const { error } = await adminClient
+    const { error } = await (adminClient as any)
         .from('services')
         .update({ is_active: isActive })
         .eq('id', id)
@@ -320,7 +320,7 @@ export async function createAvailabilityRule(formData: FormData) {
         const start_time = formData.get('start_time') as string
         const end_time = formData.get('end_time') as string
 
-        const { error } = await adminClient
+        const { error} = await (adminClient as any)
             .from('availability_rules')
             .insert({
                 provider_id: user.id,
@@ -355,7 +355,7 @@ export async function updateAvailabilityRule(id: string, formData: FormData) {
         const start_time = formData.get('start_time') as string
         const end_time = formData.get('end_time') as string
 
-        const { error } = await adminClient
+        const { error } = await (adminClient as any)
             .from('availability_rules')
             .update({
                 start_time_local: `${start_time}:00`,

@@ -3,7 +3,7 @@
 import { format } from 'date-fns'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Clock, MapPin, StickyNote, Phone, CheckCircle } from 'lucide-react'
+import { Clock, MapPin, StickyNote, Phone, CheckCircle, ChevronRight } from 'lucide-react'
 
 // Define a subset of the booking type needed for UI
 interface UpNextCardProps {
@@ -28,90 +28,46 @@ export default function UpNextCard({ booking }: UpNextCardProps) {
         router.push(`/app/bookings/${booking.id}`)
     }
 
-    const handlePhoneClick = (e: React.MouseEvent) => {
-        e.stopPropagation()
-        // Default anchor behavior will handle the tel: link
-    }
-
-    const handleViewBookingClick = (e: React.MouseEvent) => {
-        e.stopPropagation()
-        router.push(`/app/bookings/${booking.id}`)
-    }
-
     return (
         <div
             onClick={handleCardClick}
-            className="bg-[#1C1C1E] rounded-2xl p-4 border border-gray-800/50 relative overflow-hidden cursor-pointer active:bg-gray-800/50 transition-colors group"
+            className="bg-[#1C1C1E] rounded-2xl p-5 active:scale-[0.99] transition-transform cursor-pointer group"
         >
-            <div className="flex justify-between items-start mb-4">
-                <div className="flex-1">
-                    <h3 className="text-[20px] font-bold text-white leading-tight">{booking.client_name}</h3>
-                    <p className="text-blue-500 font-medium text-[15px] mt-0.5">{booking.services?.name}</p>
-                </div>
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-900/30 text-green-400 text-[11px] font-bold uppercase tracking-wide">
-                    <CheckCircle className="w-3 h-3" />
-                    Confirmed
-                </div>
-            </div>
-
-            <div className="grid gap-3 mb-4">
-                <div className="flex items-center gap-3 text-gray-200">
-                    <div className="w-9 h-9 rounded-xl bg-gray-800/50 flex items-center justify-center">
-                        <Clock className="w-[18px] h-[18px] text-gray-400" />
-                    </div>
-                    <div>
-                        <span className="text-[17px] font-semibold block leading-tight text-white">
-                            {format(new Date(booking.start_at), 'h:mm a')}
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-5">
+                    <div className="flex flex-col items-center min-w-[3.5rem]">
+                        <span className="text-3xl font-bold text-white leading-none tracking-tight">
+                            {format(new Date(booking.start_at), 'h:mm')}
                         </span>
-                        <span className="text-[13px] text-gray-500">
-                            Until {format(new Date(booking.end_at), 'h:mm a')} · {booking.services?.duration_minutes}m
+                        <span className="text-xs font-bold text-gray-500 uppercase mt-1">
+                            {format(new Date(booking.start_at), 'a')}
                         </span>
                     </div>
-                </div>
-                <div className="flex items-center gap-3 text-gray-200">
-                    <div className="w-9 h-9 rounded-xl bg-gray-800/50 flex items-center justify-center">
-                        <MapPin className="w-[18px] h-[18px] text-gray-400" />
-                    </div>
+
+                    <div className="h-10 w-px bg-gray-800"></div>
+
                     <div>
-                        <span className="text-[15px] font-medium block leading-tight text-white">Downtown Studio</span>
-                        <span className="text-[13px] text-gray-500">Room 4B</span>
+                        <h3 className="text-[17px] font-bold text-white leading-snug">
+                            {booking.client_name}
+                        </h3>
+                        <div className="flex items-center gap-1.5 text-[14px] text-gray-400 mt-0.5">
+                            <span className="truncate max-w-[150px]">{booking.services?.name}</span>
+                            {booking.services?.duration_minutes && (
+                                <>
+                                    <span>·</span>
+                                    <span>{booking.services.duration_minutes}m</span>
+                                </>
+                            )}
+                        </div>
                     </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                    <ChevronRight className="w-5 h-5 text-gray-600 group-hover:text-gray-400 transition-colors" />
                 </div>
             </div>
 
-            {booking.notes && (
-                <div className="mb-4">
-                    <div className="bg-gray-800/30 rounded-xl p-3 flex gap-2.5">
-                        <StickyNote className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
-                        <p className="text-[13px] text-gray-300 leading-relaxed">
-                            "{booking.notes}"
-                        </p>
-                    </div>
-                </div>
-            )}
-
-            <div className="flex gap-2">
-                <button
-                    onClick={handleViewBookingClick}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white py-3 rounded-xl font-semibold text-[15px] active:scale-[0.98] transition-all flex justify-center items-center gap-2"
-                >
-                    View booking
-                </button>
-
-                {booking.client_phone ? (
-                    <a
-                        href={`tel:${booking.client_phone}`}
-                        onClick={handlePhoneClick}
-                        className="w-11 h-11 flex items-center justify-center bg-gray-800/50 text-gray-400 rounded-xl hover:bg-gray-700/50 active:scale-95 transition-all z-10"
-                    >
-                        <Phone className="w-[18px] h-[18px]" />
-                    </a>
-                ) : (
-                    <button disabled className="w-11 h-11 flex items-center justify-center bg-gray-800/20 text-gray-600 rounded-xl cursor-not-allowed">
-                        <Phone className="w-[18px] h-[18px]" />
-                    </button>
-                )}
-            </div>
+            {/* Optional Footer: Location if needed, but keep minimal for now per design */}
         </div>
     )
 }

@@ -1,9 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isToday, addMinutes, startOfDay, addMonths, subMonths } from 'date-fns'
+import { startOfMonth, endOfMonth, eachDayOfInterval, isToday, addMinutes, startOfDay, addMonths, subMonths, format } from 'date-fns'
 import { ChevronLeft, ChevronRight, Globe, Loader2 } from 'lucide-react'
 import { getAvailableSlots } from '@/app/actions/availability'
+import { createBookingAction } from '@/app/actions/booking'
 
 interface Availability {
     day_of_week: number
@@ -98,27 +99,23 @@ export default function BookingForm({ service, providerId, providerName, availab
             startAt.setHours(hours, minutes, 0)
             const endAt = addMinutes(startAt, service.duration_minutes)
 
-            const response = await fetch('/api/book', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    provider_id: providerId,
-                    service_id: service.id,
-                    client_name: clientName,
-                    client_email: clientEmail,
-                    client_phone: clientPhone,
-                    start_at: startAt.toISOString(),
-                    end_at: endAt.toISOString(),
-                    notes
-                })
+            const result = await createBookingAction({
+                provider_id: providerId,
+                service_id: service.id,
+                client_name: clientName,
+                client_email: clientEmail,
+                client_phone: clientPhone,
+                start_at: startAt.toISOString(),
+                // end_at is calculated server side in action, but we need start_at
+                notes
             })
 
-            if (response.ok) {
+            if (result.success) {
                 alert('Booking confirmed! You will receive a confirmation email.')
+                // Redirect or show success state
                 window.location.href = '/'
             } else {
-                const data = await response.json()
-                alert(data.error || 'Booking failed. Please try again.')
+                alert(result.error || 'Booking failed. Please try again.')
             }
         } catch (error) {
             alert('An error occurred. Please try again.')

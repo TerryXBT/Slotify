@@ -52,39 +52,22 @@ export default function ServiceCard({ service, username }: ServiceCardProps) {
         <>
             <div
                 onClick={() => setIsSheetOpen(true)}
-                className="bg-[#1C1C1E] rounded-2xl p-4 border border-gray-800/50 active:bg-gray-800/50 transition-colors cursor-pointer relative overflow-hidden"
+                className="bg-[#1C1C1E] rounded-2xl w-32 h-32 p-3 flex flex-col justify-between active:scale-95 transition-all cursor-pointer relative overflow-hidden snap-start flex-shrink-0"
             >
-                <div className="flex items-center justify-between gap-4">
-
-                    {/* Left: Info */}
-                    <div className="flex-1 min-w-0">
-                        <h3 className="text-[17px] font-semibold text-white leading-tight mb-1 truncate">
-                            {service.name}
-                        </h3>
-                        <div className="flex items-center gap-1.5 text-[15px] text-gray-400">
-                            <span>
-                                {service.duration_minutes > 1440
-                                    ? 'Custom Duration'
-                                    : `${service.duration_minutes} min`}
-                            </span>
-
-                            {service.price_cents !== null && service.price_cents !== undefined && (
-                                <>
-                                    <span className="text-gray-600">•</span>
-                                    <span>
-                                        {service.price_cents === 0 ? 'Free' : `$${(service.price_cents / 100).toFixed(2)}`}
-                                    </span>
-                                </>
-                            )}
-                        </div>
+                <div className="flex justify-between items-start">
+                    {/* Placeholder Icon or First Letter */}
+                    <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 font-semibold text-sm">
+                        {service.name[0].toUpperCase()}
                     </div>
+                </div>
 
-                    {/* Right: Menu */}
-                    <div className="flex items-center gap-3 flex-shrink-0">
-                        <div className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-800/50 text-gray-400">
-                            <MoreHorizontal className="w-5 h-5" />
-                        </div>
-                    </div>
+                <div>
+                    <h3 className="text-[14px] font-semibold text-white leading-tight line-clamp-2 mb-1">
+                        {service.name}
+                    </h3>
+                    <p className="text-[12px] text-gray-500">
+                        {service.price_cents === 0 ? 'Free' : `$${(service.price_cents / 100).toFixed(2)}`}
+                    </p>
                 </div>
             </div>
 

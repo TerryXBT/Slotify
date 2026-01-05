@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, Clock, Check } from 'lucide-react'
 import { fetchSlots } from '@/app/actions'
 import { sendConfirmationEmail } from '@/app/actions/emails'
 import { createClient } from '@/utils/supabase/client' // For submitting the booking
+import { createBookingAction } from '@/app/actions/booking'
 import clsx from 'clsx'
 
 type Slot = {
@@ -28,12 +29,19 @@ type Profile = {
 
 export default function BookingFlow({
     profile,
-    services
+    services,
+    preSelectedServiceId
 }: {
     profile: Profile
     services: Service[]
+    preSelectedServiceId?: string
 }) {
-    const [selectedService, setSelectedService] = useState<Service | null>(services.length === 1 ? services[0] : null)
+    const [selectedService, setSelectedService] = useState<Service | null>(() => {
+        if (preSelectedServiceId) {
+            return services.find(s => s.id === preSelectedServiceId) || null
+        }
+        return services.length === 1 ? services[0] : null
+    })
     const [selectedDate, setSelectedDate] = useState<Date | null>(null)
     const [currentMonth, setCurrentMonth] = useState<Date>(new Date())
     const [slots, setSlots] = useState<Slot[]>([])
@@ -79,23 +87,23 @@ export default function BookingFlow({
         setError(null)
 
         try {
-            const supabase = createClient()
-            // We use RPC 'create_booking' (Assuming it exists and is public accessible? 
-            // Wait, schema says RLS specific policies.
-            // And 'create_booking' is SECURITY DEFINER.
-            // AND we need to call it via RPC.
-            // Supabase Client can call RPC.
-
-            const { data, error } = await supabase.rpc('create_booking', {
-                p_provider_id: profile.id,
-                p_service_id: selectedService.id,
-                p_start_at: selectedSlot.start,
-                p_client_name: clientName,
-                p_client_email: clientEmail,
-                p_notes: notes
+            // Call Server Action
+            const result = await createBookingAction({
+                provider_id: profile.id,
+                service_id: selectedService.id,
+                start_at: selectedSlot.start,
+                client_name: clientName,
+                client_email: clientEmail,
+                client_phone: null,
+                notes: notes
             })
 
-            if (error) throw error
+            if (result.error) {
+                throw new Error(result.error)
+            }
+
+            const data = result.data
+            if (!data) throw new Error('Booking created but no data returned')
 
             // Trigger Email
             await sendConfirmationEmail(data.id)

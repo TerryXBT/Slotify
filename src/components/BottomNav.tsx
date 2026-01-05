@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Calendar, Users, Settings } from 'lucide-react'
+import { Home, Calendar, Briefcase, Settings } from 'lucide-react'
 
 export default function BottomNav() {
     const pathname = usePathname()
@@ -10,7 +10,7 @@ export default function BottomNav() {
     const navItems = [
         { href: '/app/today', icon: Home, label: 'Home' },
         { href: '/app/week', icon: Calendar, label: 'Calendar' },
-        { href: '/app/bookings', icon: Users, label: 'Clients' },
+        { href: '/app/services', icon: Briefcase, label: 'Services' },
         { href: '/app/settings', icon: Settings, label: 'Settings' },
     ]
 
@@ -24,7 +24,7 @@ export default function BottomNav() {
                             key={href}
                             href={href}
                             className={`flex flex-col items-center justify-center gap-1 transition-colors ${isActive
-                                ? 'text-blue-500'
+                                ? 'text-white'
                                 : 'text-gray-500 hover:text-gray-300'
                                 }`}
                         >

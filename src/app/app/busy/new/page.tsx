@@ -1,91 +1,110 @@
 import { createBusyBlock } from '../actions'
-import { ArrowLeft, Clock, Calendar } from 'lucide-react'
+import { ArrowLeft, Clock, Calendar, Check } from 'lucide-react'
 import Link from 'next/link'
 
 export default function NewBusyBlockPage() {
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-black font-sans pb-24 text-gray-900 dark:text-gray-100">
+        <div className="min-h-screen bg-black text-white font-sans pb-safe">
 
-            {/* Header */}
-            <header className="sticky top-0 z-30 bg-white/90 dark:bg-[#1C1C1E]/90 backdrop-blur-md px-5 pt-12 pb-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <Link href="/app/today" className="text-blue-600 font-medium text-base">
+            {/* iOS Modal Header */}
+            <header className="sticky top-0 z-30 bg-[#1C1C1E]/80 backdrop-blur-md border-b border-gray-800/50 pt-safe-top">
+                <div className="px-5 h-[52px] flex items-center justify-between">
+                    <Link
+                        href="/app/today"
+                        className="text-[17px] text-blue-500 active:opacity-50 transition-opacity"
+                    >
                         Cancel
                     </Link>
+                    <h1 className="text-[17px] font-semibold text-white">New Block</h1>
+                    <div className="w-[50px]"></div> {/* Spacer for balance */}
                 </div>
-                <h1 className="text-lg font-bold">New Busy Block</h1>
-                <div className="w-12"></div> {/* Spacer for center alignment */}
             </header>
 
-            <main className="px-5 mt-4">
+            <main className="px-5 pt-6">
                 <form action={createBusyBlock} className="space-y-6">
 
-                    {/* Title Input */}
-                    <div className="bg-[#1C1C1E] rounded-xl px-4 py-1 shadow-sm border border-gray-800">
-                        <input
-                            name="title"
-                            type="text"
-                            placeholder="Title (e.g., Lunch, Appointment)"
-                            className="w-full py-3 bg-transparent text-lg font-medium outline-none placeholder:text-gray-400"
-                        />
+                    {/* Section 1: Title */}
+                    <div className="space-y-2">
+                        <div className="overflow-hidden rounded-xl bg-[#1C1C1E] divide-y divide-gray-800/50">
+                            <div className="px-4 py-3">
+                                <input
+                                    name="title"
+                                    type="text"
+                                    placeholder="Title (e.g. Lunch)"
+                                    className="w-full bg-transparent text-[17px] text-white placeholder:text-gray-500 outline-none"
+                                />
+                            </div>
+                        </div>
+                        <p className="px-4 text-[13px] text-gray-500">
+                            Give your busy block a name.
+                        </p>
                     </div>
 
-                    {/* Time Selection */}
-                    <div className="bg-[#1C1C1E] rounded-xl shadow-sm border border-gray-800 overflow-hidden">
-                        <div className="p-4 border-b border-gray-800 flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center text-red-500">
-                                    <Calendar className="w-5 h-5" />
+                    {/* Section 2: Time Settings */}
+                    <div className="space-y-2">
+                        <div className="overflow-hidden rounded-xl bg-[#1C1C1E] divide-y divide-gray-800/50">
+
+                            {/* Date Row */}
+                            <div className="flex items-center justify-between px-4 py-3.5 active:bg-gray-800/30 transition-colors">
+                                <div className="flex items-center gap-3">
+                                    <Calendar className="w-5 h-5 text-red-500" />
+                                    <span className="text-[17px] text-white">Date</span>
                                 </div>
-                                <span className="font-medium">Date</span>
+                                <input
+                                    name="date"
+                                    type="date"
+                                    required
+                                    className="bg-transparent text-[17px] text-blue-500 font-medium text-right outline-none min-w-[140px]"
+                                    defaultValue={new Date().toISOString().split('T')[0]}
+                                />
                             </div>
-                            <input
-                                name="date"
-                                type="date"
-                                required
-                                className="bg-transparent text-right outline-none font-semibold text-blue-600"
-                                defaultValue={new Date().toISOString().split('T')[0]}
-                            />
-                        </div>
-                        <div className="p-4 border-b border-gray-800 flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500">
-                                    <Clock className="w-5 h-5" />
+
+                            {/* Start Time Row */}
+                            <div className="flex items-center justify-between px-4 py-3.5 active:bg-gray-800/30 transition-colors">
+                                <div className="flex items-center gap-3">
+                                    <Clock className="w-5 h-5 text-blue-500" />
+                                    <span className="text-[17px] text-white">Starts</span>
                                 </div>
-                                <span className="font-medium">Starts</span>
+                                <input
+                                    name="startTime"
+                                    type="time"
+                                    required
+                                    className="bg-transparent text-[17px] text-white font-medium text-right outline-none bg-gray-700/50 px-2 py-1 rounded"
+                                    defaultValue="12:00"
+                                />
                             </div>
-                            <input
-                                name="startTime"
-                                type="time"
-                                required
-                                className="bg-transparent text-right outline-none font-semibold text-white"
-                                defaultValue="12:00"
-                            />
-                        </div>
-                        <div className="p-4 flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-lg bg-black flex items-center justify-center text-gray-400">
-                                    <Clock className="w-5 h-5" />
+
+                            {/* End Time Row */}
+                            <div className="flex items-center justify-between px-4 py-3.5 active:bg-gray-800/30 transition-colors">
+                                <div className="flex items-center gap-3">
+                                    <Clock className="w-5 h-5 text-gray-400" />
+                                    <span className="text-[17px] text-white">Ends</span>
                                 </div>
-                                <span className="font-medium">Ends</span>
+                                <input
+                                    name="endTime"
+                                    type="time"
+                                    required
+                                    className="bg-transparent text-[17px] text-white font-medium text-right outline-none bg-gray-700/50 px-2 py-1 rounded"
+                                    defaultValue="13:00"
+                                />
                             </div>
-                            <input
-                                name="endTime"
-                                type="time"
-                                required
-                                className="bg-transparent text-right outline-none font-semibold text-white"
-                                defaultValue="13:00"
-                            />
                         </div>
+                        <p className="px-4 text-[13px] text-gray-500">
+                            Clients will be blocked from booking during this time.
+                        </p>
                     </div>
 
-                    <p className="text-sm text-gray-500 px-2">
-                        Clients will not be able to book you during this time.
-                    </p>
+                    {/* Submit Button */}
+                    <div className="pt-4">
+                        <button
+                            type="submit"
+                            className="w-full bg-blue-600 hover:bg-blue-500 text-white text-[17px] font-bold py-3.5 rounded-xl active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                        >
+                            <Check className="w-5 h-5" />
+                            Block Time
+                        </button>
+                    </div>
 
-                    <button type="submit" className="w-full bg-black text-white font-bold py-4 rounded-xl shadow-lg active:scale-[0.98] transition-all">
-                        Block Time
-                    </button>
                 </form>
             </main>
         </div>

@@ -10,10 +10,13 @@ import BookingFlow from '@/components/BookingFlow'
 
 export default async function BookingPage({
     params,
+    searchParams,
 }: {
     params: Promise<{ username: string }>
+    searchParams: Promise<{ service?: string }>
 }) {
     const { username } = await params
+    const { service: serviceId } = await searchParams
     const supabase = await createClient()
 
     // 1. Get Profile
@@ -40,6 +43,7 @@ export default async function BookingPage({
             <BookingFlow
                 profile={profile}
                 services={services || []}
+                preSelectedServiceId={serviceId}
             />
         </main>
     )

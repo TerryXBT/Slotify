@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Plus, Settings as SettingsIcon, Clock, MapPin, Video, CheckCircle, MessageSquare, Phone, ChevronRight, AlertCircle, Calendar as CalendarIcon, StickyNote } from 'lucide-react'
 import ServiceCard from '@/components/ServiceCard'
 import UpNextCard from '@/components/UpNextCard'
+import ActionGrid from '@/components/ActionGrid'
 
 export default async function TodayPage() {
     const supabase = await createClient()
@@ -63,142 +64,80 @@ export default async function TodayPage() {
     const freeHours = Math.max(0, Math.floor(freeMinutes / 60))
 
     return (
-        <div className="min-h-screen bg-black font-sans pb-24 text-gray-100">
+        <div className="min-h-screen bg-black font-sans pb-24 text-white selection:bg-blue-500/30">
 
-            {/* Header */}
-            <header className="sticky top-0 z-30 bg-black/95 backdrop-blur-xl border-b border-gray-800/50 px-4 pt-3 pb-3">
-                <div className="flex justify-between items-center mb-4">
-                    <div>
-                        <h1 className="text-[22px] font-bold text-white leading-tight">
-                            Today's Overview
-                        </h1>
-                        <p className="text-[14px] text-gray-400 font-medium mt-0.5">
-                            {totalBookingsCount} Events • {Math.round(totalBookedMinutes / 60)}h Busy
-                        </p>
-                    </div>
-                    <Link href="/app/settings" className="relative active:scale-95 transition-transform">
-                        {profile.avatar_url ? (
-                            <img
-                                src={profile.avatar_url}
-                                alt="Profile"
-                                className="w-10 h-10 rounded-full object-cover shadow-lg ring-2 ring-gray-800"
-                            />
-                        ) : (
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-[16px] shadow-lg ring-2 ring-gray-800">
-                                {profile.full_name?.[0] || profile.username[0].toUpperCase()}
-                            </div>
-                        )}
-                        {needsAction.length > 0 && (
-                            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 border-2 border-black rounded-full"></span>
-                        )}
-                    </Link>
+            {/* Large Header */}
+            <header className="pt-16 pb-6 px-5 flex justify-between items-start">
+                <div>
+                    <h1 className="text-[34px] font-bold text-white tracking-tight leading-tight">
+                        Today
+                    </h1>
+                    <p className="text-[15px] text-gray-500 font-medium mt-1">
+                        {format(new Date(), 'EEEE, MMMM d')}
+                    </p>
                 </div>
-
-                <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 -mx-1 px-1">
-                    <Link href="/app/busy/new" className="flex items-center gap-2 px-4 py-2.5 bg-[#1C1C1E] rounded-xl text-blue-500 text-[14px] font-semibold whitespace-nowrap active:scale-95 transition-all">
-                        <Plus className="w-4 h-4" />
-                        Busy Block
-                    </Link>
-                    <Link href="/app/reschedule" className="flex items-center gap-2 px-4 py-2.5 bg-[#1C1C1E] rounded-xl text-gray-400 text-[14px] font-semibold whitespace-nowrap active:scale-95 transition-all">
-                        <Clock className="w-4 h-4" />
-                        Reschedule
-                    </Link>
-                    <Link href="/app/settings" className="flex items-center gap-2 px-4 py-2.5 bg-[#1C1C1E] rounded-xl text-gray-400 text-[14px] font-semibold whitespace-nowrap active:scale-95 transition-all">
-                        <SettingsIcon className="w-4 h-4" />
-                        Settings
-                    </Link>
-                </div>
+                {/* Moved left slightly with mr-2 */}
+                <Link href="/app/settings" className="relative active:scale-95 transition-transform mt-1 mr-2">
+                    {profile.avatar_url ? (
+                        <img
+                            src={profile.avatar_url}
+                            alt="Profile"
+                            className="w-10 h-10 rounded-full object-cover ring-2 ring-gray-900 grayscale-[0.3]"
+                        />
+                    ) : (
+                        <div className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 font-semibold text-[16px]">
+                            {profile.full_name?.[0] || profile.username[0].toUpperCase()}
+                        </div>
+                    )}
+                </Link>
             </header>
 
-            <main className="px-4 space-y-6 mt-4">
+            <main className="px-5 space-y-6">
 
-                {/* SECTION 1: Needs Action */}
-                {needsAction.length > 0 && (
-                    <section>
-                        <h2 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
-                            Needs Action
-                            <span className="bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full font-bold">{needsAction.length}</span>
-                        </h2>
-                        {needsAction.map((b: any) => (
-                            <div key={b.id} className="bg-[#1C1C1E] rounded-2xl p-5 shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-orange-100 relative overflow-hidden group">
-                                <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-orange-500"></div>
-                                <div className="flex justify-between items-start mb-3 pl-2">
-                                    <div>
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <span className="text-lg font-bold text-white">{b.client_name}</span>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <p className="text-base text-gray-500 font-medium">{b.services?.name} • {b.services?.duration_minutes}m</p>
-                                            {b.services?.location_type && (
-                                                b.services.location_type === 'online' ? (
-                                                    <Video className="w-4 h-4 text-blue-500" />
-                                                ) : (
-                                                    <MapPin className="w-4 h-4 text-purple-500" />
-                                                )
-                                            )}
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-orange-100 text-orange-700 text-xs font-bold uppercase tracking-wider">
-                                        <AlertCircle className="w-3 h-3" />
-                                        Reschedule
-                                    </div>
-                                </div>
-                                <div className="pl-2 mt-4 flex gap-3">
-                                    <button className="flex-1 bg-orange-50 text-orange-700 py-3 rounded-xl font-semibold text-sm hover:bg-orange-100 transition-colors">
-                                        Review Request
-                                    </button>
-                                    <button className="w-12 h-12 flex items-center justify-center bg-black text-gray-600 rounded-xl hover:bg-[#1C1C1E] transition-colors">
-                                        <MessageSquare className="w-5 h-5" />
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-                    </section>
-                )}
-
-                {/* SECTION 2: Up Next */}
+                {/* SECTION 1: Up Next */}
                 <section>
-                    <div className="flex items-center gap-2 mb-3">
-                        <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                        <h2 className="text-[17px] font-semibold text-white">Up Next</h2>
-                    </div>
+                    <h2 className="text-[17px] font-bold text-white mb-3 tracking-tight">Next Activity</h2>
 
                     {nextBooking ? (
                         <UpNextCard booking={nextBooking} />
                     ) : (
-                        <div className="text-center py-12 bg-[#1C1C1E] rounded-2xl border border-dashed border-gray-800">
-                            <p className="text-gray-500 text-[15px]">No upcoming bookings.</p>
+                        <div className="py-8 bg-[#1C1C1E] rounded-2xl flex flex-col items-center justify-center text-center">
+                            <Clock className="w-8 h-8 text-gray-600 mb-3" />
+                            <p className="text-gray-400 font-medium">No upcoming bookings</p>
+                            <p className="text-gray-600 text-sm mt-1">You're clear for now</p>
                         </div>
                     )}
                 </section>
 
-                {/* SECTION 3: Rest of Today */}
+                {/* SECTION 2: Rest of Today (Moved Up) */}
                 {restOfToday.length > 0 && (
                     <section>
-                        <h2 className="text-[17px] font-semibold text-white mb-3">Rest of Today</h2>
-                        <div className="space-y-2">
-                            {restOfToday.map((b: any) => (
+                        <h2 className="text-[19px] font-bold text-white mb-3 tracking-tight">Rest of Today</h2>
+                        <div className="space-y-px bg-[#1C1C1E] rounded-2xl overflow-hidden">
+                            {restOfToday.map((b: any, index: number) => (
                                 <Link
                                     key={b.id}
                                     href={`/app/bookings/${b.id}`}
-                                    className="bg-[#1C1C1E] rounded-2xl p-3.5 border border-gray-800/50 flex items-center gap-3 active:bg-gray-800/50 transition-colors"
+                                    className={`block p-4 hover:bg-gray-800/50 active:bg-gray-800 transition-colors ${index !== restOfToday.length - 1 ? 'border-b border-gray-800' : ''}`}
                                 >
-                                    <div className="flex flex-col items-center justify-center w-14 text-center border-r border-gray-800 pr-3">
-                                        <span className="text-[15px] font-semibold text-white">
-                                            {format(new Date(b.start_at), 'h:mm')}
-                                        </span>
-                                        <span className="text-[11px] font-medium text-gray-500 uppercase">
-                                            {format(new Date(b.start_at), 'a')}
-                                        </span>
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex justify-between items-start mb-0.5">
-                                            <h4 className="text-[15px] font-semibold text-white truncate">{b.client_name}</h4>
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-4">
+                                            {/* Time Layout */}
+                                            <div className="flex flex-col items-center w-12 text-center">
+                                                <span className="text-white font-medium text-[16px] leading-tight">
+                                                    {format(new Date(b.start_at), 'h:mm')}
+                                                </span>
+                                                <span className="text-gray-500 text-[11px] font-bold uppercase tracking-wide">
+                                                    {format(new Date(b.start_at), 'a')}
+                                                </span>
+                                            </div>
+
+                                            <div>
+                                                <h4 className="text-[16px] font-semibold text-white">{b.client_name}</h4>
+                                                <p className="text-[13px] text-gray-500">{b.services?.name}</p>
+                                            </div>
                                         </div>
-                                        <p className="text-[13px] text-gray-500 truncate">{b.services?.name}</p>
-                                    </div>
-                                    <div className="w-9 h-9 rounded-full bg-gray-800/50 flex items-center justify-center text-gray-400">
-                                        <ChevronRight className="w-[18px] h-[18px]" />
+                                        <ChevronRight className="w-5 h-5 text-gray-600" />
                                     </div>
                                 </Link>
                             ))}
@@ -206,23 +145,21 @@ export default async function TodayPage() {
                     </section>
                 )}
 
-                {/* SECTION: Services */}
+                {/* SECTION 3: Services (Horizontal) */}
                 <section>
                     <div className="flex items-center justify-between mb-3">
-                        <h2 className="text-[17px] font-semibold text-white">
-                            Services <span className="text-gray-500 font-normal ml-1">({services?.filter((s: any) => s.is_active).length || 0} Active)</span>
-                        </h2>
+                        <h2 className="text-[19px] font-bold text-white tracking-tight">Services</h2>
                         <Link
-                            href="/app/settings?tab=services"
-                            className="text-[15px] font-semibold text-blue-500 active:opacity-70 transition-opacity"
+                            href="/app/services"
+                            className="text-[15px] font-medium text-blue-500 active:opacity-70 transition-opacity"
                         >
                             Manage
                         </Link>
                     </div>
 
-                    {
-                        services && services.filter((s: any) => s.is_active).length > 0 ? (
-                            <div className="space-y-3">
+                    <div className="flex gap-4 overflow-x-auto pb-4 -mx-5 px-5 no-scrollbar snap-x">
+                        {services && services.filter((s: any) => s.is_active).length > 0 ? (
+                            <>
                                 {services.filter((s: any) => s.is_active).map((service: any) => (
                                     <ServiceCard
                                         key={service.id}
@@ -230,39 +167,35 @@ export default async function TodayPage() {
                                         username={profile.username}
                                     />
                                 ))}
-
-                                {/* Add New Service Button */}
+                                {/* Add New Service Card Placeholder */}
                                 <Link
-                                    href="/app/settings?tab=services"
-                                    className="flex items-center justify-center gap-2 bg-[#1C1C1E] rounded-2xl p-4 border border-dashed border-gray-700 hover:border-blue-500 active:scale-95 transition-all"
+                                    href="/app/services/new"
+                                    className="bg-[#1C1C1E] rounded-2xl w-32 h-32 flex flex-col items-center justify-center gap-2 active:scale-95 transition-all text-gray-500 border border-gray-800/50 flex-shrink-0 snap-start"
                                 >
-                                    <Plus className="w-[18px] h-[18px] text-blue-500" />
-                                    <span className="text-[15px] font-semibold text-blue-500">Add New Service</span>
+                                    <Plus className="w-6 h-6" />
+                                    <span className="text-xs font-medium">Add New</span>
                                 </Link>
-                            </div >
+                            </>
                         ) : (
-                            <div className="text-center py-10 bg-[#1C1C1E] rounded-2xl border border-dashed border-gray-800">
-                                <p className="text-gray-500 text-[15px] mb-3">No active services.</p>
-                                <Link
-                                    href="/app/settings?tab=services"
-                                    className="inline-flex items-center gap-2 text-blue-500 font-semibold text-[15px] active:opacity-70 transition-opacity"
-                                >
-                                    <Plus className="w-[18px] h-[18px]" />
-                                    Create your first service
-                                </Link>
-                            </div>
-                        )
-                    }
-                </section >
-
-                <div className="text-center mt-8 mb-6">
-                    <div className="inline-flex items-center justify-center w-11 h-11 rounded-full bg-gray-800/50 text-gray-500 mb-2">
-                        <CalendarIcon className="w-5 h-5" />
+                            <Link
+                                href="/app/services/new"
+                                className="w-full py-6 bg-[#1C1C1E] rounded-2xl flex flex-col items-center text-gray-500 active:scale-95 transition-all"
+                            >
+                                <Plus className="w-6 h-6 mb-2" />
+                                <span className="text-sm font-medium">Create your first service</span>
+                            </Link>
+                        )}
                     </div>
-                    <p className="text-gray-500 text-[13px]">That's all for today.</p>
-                </div>
+                </section>
 
-            </main >
-        </div >
+                {/* SECTION 4: Quick Actions (Moved Down) */}
+                <section>
+                    <h2 className="text-[19px] font-bold text-white mb-3 tracking-tight">Quick Actions</h2>
+                    <ActionGrid />
+                </section>
+
+                <div className="py-8"></div>
+            </main>
+        </div>
     )
 }

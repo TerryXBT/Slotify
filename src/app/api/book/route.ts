@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
         } = body
 
         // Validate required fields
-        if (!provider_id || !service_id || !client_name || !client_email || !start_at || !end_at) {
+        if (!provider_id || !service_id || !client_name || !client_phone || !start_at || !end_at) {
             return NextResponse.json(
                 { error: 'Missing required fields' },
                 { status: 400 }
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
             .from('services')
             .select('id, provider_id, is_active')
             .eq('id', service_id)
-            .single()
+            .single() as { data: { id: string; provider_id: string; is_active: boolean } | null }
 
         if (!service) {
             return NextResponse.json(
@@ -74,7 +74,6 @@ export async function POST(request: NextRequest) {
 
         // Create booking
         const { data: booking, error } = await supabase
-            // @ts-ignore
             .from('bookings')
             .insert({
                 provider_id,
@@ -86,7 +85,7 @@ export async function POST(request: NextRequest) {
                 end_at,
                 notes,
                 status: 'confirmed'
-            })
+            } as any)
             .select()
             .single()
 
