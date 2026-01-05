@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import ProfileTab from './ProfileTab'
 
-export default function SettingsView({ profile, services, availabilityRules }: { profile: any, services: any[], availabilityRules: any[] }) {
+export default function SettingsView({ profile, services, deletedServices, availabilityRules }: { profile: any, services: any[], deletedServices: any[], availabilityRules: any[] }) {
     const router = useRouter()
 
     return (
@@ -18,7 +18,7 @@ export default function SettingsView({ profile, services, availabilityRules }: {
 
             {/* Content */}
             <div className="flex-1">
-                <ProfileTab profile={profile} services={services} availabilityRules={availabilityRules} />
+                <ProfileTab profile={profile} services={services} deletedServices={deletedServices} availabilityRules={availabilityRules} />
             </div>
         </div>
     )

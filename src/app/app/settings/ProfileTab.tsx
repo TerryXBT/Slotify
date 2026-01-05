@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { signOut, createService, updateService, deleteService } from './actions'
-import { Plus, X, Copy, Check, Edit, Trash2, Share2, ChevronRight, MapPin, Video } from 'lucide-react'
+import { signOut, createService, updateService, toggleServiceActive, deleteService, restoreService, permanentlyDeleteService } from './actions'
+import { Plus, X, Copy, Check, Edit, Trash2, Share2, ChevronRight, MapPin, Video, Undo2, AlertTriangle, ChevronDown } from 'lucide-react'
 import { createAvailabilityRule, updateAvailabilityRule, deleteAvailabilityRule } from './actions'
 import clsx from 'clsx'
 
@@ -52,13 +52,43 @@ interface LocalRule {
     end_time: string
 }
 
-export default function ProfileTab({ profile, services, availabilityRules }: { profile: any, services: any[], availabilityRules: AvailabilityRule[] }) {
+export default function ProfileTab({ profile, services, deletedServices, availabilityRules }: { profile: any, services: any[], deletedServices: any[], availabilityRules: AvailabilityRule[] }) {
     const router = useRouter()
     const [showSuccess, setShowSuccess] = useState(false)
     const [copiedServiceId, setCopiedServiceId] = useState<string | null>(null)
     const [editingService, setEditingService] = useState<string | null>(null)
     const [isCreatingService, setIsCreatingService] = useState(false)
     const [serviceLocationType, setServiceLocationType] = useState('physical')
+    const [togglingServiceId, setTogglingServiceId] = useState<string | null>(null)
+    // Local state for service active status (optimistic updates)
+    const [localServices, setLocalServices] = useState(services.map(s => ({ ...s, is_active: s.is_active ?? true })))
+    // Delete confirmation modal state
+    const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; serviceId: string | null; serviceName: string }>({ isOpen: false, serviceId: null, serviceName: '' })
+    const [isDeleting, setIsDeleting] = useState(false)
+    // Trash section state
+    const [showTrash, setShowTrash] = useState(false)
+    const [permanentDeleteModal, setPermanentDeleteModal] = useState<{ isOpen: boolean; serviceId: string | null; serviceName: string }>({ isOpen: false, serviceId: null, serviceName: '' })
+    const [isRestoringId, setIsRestoringId] = useState<string | null>(null)
+    const [isPermanentlyDeleting, setIsPermanentlyDeleting] = useState(false)
+
+    // Sync local state with server data when props change (after router.refresh())
+    useEffect(() => {
+        setLocalServices(services.map(s => ({ ...s, is_active: s.is_active ?? true })))
+    }, [services])
+
+    const handleToggleActive = async (serviceId: string, currentState: boolean) => {
+        setTogglingServiceId(serviceId)
+        // Optimistic update
+        setLocalServices(prev => prev.map(s => s.id === serviceId ? { ...s, is_active: !currentState } : s))
+        const result = await toggleServiceActive(serviceId, !currentState)
+        if (result.error) {
+            // Revert on error
+            setLocalServices(prev => prev.map(s => s.id === serviceId ? { ...s, is_active: currentState } : s))
+            alert(result.error)
+        }
+        setTogglingServiceId(null)
+        router.refresh()
+    }
 
     // Availability state
     const [localRules, setLocalRules] = useState<LocalRule[]>(
@@ -166,11 +196,64 @@ export default function ProfileTab({ profile, services, availabilityRules }: { p
         router.refresh()
     }
 
-    const handleDeleteService = async (id: string) => {
-        if (confirm('Are you sure you want to delete this service?')) {
-            await deleteService(id)
+    const openDeleteModal = (id: string, name: string) => {
+        setDeleteModal({ isOpen: true, serviceId: id, serviceName: name })
+    }
+
+    const closeDeleteModal = () => {
+        setDeleteModal({ isOpen: false, serviceId: null, serviceName: '' })
+    }
+
+    const confirmDeleteService = async () => {
+        if (!deleteModal.serviceId) return
+        setIsDeleting(true)
+
+        const res = await deleteService(deleteModal.serviceId)
+        if (res?.error) {
+            alert(res.error)
+        } else if (res?.success) {
+            // Update local state
+            setLocalServices(prev => prev.filter(s => s.id !== deleteModal.serviceId))
             router.refresh()
         }
+        setIsDeleting(false)
+        closeDeleteModal()
+    }
+
+    // Restore service from trash
+    const handleRestoreService = async (id: string) => {
+        setIsRestoringId(id)
+        const res = await restoreService(id)
+        if (res?.error) {
+            alert(res.error)
+        } else if (res?.success) {
+            router.refresh()
+        }
+        setIsRestoringId(null)
+    }
+
+    // Open permanent delete modal
+    const openPermanentDeleteModal = (id: string, name: string) => {
+        setPermanentDeleteModal({ isOpen: true, serviceId: id, serviceName: name })
+    }
+
+    const closePermanentDeleteModal = () => {
+        setPermanentDeleteModal({ isOpen: false, serviceId: null, serviceName: '' })
+    }
+
+    // Permanently delete service and all related bookings
+    const confirmPermanentDelete = async () => {
+        if (!permanentDeleteModal.serviceId) return
+        setIsPermanentlyDeleting(true)
+
+        const res = await permanentlyDeleteService(permanentDeleteModal.serviceId)
+        if (res?.error) {
+            alert(res.error)
+        } else if (res?.success) {
+            router.refresh()
+        }
+        setIsPermanentlyDeleting(false)
+        closePermanentDeleteModal()
     }
 
     const handleSignOut = async () => {
@@ -247,16 +330,43 @@ export default function ProfileTab({ profile, services, availabilityRules }: { p
                     <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Services</h3>
                 </div>
 
-                {services.length > 0 && services.map((service, index) => (
-                    <div key={service.id} className={index > 0 ? 'border-t border-gray-800' : ''}>
+                {localServices.length > 0 && localServices.map((service, index) => (
+                    <div key={service.id} className={clsx(
+                        index > 0 ? 'border-t border-gray-800' : '',
+                        !service.is_active && 'opacity-50'
+                    )}>
                         <div className="px-6 py-4 flex items-center gap-4 hover:bg-gray-900/50 transition-colors">
                             <div className="flex-1 min-w-0">
-                                <p className="font-medium text-white">{service.name}</p>
+                                <div className="flex items-center gap-2">
+                                    <p className="font-medium text-white">{service.name}</p>
+                                    {!service.is_active && (
+                                        <span className="px-2 py-0.5 text-xs font-medium bg-gray-800 text-gray-400 rounded-full">
+                                            Inactive
+                                        </span>
+                                    )}
+                                </div>
                                 <p className="text-sm text-gray-400">
                                     {service.duration_minutes} min · ${(service.price_cents / 100).toFixed(2)}
                                 </p>
                             </div>
-                            <div className="flex items-center gap-1 flex-shrink-0">
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                                {/* Active Toggle */}
+                                <button
+                                    type="button"
+                                    onClick={() => handleToggleActive(service.id, service.is_active)}
+                                    disabled={togglingServiceId === service.id}
+                                    className={clsx(
+                                        'relative w-11 h-6 rounded-full transition-colors duration-200 flex-shrink-0',
+                                        service.is_active ? 'bg-green-600' : 'bg-gray-700',
+                                        togglingServiceId === service.id && 'opacity-50 cursor-not-allowed'
+                                    )}
+                                    title={service.is_active ? 'Click to deactivate' : 'Click to activate'}
+                                >
+                                    <span className={clsx(
+                                        'absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200',
+                                        service.is_active && 'translate-x-5'
+                                    )} />
+                                </button>
                                 <button
                                     type="button"
                                     onClick={() => handleShareService(service.id)}
@@ -279,7 +389,7 @@ export default function ProfileTab({ profile, services, availabilityRules }: { p
                                 </button>
                                 <button
                                     type="button"
-                                    onClick={() => handleDeleteService(service.id)}
+                                    onClick={() => openDeleteModal(service.id, service.name)}
                                     className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
                                     title="Delete service"
                                 >
@@ -301,6 +411,67 @@ export default function ProfileTab({ profile, services, availabilityRules }: { p
                     </button>
                 </div>
             </div>
+
+            {/* Deleted Services (Trash) */}
+            {deletedServices.length > 0 && (
+                <div className="mt-2 border-t border-gray-800">
+                    <button
+                        type="button"
+                        onClick={() => setShowTrash(!showTrash)}
+                        className="w-full px-6 py-4 flex items-center justify-between text-gray-400 hover:bg-gray-900/30 transition-colors"
+                    >
+                        <div className="flex items-center gap-2">
+                            <Trash2 className="w-4 h-4" />
+                            <span className="text-sm font-medium">Recently Deleted</span>
+                            <span className="px-2 py-0.5 text-xs font-medium bg-gray-800 text-gray-400 rounded-full">
+                                {deletedServices.length}
+                            </span>
+                        </div>
+                        <ChevronDown className={clsx("w-4 h-4 transition-transform", showTrash && "rotate-180")} />
+                    </button>
+
+                    {showTrash && (
+                        <div className="px-6 pb-4 space-y-2">
+                            {deletedServices.map((service: any) => (
+                                <div
+                                    key={service.id}
+                                    className="flex items-center justify-between p-3 bg-gray-900/50 rounded-xl border border-gray-800/50"
+                                >
+                                    <div>
+                                        <h4 className="text-sm font-medium text-gray-400 line-through">{service.name}</h4>
+                                        <p className="text-xs text-gray-500">
+                                            Deleted {new Date(service.deleted_at).toLocaleDateString()}
+                                        </p>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleRestoreService(service.id)}
+                                            disabled={isRestoringId === service.id}
+                                            className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+                                            title="Restore"
+                                        >
+                                            {isRestoringId === service.id ? (
+                                                <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                                            ) : (
+                                                <Undo2 className="w-4 h-4 text-blue-400" />
+                                            )}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => openPermanentDeleteModal(service.id, service.name)}
+                                            className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+                                            title="Delete permanently"
+                                        >
+                                            <X className="w-4 h-4 text-red-500" />
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* Availability Section - Link to dedicated page */}
             <div className="mt-6 border-t border-gray-800">
@@ -483,6 +654,83 @@ export default function ProfileTab({ profile, services, availabilityRules }: { p
                                 className="flex-1 px-4 py-3 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-colors"
                             >
                                 Apply
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {deleteModal.isOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={closeDeleteModal} />
+                    <div className="relative bg-[#1C1C1E] rounded-2xl p-6 w-full max-w-sm shadow-xl animate-in zoom-in-95">
+                        <div className="text-center">
+                            <div className="w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <Trash2 className="w-6 h-6 text-red-500" />
+                            </div>
+                            <h3 className="text-lg font-bold text-white mb-2">Delete Service?</h3>
+                            <p className="text-gray-400 text-sm mb-6">
+                                <span className="font-medium text-white">"{deleteModal.serviceName}"</span> will be moved to Recently Deleted. You can restore it later or delete it permanently.
+                            </p>
+                        </div>
+                        <div className="flex gap-3">
+                            <button
+                                type="button"
+                                onClick={closeDeleteModal}
+                                disabled={isDeleting}
+                                className="flex-1 px-4 py-3 bg-gray-700 text-white font-medium rounded-xl hover:bg-gray-600 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                onClick={confirmDeleteService}
+                                disabled={isDeleting}
+                                className="flex-1 px-4 py-3 bg-red-600 text-white font-medium rounded-xl hover:bg-red-500 disabled:opacity-50 transition-colors"
+                            >
+                                {isDeleting ? 'Deleting...' : 'Delete'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Permanent Delete Confirmation Modal */}
+            {permanentDeleteModal.isOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={closePermanentDeleteModal} />
+                    <div className="relative bg-[#1C1C1E] rounded-2xl p-6 w-full max-w-sm shadow-xl animate-in zoom-in-95">
+                        <div className="text-center">
+                            <div className="w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <AlertTriangle className="w-6 h-6 text-red-500" />
+                            </div>
+                            <h3 className="text-lg font-bold text-white mb-2">Permanently Delete?</h3>
+                            <p className="text-gray-400 text-sm mb-4">
+                                Are you sure you want to permanently delete <span className="font-medium text-white">"{permanentDeleteModal.serviceName}"</span>?
+                            </p>
+                            <div className="bg-red-900/30 border border-red-800/50 rounded-xl p-3 mb-6">
+                                <p className="text-red-400 text-xs">
+                                    ⚠️ This will also delete <strong>all bookings</strong> associated with this service. This action cannot be undone.
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex gap-3">
+                            <button
+                                type="button"
+                                onClick={closePermanentDeleteModal}
+                                disabled={isPermanentlyDeleting}
+                                className="flex-1 px-4 py-3 bg-gray-700 text-white font-medium rounded-xl hover:bg-gray-600 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                onClick={confirmPermanentDelete}
+                                disabled={isPermanentlyDeleting}
+                                className="flex-1 px-4 py-3 bg-red-600 text-white font-medium rounded-xl hover:bg-red-500 disabled:opacity-50 transition-colors"
+                            >
+                                {isPermanentlyDeleting ? 'Deleting...' : 'Delete Forever'}
                             </button>
                         </div>
                     </div>

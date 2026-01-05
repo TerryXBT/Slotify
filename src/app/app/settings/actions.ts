@@ -67,13 +67,32 @@ export async function createService(formData: FormData) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: 'Not authenticated' }
 
-    const adminClient = createAdminClient()
-
-    const name = formData.get('name') as string
-    const duration_minutes = parseInt(formData.get('duration') as string)
-    const price_cents = parseInt(formData.get('price') as string) * 100
+    // Extract and validate inputs
+    const name = (formData.get('name') as string)?.trim()
+    const durationStr = formData.get('duration') as string
+    const priceStr = formData.get('price') as string
     const location_type = formData.get('location_type') as string || 'physical'
     const default_location = formData.get('default_location') as string || ''
+
+    // Validate required fields
+    if (!name) {
+        return { error: 'Service name is required' }
+    }
+
+    // Validate duration
+    const duration_minutes = parseInt(durationStr)
+    if (isNaN(duration_minutes) || duration_minutes < 5 || duration_minutes > 480) {
+        return { error: 'Duration must be between 5 and 480 minutes' }
+    }
+
+    // Validate price
+    const price = parseFloat(priceStr)
+    if (isNaN(price) || price < 0 || price > 10000) {
+        return { error: 'Price must be between $0 and $10,000' }
+    }
+    const price_cents = Math.round(price * 100)
+
+    const adminClient = createAdminClient()
 
     const { error } = await adminClient
         .from('services')
@@ -88,7 +107,7 @@ export async function createService(formData: FormData) {
 
     if (error) {
         console.error('Create Service Error:', error)
-        return { error: 'Failed to create service: ' + error.message }
+        return { error: `Failed to create service: ${error.message}`, code: error.code }
     }
 
     revalidatePath('/app/settings')
@@ -103,13 +122,33 @@ export async function updateService(id: string, formData: FormData) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: 'Not authenticated' }
 
-    const adminClient = createAdminClient()
-
-    const name = formData.get('name') as string
-    const duration_minutes = parseInt(formData.get('duration') as string)
-    const price_cents = parseInt(formData.get('price') as string) * 100
+    // Extract and validate inputs
+    const name = (formData.get('name') as string)?.trim()
+    const durationStr = formData.get('duration') as string
+    const priceStr = formData.get('price') as string
     const location_type = formData.get('location_type') as string || 'physical'
     const default_location = formData.get('default_location') as string || ''
+    const is_active = formData.get('is_active') === 'on'
+
+    // Validate required fields
+    if (!name) {
+        return { error: 'Service name is required' }
+    }
+
+    // Validate duration
+    const duration_minutes = parseInt(durationStr)
+    if (isNaN(duration_minutes) || duration_minutes < 5 || duration_minutes > 480) {
+        return { error: 'Duration must be between 5 and 480 minutes' }
+    }
+
+    // Validate price
+    const price = parseFloat(priceStr)
+    if (isNaN(price) || price < 0 || price > 10000) {
+        return { error: 'Price must be between $0 and $10,000' }
+    }
+    const price_cents = Math.round(price * 100)
+
+    const adminClient = createAdminClient()
 
     const { error } = await adminClient
         .from('services')
@@ -118,14 +157,15 @@ export async function updateService(id: string, formData: FormData) {
             duration_minutes,
             price_cents,
             location_type,
-            default_location
+            default_location,
+            is_active
         })
         .eq('id', id)
         .eq('provider_id', user.id)
 
     if (error) {
         console.error('Update Service Error:', error)
-        return { error: 'Failed to update service' }
+        return { error: `Failed to update service: ${error.message}`, code: error.code }
     }
 
     revalidatePath('/app/settings')
@@ -133,9 +173,115 @@ export async function updateService(id: string, formData: FormData) {
 }
 
 /**
- * Delete Service
+ * Soft Delete Service (move to trash)
  */
 export async function deleteService(id: string) {
+    try {
+        const supabase = await createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return { error: 'Not authenticated' }
+
+        const adminClient = createAdminClient()
+
+        // Soft delete: set deleted_at timestamp
+        const { error } = await adminClient
+            .from('services')
+            .update({ deleted_at: new Date().toISOString() })
+            .eq('id', id)
+            .eq('provider_id', user.id)
+            .is('deleted_at', null) // Only delete if not already deleted
+
+        if (error) {
+            console.error('Soft Delete Service Error:', error)
+            return { error: `Failed to delete service: ${error.message}` }
+        }
+
+        revalidatePath('/app/settings')
+        return { success: true }
+    } catch (err) {
+        console.error('Unexpected error in deleteService:', err)
+        return { error: 'An unexpected error occurred while deleting the service' }
+    }
+}
+
+/**
+ * Restore Service (undelete from trash)
+ */
+export async function restoreService(id: string) {
+    try {
+        const supabase = await createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return { error: 'Not authenticated' }
+
+        const adminClient = createAdminClient()
+
+        // Clear deleted_at to restore
+        const { error } = await adminClient
+            .from('services')
+            .update({ deleted_at: null })
+            .eq('id', id)
+            .eq('provider_id', user.id)
+
+        if (error) {
+            console.error('Restore Service Error:', error)
+            return { error: `Failed to restore service: ${error.message}` }
+        }
+
+        revalidatePath('/app/settings')
+        return { success: true }
+    } catch (err) {
+        console.error('Unexpected error in restoreService:', err)
+        return { error: 'An unexpected error occurred while restoring the service' }
+    }
+}
+
+/**
+ * Permanently Delete Service (including all related bookings)
+ */
+export async function permanentlyDeleteService(id: string) {
+    try {
+        const supabase = await createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return { error: 'Not authenticated' }
+
+        const adminClient = createAdminClient()
+
+        // First, delete all related bookings
+        const { error: bookingsError } = await adminClient
+            .from('bookings')
+            .delete()
+            .eq('service_id', id)
+
+        if (bookingsError) {
+            console.error('Delete Bookings Error:', bookingsError)
+            return { error: `Failed to delete related bookings: ${bookingsError.message}` }
+        }
+
+        // Then, permanently delete the service
+        const { error: serviceError } = await adminClient
+            .from('services')
+            .delete()
+            .eq('id', id)
+            .eq('provider_id', user.id)
+
+        if (serviceError) {
+            console.error('Permanent Delete Service Error:', serviceError)
+            return { error: `Failed to permanently delete service: ${serviceError.message}` }
+        }
+
+        revalidatePath('/app/settings')
+        return { success: true }
+    } catch (err) {
+        console.error('Unexpected error in permanentlyDeleteService:', err)
+        return { error: 'An unexpected error occurred while permanently deleting the service' }
+    }
+}
+
+
+/**
+ * Toggle Service Active Status
+ */
+export async function toggleServiceActive(id: string, isActive: boolean) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: 'Not authenticated' }
@@ -144,13 +290,13 @@ export async function deleteService(id: string) {
 
     const { error } = await adminClient
         .from('services')
-        .delete()
+        .update({ is_active: isActive })
         .eq('id', id)
         .eq('provider_id', user.id)
 
     if (error) {
-        console.error('Delete Service Error:', error)
-        return { error: 'Failed to delete service' }
+        console.error('Toggle Service Active Error:', error)
+        return { error: 'Failed to update service status' }
     }
 
     revalidatePath('/app/settings')
