@@ -1,6 +1,7 @@
 import { createClient } from '@/utils/supabase/server'
 import { format, differenceInMinutes, isAfter, isBefore, addMinutes, addDays } from 'date-fns'
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { Plus, Settings as SettingsIcon, Clock, MapPin, Video, CheckCircle, MessageSquare, Phone, ChevronRight, AlertCircle, Calendar as CalendarIcon, StickyNote } from 'lucide-react'
 import ServiceCard from '@/components/ServiceCard'
 import UpNextCard from '@/components/UpNextCard'
@@ -10,8 +11,43 @@ export default async function TodayPage() {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
-    const { data: profile } = await supabase.from('profiles').select('*').eq('id', user?.id).single()
-    if (!profile) return <div>Profile not found.</div>
+    if (!user) {
+        redirect('/login')
+    }
+
+    // Fetch user profile (should be auto-created by database trigger on signup)
+    const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+
+    // If profile doesn't exist, something went wrong with the signup process
+    if (!profile || profileError) {
+        console.error('Profile not found for user:', user.id, profileError)
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-black p-4">
+                <div className="bg-white dark:bg-zinc-900 p-8 rounded-2xl shadow-xl w-full max-w-md text-center space-y-4">
+                    <div className="text-red-500 text-5xl mb-4">⚠️</div>
+                    <h1 className="text-2xl font-bold">Profile Not Found</h1>
+                    <p className="text-gray-500">
+                        Your account exists but your profile is missing. This shouldn't happen.
+                    </p>
+                    <p className="text-gray-400 text-sm">
+                        Please logout and try signing up again, or contact support if the problem persists.
+                    </p>
+                    <div className="pt-4">
+                        <Link
+                            href="/logout"
+                            className="inline-block px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                            Logout
+                        </Link>
+                    </div>
+                </div>
+            </div>
+        )
+    }
 
     const todayStr = format(new Date(), 'yyyy-MM-dd')
     const now = new Date()
