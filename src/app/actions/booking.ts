@@ -8,8 +8,8 @@ interface CreateBookingParams {
     service_id: string
     start_at: string // ISO string
     client_name: string
-    client_email: string
-    client_phone?: string | null
+    client_email: string | null
+    client_phone: string
     notes?: string | null
 }
 

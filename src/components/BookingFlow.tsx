@@ -51,6 +51,7 @@ export default function BookingFlow({
     // Booking Form State
     const [clientName, setClientName] = useState('')
     const [clientEmail, setClientEmail] = useState('')
+    const [clientPhone, setClientPhone] = useState('')
     const [notes, setNotes] = useState('')
     const [submitting, setSubmitting] = useState(false)
     const [completed, setCompleted] = useState(false)
@@ -83,6 +84,17 @@ export default function BookingFlow({
 
     const handleBooking = async () => {
         if (!selectedService || !selectedSlot) return
+
+        // Validate required fields
+        if (!clientName.trim()) {
+            setError('Please enter your name')
+            return
+        }
+        if (!clientPhone.trim()) {
+            setError('Please enter your phone number')
+            return
+        }
+
         setSubmitting(true)
         setError(null)
 
@@ -94,7 +106,7 @@ export default function BookingFlow({
                 start_at: selectedSlot.start,
                 client_name: clientName,
                 client_email: clientEmail,
-                client_phone: null,
+                client_phone: clientPhone,
                 notes: notes
             })
 
@@ -277,13 +289,24 @@ export default function BookingFlow({
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium mb-1">Email</label>
+                                <label className="block text-sm font-medium mb-1">Email (Optional)</label>
                                 <input
                                     type="email"
                                     value={clientEmail}
                                     onChange={e => setClientEmail(e.target.value)}
                                     className="w-full p-2 border rounded-lg dark:bg-gray-900 dark:border-gray-700 focus:ring-2 focus:ring-blue-500 outline-none"
                                     placeholder="you@example.com"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Phone Number</label>
+                                <input
+                                    type="tel"
+                                    value={clientPhone}
+                                    onChange={e => setClientPhone(e.target.value)}
+                                    required
+                                    className="w-full p-2 border rounded-lg dark:bg-gray-900 dark:border-gray-700 focus:ring-2 focus:ring-blue-500 outline-none"
+                                    placeholder="+1 234 567 890"
                                 />
                             </div>
                             <div>
