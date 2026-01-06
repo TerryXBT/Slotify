@@ -14,9 +14,7 @@ export async function getAvailableSlots(
     serviceId: string,
     date: string // YYYY-MM-DD
 ): Promise<Slot[]> {
-    // Casting to any to bypass strict type inference issues during build. 
-    // TODO: Fix Database interface alignment with supabase-js v2
-    const supabase = createAdminClient() as any
+    const supabase = createAdminClient()
 
     // 1. Get Profile
     const { data: profile, error: profileError } = await supabase
@@ -105,8 +103,8 @@ export async function getAvailableSlots(
         .gt('end_at', queryStart.toISOString())
 
     const allConflicts = [
-        ...(bookings || []).map((b: any) => ({ start: new Date(b.start_at), end: new Date(b.end_at) })),
-        ...(busy || []).map((b: any) => ({ start: new Date(b.start_at), end: new Date(b.end_at) }))
+        ...(bookings || []).map(b => ({ start: new Date(b.start_at), end: new Date(b.end_at) })),
+        ...(busy || []).map(b => ({ start: new Date(b.start_at), end: new Date(b.end_at) }))
     ]
 
     // 7. Generate Slots

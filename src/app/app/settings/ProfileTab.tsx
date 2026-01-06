@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { signOut, createService, updateService, toggleServiceActive, deleteService, restoreService, permanentlyDeleteService } from './actions'
 import { Plus, X, Copy, Check, Edit, Trash2, Share2, ChevronRight, MapPin, Video, Undo2, AlertTriangle, ChevronDown } from 'lucide-react'
 import { createAvailabilityRule, updateAvailabilityRule, deleteAvailabilityRule } from './actions'
+import SignOutConfirmDialog from '@/components/SignOutConfirmDialog'
 import clsx from 'clsx'
 
 // Monday-first order
@@ -70,6 +71,8 @@ export default function ProfileTab({ profile, services, deletedServices, availab
     const [permanentDeleteModal, setPermanentDeleteModal] = useState<{ isOpen: boolean; serviceId: string | null; serviceName: string }>({ isOpen: false, serviceId: null, serviceName: '' })
     const [isRestoringId, setIsRestoringId] = useState<string | null>(null)
     const [isPermanentlyDeleting, setIsPermanentlyDeleting] = useState(false)
+    const [showSignOutConfirm, setShowSignOutConfirm] = useState(false)
+    const [isSigningOut, setIsSigningOut] = useState(false)
 
     // Sync local state with server data when props change (after router.refresh())
     useEffect(() => {
@@ -256,9 +259,24 @@ export default function ProfileTab({ profile, services, deletedServices, availab
         closePermanentDeleteModal()
     }
 
-    const handleSignOut = async () => {
-        await signOut()
-        router.push('/login')
+    const handleSignOutClick = () => {
+        setShowSignOutConfirm(true)
+    }
+
+    const handleConfirmSignOut = async () => {
+        setIsSigningOut(true)
+        try {
+            await signOut()
+            router.push('/login')
+        } catch (error) {
+            console.error('Sign out error:', error)
+            setIsSigningOut(false)
+            setShowSignOutConfirm(false)
+        }
+    }
+
+    const handleCancelSignOut = () => {
+        setShowSignOutConfirm(false)
     }
 
     const rulesByDay = DAYS.map(day => ({
@@ -736,6 +754,14 @@ export default function ProfileTab({ profile, services, deletedServices, availab
                     </div>
                 </div>
             )}
+
+            {/* Sign Out Confirmation Dialog */}
+            <SignOutConfirmDialog
+                isOpen={showSignOutConfirm}
+                onClose={handleCancelSignOut}
+                onConfirm={handleConfirmSignOut}
+                isLoading={isSigningOut}
+            />
 
             <style jsx>{`
                 @keyframes slide-in {

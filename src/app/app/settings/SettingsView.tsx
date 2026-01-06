@@ -4,12 +4,15 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { signOut, updateProfile } from './actions'
 import { User, Mail, Phone, MapPin, LogOut, ChevronRight } from 'lucide-react'
+import SignOutConfirmDialog from '@/components/SignOutConfirmDialog'
 
 export default function SettingsView({ profile }: { profile: any }) {
     const router = useRouter()
     const [isEditing, setIsEditing] = useState(false)
     const [isSaving, setIsSaving] = useState(false)
     const [showSuccess, setShowSuccess] = useState(false)
+    const [showSignOutConfirm, setShowSignOutConfirm] = useState(false)
+    const [isSigningOut, setIsSigningOut] = useState(false)
 
     const handleProfileSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
@@ -25,9 +28,24 @@ export default function SettingsView({ profile }: { profile: any }) {
         setIsSaving(false)
     }
 
-    const handleSignOut = async () => {
-        await signOut()
-        router.push('/login')
+    const handleSignOutClick = () => {
+        setShowSignOutConfirm(true)
+    }
+
+    const handleConfirmSignOut = async () => {
+        setIsSigningOut(true)
+        try {
+            await signOut()
+            router.push('/login')
+        } catch (error) {
+            console.error('Sign out error:', error)
+            setIsSigningOut(false)
+            setShowSignOutConfirm(false)
+        }
+    }
+
+    const handleCancelSignOut = () => {
+        setShowSignOutConfirm(false)
     }
 
     return (
@@ -205,13 +223,21 @@ export default function SettingsView({ profile }: { profile: any }) {
                     <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Account</h2>
                 </div>
                 <button
-                    onClick={handleSignOut}
+                    onClick={handleSignOutClick}
                     className="w-full px-4 py-4 flex items-center gap-3 hover:bg-gray-900/50 transition-colors text-red-500"
                 >
                     <LogOut className="w-5 h-5" />
                     <span className="font-medium">Sign Out</span>
                 </button>
             </div>
+
+            {/* Sign Out Confirmation Dialog */}
+            <SignOutConfirmDialog
+                isOpen={showSignOutConfirm}
+                onClose={handleCancelSignOut}
+                onConfirm={handleConfirmSignOut}
+                isLoading={isSigningOut}
+            />
         </div>
     )
 }

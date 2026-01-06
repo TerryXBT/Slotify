@@ -7,12 +7,15 @@ import { updateProfile, signOut } from '../actions'
 import { createClient } from '@/utils/supabase/client'
 import Cropper from 'react-easy-crop'
 import getCroppedImg, { Area } from '@/utils/cropImage'
+import SignOutConfirmDialog from '@/components/SignOutConfirmDialog'
 
 export default function ProfileEditForm({ profile }: { profile: any }) {
     const router = useRouter()
     const [uploading, setUploading] = useState(false)
     const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url || '')
     const [isSaving, setIsSaving] = useState(false)
+    const [showSignOutConfirm, setShowSignOutConfirm] = useState(false)
+    const [isSigningOut, setIsSigningOut] = useState(false)
 
     // Crop state
     const [cropModalOpen, setCropModalOpen] = useState(false)
@@ -104,9 +107,24 @@ export default function ProfileEditForm({ profile }: { profile: any }) {
         }, 300)
     }
 
-    const handleSignOut = async () => {
-        await signOut()
-        router.push('/login')
+    const handleSignOutClick = () => {
+        setShowSignOutConfirm(true)
+    }
+
+    const handleConfirmSignOut = async () => {
+        setIsSigningOut(true)
+        try {
+            await signOut()
+            router.push('/login')
+        } catch (error) {
+            console.error('Sign out error:', error)
+            setIsSigningOut(false)
+            setShowSignOutConfirm(false)
+        }
+    }
+
+    const handleCancelSignOut = () => {
+        setShowSignOutConfirm(false)
     }
 
     return (
@@ -204,7 +222,7 @@ export default function ProfileEditForm({ profile }: { profile: any }) {
 
                     <button
                         type="button"
-                        onClick={handleSignOut}
+                        onClick={handleSignOutClick}
                         className="w-full bg-[#1C1C1E] hover:bg-[#2C2C2E] active:bg-[#3C3C3E] text-red-500 text-[17px] font-semibold py-3.5 rounded-xl transition-all active:scale-[0.98]"
                     >
                         Sign Out
@@ -213,6 +231,14 @@ export default function ProfileEditForm({ profile }: { profile: any }) {
 
                 {/* Safe bottom padding */}
                 <div className="h-8" />
+
+            {/* Sign Out Confirmation Dialog */}
+            <SignOutConfirmDialog
+                isOpen={showSignOutConfirm}
+                onClose={handleCancelSignOut}
+                onConfirm={handleConfirmSignOut}
+                isLoading={isSigningOut}
+            />
             </form>
 
             {/* Crop Modal */}

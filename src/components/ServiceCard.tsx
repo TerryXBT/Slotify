@@ -2,6 +2,7 @@
 
 import { MoreHorizontal, Link as LinkIcon, Edit, CheckCircle } from 'lucide-react'
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import ServiceActionsSheet, { ActionItem } from './ServiceActionsSheet'
 import Link from 'next/link'
 
@@ -22,6 +23,7 @@ interface ServiceCardProps {
 export default function ServiceCard({ service, username }: ServiceCardProps) {
     const [isSheetOpen, setIsSheetOpen] = useState(false)
     const [showToast, setShowToast] = useState(false)
+    const router = useRouter()
 
     const handleCopyLink = async () => {
         const bookingUrl = `${window.location.origin}/book/${username}/${service.id}`
@@ -30,6 +32,10 @@ export default function ServiceCard({ service, username }: ServiceCardProps) {
         // Show local toast
         setShowToast(true)
         setTimeout(() => setShowToast(false), 3000)
+    }
+
+    const handleEditService = () => {
+        router.push(`/app/services/${service.id}/edit`)
     }
 
     const actions: ActionItem[] = [
@@ -41,10 +47,7 @@ export default function ServiceCard({ service, username }: ServiceCardProps) {
         {
             label: 'Edit Service',
             icon: <Edit className="w-5 h-5" />,
-            onClick: () => {
-                // TODO: Navigate to edit page
-                window.location.href = `/app/settings?tab=services`
-            }
+            onClick: handleEditService
         }
     ]
 

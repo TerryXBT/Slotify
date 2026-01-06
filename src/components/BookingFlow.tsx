@@ -19,6 +19,9 @@ type Service = {
     name: string
     duration_minutes: number
     price_cents: number | null
+    description: string | null
+    location_type: string | null
+    default_location: string | null
 }
 
 type Profile = {
@@ -145,18 +148,52 @@ export default function BookingFlow({
     }
 
     return (
-        <div className="max-w-md mx-auto bg-white dark:bg-gray-900 min-h-screen sm:min-h-0 sm:rounded-xl sm:shadow-lg sm:my-8 overflow-hidden flex flex-col">
+        <div className="max-w-md mx-auto bg-[#1e293b] min-h-screen sm:min-h-0 sm:rounded-xl sm:shadow-lg sm:my-8 overflow-hidden flex flex-col">
             {/* Header */}
-            <div className="p-6 border-b border-gray-100 dark:border-gray-800">
-                <div className="flex items-center space-x-3">
+            <div className="p-6 border-b border-gray-700">
+                <div className="flex items-center space-x-3 mb-4">
                     <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-700 dark:text-blue-300 font-bold text-lg">
                         {profile.full_name?.[0] || profile.username[0].toUpperCase()}
                     </div>
                     <div>
-                        <h1 className="text-lg font-semibold">{profile.full_name || profile.username}</h1>
-                        <p className="text-sm text-gray-500">Select a time to meet</p>
+                        <h1 className="text-lg font-semibold text-white">{profile.full_name || profile.username}</h1>
+                        <p className="text-sm text-gray-400">Select a time to meet</p>
                     </div>
                 </div>
+
+                {/* Service Info - Show when service is selected */}
+                {selectedService && (
+                    <div className="mt-4 p-4 bg-[#2d3748] rounded-lg space-y-2">
+                        <h2 className="font-semibold text-lg text-white">{selectedService.name}</h2>
+
+                        {selectedService.description && (
+                            <p className="text-sm text-gray-300">{selectedService.description}</p>
+                        )}
+
+                        <div className="flex flex-wrap gap-3 text-sm">
+                            <div className="flex items-center text-gray-300">
+                                <Clock className="w-4 h-4 mr-1" />
+                                <span>{selectedService.duration_minutes} minutes</span>
+                            </div>
+
+                            {selectedService.price_cents && selectedService.price_cents > 0 && (
+                                <div className="flex items-center text-gray-300">
+                                    <span className="mr-1">$</span>
+                                    <span>{(selectedService.price_cents / 100).toFixed(2)}</span>
+                                </div>
+                            )}
+
+                            {selectedService.location_type && (
+                                <div className="flex items-center text-gray-300">
+                                    <span className="capitalize">{selectedService.location_type}</span>
+                                    {selectedService.location_type !== 'online' && selectedService.default_location && (
+                                        <span className="ml-1">• {selectedService.default_location}</span>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Steps */}
@@ -165,16 +202,16 @@ export default function BookingFlow({
                 {/* Service Selection */}
                 {!selectedService && (
                     <div className="space-y-4">
-                        <h3 className="text-lg font-medium">Select a Service</h3>
+                        <h3 className="text-lg font-medium text-white">Select a Service</h3>
                         <div className="grid gap-3">
                             {services.map(s => (
                                 <button
                                     key={s.id}
                                     onClick={() => setSelectedService(s)}
-                                    className="flex items-center justify-between p-4 border rounded-xl hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all text-left group"
+                                    className="flex items-center justify-between p-4 border border-gray-600 rounded-xl hover:border-blue-400 hover:bg-blue-900/30 transition-all text-left group"
                                 >
-                                    <span className="font-medium group-hover:text-blue-700">{s.name}</span>
-                                    <div className="flex items-center text-gray-400 group-hover:text-blue-500">
+                                    <span className="font-medium text-white group-hover:text-blue-300">{s.name}</span>
+                                    <div className="flex items-center text-gray-400 group-hover:text-blue-400">
                                         <Clock className="w-4 h-4 mr-1" />
                                         <span className="text-sm">{s.duration_minutes}m</span>
                                     </div>
@@ -190,7 +227,7 @@ export default function BookingFlow({
 
                         {/* Back to Service */}
                         {services.length > 1 && (
-                            <button onClick={() => setSelectedService(null)} className="text-sm text-gray-400 hover:text-gray-600 mb-2">
+                            <button onClick={() => setSelectedService(null)} className="text-sm text-gray-400 hover:text-gray-200 mb-2">
                                 ← Back to services
                             </button>
                         )}
@@ -198,10 +235,10 @@ export default function BookingFlow({
                         {/* Calendar */}
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
-                                <h3 className="font-medium">{format(currentMonth, 'MMMM yyyy')}</h3>
+                                <h3 className="font-medium text-white">{format(currentMonth, 'MMMM yyyy')}</h3>
                                 <div className="flex space-x-1">
-                                    <button onClick={() => setCurrentMonth(prev => addMonths(prev, -1))} className="p-1 hover:bg-gray-100 rounded-full"><ChevronLeft className="w-5 h-5" /></button>
-                                    <button onClick={() => setCurrentMonth(prev => addMonths(prev, 1))} className="p-1 hover:bg-gray-100 rounded-full"><ChevronRight className="w-5 h-5" /></button>
+                                    <button onClick={() => setCurrentMonth(prev => addMonths(prev, -1))} className="p-1 hover:bg-gray-700 rounded-full text-gray-300"><ChevronLeft className="w-5 h-5" /></button>
+                                    <button onClick={() => setCurrentMonth(prev => addMonths(prev, 1))} className="p-1 hover:bg-gray-700 rounded-full text-gray-300"><ChevronRight className="w-5 h-5" /></button>
                                 </div>
                             </div>
 
@@ -220,10 +257,10 @@ export default function BookingFlow({
                                             disabled={isPast}
                                             onClick={() => handleDateSelect(day)}
                                             className={clsx(
-                                                "h-10 rounded-full flex items-center justify-center text-sm transition-all",
-                                                isSelected ? "bg-black text-white dark:bg-white dark:text-black" : "hover:bg-gray-100 dark:hover:bg-gray-800",
-                                                isPast && "text-gray-300 cursor-not-allowed",
-                                                isToday(day) && !isSelected && "text-blue-600 font-bold"
+                                                "w-10 h-10 rounded-full flex items-center justify-center text-sm transition-all",
+                                                isSelected ? "bg-white text-[#1e293b]" : "hover:bg-gray-700 text-white",
+                                                isPast && "text-gray-500 cursor-not-allowed",
+                                                isToday(day) && !isSelected && "text-blue-400 font-bold"
                                             )}
                                         >
                                             {format(day, 'd')}
@@ -235,11 +272,11 @@ export default function BookingFlow({
 
                         {/* Slots */}
                         {selectedDate && (
-                            <div className="space-y-3 animate-in fade-in pt-4 border-t border-gray-100 dark:border-gray-800">
-                                <h4 className="text-sm font-medium text-gray-500">Available times for {format(selectedDate, 'EEEE, MMM d')}</h4>
+                            <div className="space-y-3 animate-in fade-in pt-4 border-t border-gray-700">
+                                <h4 className="text-sm font-medium text-gray-400">Available times for {format(selectedDate, 'EEEE, MMM d')}</h4>
 
                                 {loadingSlots ? (
-                                    <div className="flex justify-center p-4"><div className="w-5 h-5 border-2 border-gray-300 border-t-black rounded-full animate-spin" /></div>
+                                    <div className="flex justify-center p-4"><div className="w-5 h-5 border-2 border-gray-500 border-t-white rounded-full animate-spin" /></div>
                                 ) : slots.length === 0 ? (
                                     <div className="text-center text-gray-400 text-sm py-4">No slots available</div>
                                 ) : (
@@ -248,7 +285,7 @@ export default function BookingFlow({
                                             <button
                                                 key={slot.start}
                                                 onClick={() => setSelectedSlot(slot)}
-                                                className="px-3 py-2 text-sm border rounded-lg hover:border-black dark:hover:border-white transition-all text-center"
+                                                className="px-3 py-2 text-sm border border-gray-600 rounded-lg hover:border-blue-400 hover:bg-blue-900/30 transition-all text-center text-white font-medium"
                                             >
                                                 {format(new Date(slot.start), 'h:mm a')}
                                             </button>
