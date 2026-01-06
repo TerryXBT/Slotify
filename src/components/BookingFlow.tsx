@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { format, addMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isToday, addDays, getDay } from 'date-fns'
+import { format, addMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isToday, addDays, getDay, isBefore, startOfDay } from 'date-fns'
 import { ChevronLeft, ChevronRight, Clock, Check } from 'lucide-react'
 import { fetchSlots } from '@/app/actions'
 import { sendConfirmationEmail } from '@/app/actions/emails'
@@ -46,7 +46,10 @@ export default function BookingFlow({
         return services.length === 1 ? services[0] : null
     })
     const [selectedDate, setSelectedDate] = useState<Date | null>(null)
-    const [currentMonth, setCurrentMonth] = useState<Date>(new Date())
+    const [currentMonth, setCurrentMonth] = useState<Date>(() => {
+        // Always start with current month, never in the past
+        return startOfMonth(new Date())
+    })
     const [slots, setSlots] = useState<Slot[]>([])
     const [loadingSlots, setLoadingSlots] = useState(false)
     const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null)
@@ -66,6 +69,17 @@ export default function BookingFlow({
     const days = eachDayOfInterval({ start: monthStart, end: monthEnd })
     const startDayIndex = getDay(monthStart) // 0 (Sun) - 6 (Sat)
     const emptyDays = Array(startDayIndex).fill(null)
+
+    // Month navigation limits
+    const today = new Date()
+    const currentMonthStart = startOfMonth(today)
+    const maxMonth = addMonths(currentMonthStart, 2) // Can view up to 3 months (current + 2 more)
+    const displayedMonthStart = startOfMonth(currentMonth)
+
+    // Can go previous only if displayed month is after current month
+    const canGoPrevious = isBefore(currentMonthStart, displayedMonthStart)
+    // Can go next only if displayed month is before the max month
+    const canGoNext = isBefore(displayedMonthStart, maxMonth)
 
     const handleDateSelect = async (date: Date) => {
         setSelectedDate(date)
@@ -237,8 +251,30 @@ export default function BookingFlow({
                             <div className="flex items-center justify-between">
                                 <h3 className="font-medium text-white">{format(currentMonth, 'MMMM yyyy')}</h3>
                                 <div className="flex space-x-1">
-                                    <button onClick={() => setCurrentMonth(prev => addMonths(prev, -1))} className="p-1 hover:bg-gray-700 rounded-full text-gray-300"><ChevronLeft className="w-5 h-5" /></button>
-                                    <button onClick={() => setCurrentMonth(prev => addMonths(prev, 1))} className="p-1 hover:bg-gray-700 rounded-full text-gray-300"><ChevronRight className="w-5 h-5" /></button>
+                                    <button
+                                        onClick={() => setCurrentMonth(prev => addMonths(prev, -1))}
+                                        disabled={!canGoPrevious}
+                                        className={clsx(
+                                            "p-1 rounded-full transition-all",
+                                            canGoPrevious
+                                                ? "hover:bg-gray-700 text-gray-300"
+                                                : "text-gray-600 cursor-not-allowed opacity-40"
+                                        )}
+                                    >
+                                        <ChevronLeft className="w-5 h-5" />
+                                    </button>
+                                    <button
+                                        onClick={() => setCurrentMonth(prev => addMonths(prev, 1))}
+                                        disabled={!canGoNext}
+                                        className={clsx(
+                                            "p-1 rounded-full transition-all",
+                                            canGoNext
+                                                ? "hover:bg-gray-700 text-gray-300"
+                                                : "text-gray-600 cursor-not-allowed opacity-40"
+                                        )}
+                                    >
+                                        <ChevronRight className="w-5 h-5" />
+                                    </button>
                                 </div>
                             </div>
 
@@ -250,7 +286,8 @@ export default function BookingFlow({
                                 {emptyDays.map((_, i) => <div key={`empty-${i}`} />)}
                                 {days.map(day => {
                                     const isSelected = selectedDate && isSameDay(day, selectedDate)
-                                    const isPast = day < new Date(new Date().setHours(0, 0, 0, 0))
+                                    const isPast = isBefore(startOfDay(day), startOfDay(new Date()))
+                                    const isTodayDate = isToday(day)
                                     return (
                                         <button
                                             key={day.toISOString()}
@@ -258,9 +295,12 @@ export default function BookingFlow({
                                             onClick={() => handleDateSelect(day)}
                                             className={clsx(
                                                 "w-10 h-10 rounded-full flex items-center justify-center text-sm transition-all",
-                                                isSelected ? "bg-white text-[#1e293b]" : "hover:bg-gray-700 text-white",
-                                                isPast && "text-gray-500 cursor-not-allowed",
-                                                isToday(day) && !isSelected && "text-blue-400 font-bold"
+                                                isSelected
+                                                    ? "bg-white text-[#1e293b] font-semibold"
+                                                    : isPast
+                                                    ? "text-gray-700 cursor-not-allowed opacity-30"
+                                                    : "hover:bg-gray-700 text-white",
+                                                isTodayDate && !isSelected && !isPast && "text-blue-400 font-bold"
                                             )}
                                         >
                                             {format(day, 'd')}
