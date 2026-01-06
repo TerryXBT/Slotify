@@ -6,6 +6,37 @@ DO $$
 DECLARE
   v_provider_id uuid := '11111111-1111-1111-1111-111111111111';
 BEGIN
+  -- First, create the auth user if it doesn't exist
+  INSERT INTO auth.users (
+    id,
+    instance_id,
+    aud,
+    role,
+    email,
+    encrypted_password,
+    email_confirmed_at,
+    created_at,
+    updated_at,
+    confirmation_token,
+    raw_app_meta_data,
+    raw_user_meta_data
+  )
+  VALUES (
+    v_provider_id,
+    '00000000-0000-0000-0000-000000000000',
+    'authenticated',
+    'authenticated',
+    'demo@example.com',
+    crypt('demo123456', gen_salt('bf')),
+    now(),
+    now(),
+    now(),
+    '',
+    '{"provider":"email","providers":["email"]}',
+    '{"full_name":"Demo Professional"}'
+  )
+  ON CONFLICT (id) DO NOTHING;
+
   -- Insert Profile
   INSERT INTO profiles (id, username, full_name, timezone)
   VALUES (v_provider_id, 'demo_pro', 'Demo Professional', 'Australia/Hobart')
