@@ -1,36 +1,26 @@
 <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Background circle with gradient -->
-  <circle cx="256" cy="256" r="256" fill="url(#gradient)"/>
+  <!-- White background -->
+  <rect width="512" height="512" fill="white"/>
 
-  <!-- Gradient definition -->
-  <defs>
-    <linearGradient id="gradient" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#3b82f6"/>
-      <stop offset="100%" stop-color="#2563eb"/>
-    </linearGradient>
-  </defs>
-
-  <!-- Calendar icon (centered and scaled) -->
-  <g transform="translate(106, 106) scale(2.4)">
-    <!-- Calendar top rings -->
-    <rect x="35" y="0" width="10" height="25" rx="5" fill="white"/>
-    <rect x="55" y="0" width="10" height="25" rx="5" fill="white"/>
-    <rect x="75" y="0" width="10" height="25" rx="5" fill="white"/>
+  <!-- Calendar icon (centered, keeping original black design) -->
+  <g transform="translate(106, 126)">
+    <!-- Top rings -->
+    <rect x="35" y="0" width="22" height="50" rx="11" fill="#1a1a1a"/>
+    <rect x="93" y="0" width="22" height="50" rx="11" fill="#1a1a1a"/>
+    <rect x="151" y="0" width="22" height="50" rx="11" fill="#1a1a1a"/>
 
     <!-- Calendar body -->
-    <rect x="20" y="15" width="80" height="95" rx="12" fill="white"/>
+    <path d="M 40 30 L 40 250 C 40 265 45 270 60 270 L 240 270 C 255 270 260 265 260 250 L 260 30 C 260 15 255 10 240 10 L 60 10 C 45 10 40 15 40 30 Z" fill="#1a1a1a"/>
 
-    <!-- Checkmark background circle -->
-    <circle cx="60" cy="70" r="28" fill="#3b82f6"/>
+    <!-- White inner area -->
+    <rect x="65" y="65" width="170" height="180" rx="15" fill="white"/>
 
     <!-- Checkmark -->
-    <path
-      d="M 48 70 L 56 78 L 72 62"
-      stroke="white"
-      stroke-width="6"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      fill="none"
-    />
+    <path d="M 100 150 L 130 180 L 180 115"
+          stroke="#1a1a1a"
+          stroke-width="18"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          fill="none"/>
   </g>
 </svg>
