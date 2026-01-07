@@ -5,7 +5,13 @@ import { confirmReschedule } from '../actions'
 import { useState } from 'react'
 import { Check, Loader2 } from 'lucide-react'
 
-export default function RescheduleOptions({ token, options }: { token: string, options: any[] }) {
+interface RescheduleOption {
+    id: string
+    start_at: string
+    end_at: string
+}
+
+export default function RescheduleOptions({ token, options }: { token: string, options: RescheduleOption[] }) {
     const [loading, setLoading] = useState<string | null>(null)
     const [success, setSuccess] = useState(false)
     const [error, setError] = useState('')

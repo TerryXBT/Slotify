@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { signOut, createService, updateService, toggleServiceActive, deleteService, restoreService, permanentlyDeleteService } from './actions'
-import { Plus, X, Copy, Check, Edit, Trash2, Share2, ChevronRight, MapPin, Video, Undo2, AlertTriangle, ChevronDown } from 'lucide-react'
-import { createAvailabilityRule, updateAvailabilityRule, deleteAvailabilityRule } from './actions'
+import { Plus, X, Check, Edit, Trash2, Share2, ChevronRight, MapPin, Video, Undo2, AlertTriangle, ChevronDown } from 'lucide-react'
+import { createAvailabilityRule, deleteAvailabilityRule } from './actions'
 import SignOutConfirmDialog from '@/components/SignOutConfirmDialog'
 import clsx from 'clsx'
 
@@ -19,25 +20,6 @@ const DAYS = [
     { id: 6, label: 'Saturday', short: 'S' },
     { id: 0, label: 'Sunday', short: 'S' },
 ]
-
-// Generate time options in 15-minute intervals
-const generateTimeOptions = () => {
-    const options = []
-    for (let hour = 0; hour < 24; hour++) {
-        for (let minute = 0; minute < 60; minute += 15) {
-            const h = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour
-            const period = hour < 12 ? 'am' : 'pm'
-            const minuteStr = minute.toString().padStart(2, '0')
-            const hourStr = hour.toString().padStart(2, '0')
-            const time24 = `${hourStr}:${minuteStr}`
-            const timeLabel = `${h}:${minuteStr} ${period}`
-            options.push({ value: time24, label: timeLabel })
-        }
-    }
-    return options
-}
-
-const TIME_OPTIONS = generateTimeOptions()
 
 interface AvailabilityRule {
     id: string
@@ -53,7 +35,29 @@ interface LocalRule {
     end_time: string
 }
 
-export default function ProfileTab({ profile, services, deletedServices, availabilityRules }: { profile: any, services: any[], deletedServices: any[], availabilityRules: AvailabilityRule[] }) {
+// Proper type definitions instead of `any`
+interface Profile {
+    username: string
+    full_name?: string | null
+    avatar_url?: string | null
+    bio?: string | null
+    location?: string | null
+    phone?: string | null
+    email?: string | null
+}
+
+interface Service {
+    id: string
+    name: string
+    duration_minutes: number
+    price_cents: number
+    is_active?: boolean
+    default_location?: string | null
+    location_type?: string | null
+    deleted_at?: string | null
+}
+
+export default function ProfileTab({ profile, services, deletedServices, availabilityRules }: { profile: Profile, services: Service[], deletedServices: Service[], availabilityRules: AvailabilityRule[] }) {
     const router = useRouter()
     const [showSuccess, setShowSuccess] = useState(false)
     const [copiedServiceId, setCopiedServiceId] = useState<string | null>(null)
@@ -61,8 +65,8 @@ export default function ProfileTab({ profile, services, deletedServices, availab
     const [isCreatingService, setIsCreatingService] = useState(false)
     const [serviceLocationType, setServiceLocationType] = useState('physical')
     const [togglingServiceId, setTogglingServiceId] = useState<string | null>(null)
-    // Local state for service active status (optimistic updates)
-    const [localServices, setLocalServices] = useState(services.map(s => ({ ...s, is_active: s.is_active ?? true })))
+    // Track service active states for optimistic updates
+    const [activeOverrides, setActiveOverrides] = useState<Record<string, boolean>>({})
     // Delete confirmation modal state
     const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; serviceId: string | null; serviceName: string }>({ isOpen: false, serviceId: null, serviceName: '' })
     const [isDeleting, setIsDeleting] = useState(false)
@@ -74,19 +78,23 @@ export default function ProfileTab({ profile, services, deletedServices, availab
     const [showSignOutConfirm, setShowSignOutConfirm] = useState(false)
     const [isSigningOut, setIsSigningOut] = useState(false)
 
-    // Sync local state with server data when props change (after router.refresh())
-    useEffect(() => {
-        setLocalServices(services.map(s => ({ ...s, is_active: s.is_active ?? true })))
-    }, [services])
+    // Derive localServices from props + overrides (no useEffect needed)
+    const localServices = useMemo(() =>
+        services.map(s => ({
+            ...s,
+            is_active: activeOverrides[s.id] ?? s.is_active ?? true
+        })),
+        [services, activeOverrides]
+    )
 
     const handleToggleActive = async (serviceId: string, currentState: boolean) => {
         setTogglingServiceId(serviceId)
-        // Optimistic update
-        setLocalServices(prev => prev.map(s => s.id === serviceId ? { ...s, is_active: !currentState } : s))
+        // Optimistic update via overrides
+        setActiveOverrides(prev => ({ ...prev, [serviceId]: !currentState }))
         const result = await toggleServiceActive(serviceId, !currentState)
         if (result.error) {
             // Revert on error
-            setLocalServices(prev => prev.map(s => s.id === serviceId ? { ...s, is_active: currentState } : s))
+            setActiveOverrides(prev => ({ ...prev, [serviceId]: currentState }))
             alert(result.error)
         }
         setTogglingServiceId(null)
@@ -112,51 +120,6 @@ export default function ProfileTab({ profile, services, deletedServices, availab
         navigator.clipboard.writeText(link)
         setCopiedServiceId(serviceId)
         setTimeout(() => setCopiedServiceId(null), 2000)
-    }
-
-    const handleAddDay = (dayOfWeek: number) => {
-        setLocalRules([...localRules, {
-            id: null,
-            day_of_week: dayOfWeek,
-            start_time: '08:00',
-            end_time: '20:00'
-        }])
-    }
-
-    const handleDeleteRule = async (index: number) => {
-        const rule = localRules[index]
-        if (rule.id) {
-            await deleteAvailabilityRule(rule.id)
-        }
-        setLocalRules(localRules.filter((_, i) => i !== index))
-        router.refresh()
-    }
-
-    const handleTimeChange = async (index: number, field: 'start_time' | 'end_time', value: string) => {
-        const newRules = [...localRules]
-        newRules[index][field] = value
-        setLocalRules(newRules)
-
-        const rule = newRules[index]
-        const formData = new FormData()
-        formData.append('start_time', rule.start_time)
-        formData.append('end_time', rule.end_time)
-
-        if (rule.id === null) {
-            formData.append('day_of_week', rule.day_of_week.toString())
-            const result = await createAvailabilityRule(formData)
-            if (result.success) {
-                router.refresh()
-            }
-        } else {
-            await updateAvailabilityRule(rule.id, formData)
-        }
-    }
-
-    const openCopyModal = (dayOfWeek: number) => {
-        setCopySourceDay(dayOfWeek)
-        setSelectedDays([])
-        setCopyModalOpen(true)
     }
 
     const handleApplyCopy = async () => {
@@ -215,8 +178,6 @@ export default function ProfileTab({ profile, services, deletedServices, availab
         if (res?.error) {
             alert(res.error)
         } else if (res?.success) {
-            // Update local state
-            setLocalServices(prev => prev.filter(s => s.id !== deleteModal.serviceId))
             router.refresh()
         }
         setIsDeleting(false)
@@ -259,9 +220,7 @@ export default function ProfileTab({ profile, services, deletedServices, availab
         closePermanentDeleteModal()
     }
 
-    const handleSignOutClick = () => {
-        setShowSignOutConfirm(true)
-    }
+
 
     const handleConfirmSignOut = async () => {
         setIsSigningOut(true)
@@ -301,9 +260,11 @@ export default function ProfileTab({ profile, services, deletedServices, availab
                     className="w-full px-6 py-4 flex items-center gap-4 hover:bg-gray-900/50 transition-colors block"
                 >
                     {profile.avatar_url ? (
-                        <img
+                        <Image
                             src={profile.avatar_url}
                             alt="Avatar"
+                            width={64}
+                            height={64}
                             className="w-16 h-16 rounded-full object-cover shadow-md"
                         />
                     ) : (
@@ -450,7 +411,7 @@ export default function ProfileTab({ profile, services, deletedServices, availab
 
                     {showTrash && (
                         <div className="px-6 pb-4 space-y-2">
-                            {deletedServices.map((service: any) => (
+                            {deletedServices.map((service) => (
                                 <div
                                     key={service.id}
                                     className="flex items-center justify-between p-3 bg-gray-900/50 rounded-xl border border-gray-800/50"
@@ -458,7 +419,7 @@ export default function ProfileTab({ profile, services, deletedServices, availab
                                     <div>
                                         <h4 className="text-sm font-medium text-gray-400 line-through">{service.name}</h4>
                                         <p className="text-xs text-gray-500">
-                                            Deleted {new Date(service.deleted_at).toLocaleDateString()}
+                                            Deleted {service.deleted_at ? new Date(service.deleted_at).toLocaleDateString() : 'N/A'}
                                         </p>
                                     </div>
                                     <div className="flex items-center gap-1">
@@ -554,7 +515,7 @@ export default function ProfileTab({ profile, services, deletedServices, availab
                                         name="price"
                                         required
                                         step="0.01"
-                                        defaultValue={editingService ? (services.find(s => s.id === editingService)?.price_cents / 100).toFixed(2) : '0'}
+                                        defaultValue={editingService ? ((services.find(s => s.id === editingService)?.price_cents ?? 0) / 100).toFixed(2) : '0'}
                                         className="w-full px-3 py-2 border border-gray-700 rounded-lg bg-gray-900 text-white"
                                     />
                                 </div>
@@ -602,7 +563,7 @@ export default function ProfileTab({ profile, services, deletedServices, availab
                                 <input
                                     type="text"
                                     name="default_location"
-                                    defaultValue={editingService ? services.find(s => s.id === editingService)?.default_location : ''}
+                                    defaultValue={editingService ? services.find(s => s.id === editingService)?.default_location ?? '' : ''}
                                     className="w-full px-3 py-2 border border-gray-700 rounded-lg bg-gray-900 text-white"
                                     placeholder={serviceLocationType === 'physical' ? 'e.g., Downtown Studio, 123 Main St' : 'e.g., https://meet.google.com/...'}
                                 />

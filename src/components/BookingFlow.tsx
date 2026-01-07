@@ -1,12 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { format, addMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isToday, addDays, getDay, isBefore, startOfDay } from 'date-fns'
+import { format, addMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, getDay, isBefore, startOfDay } from 'date-fns'
 import { ChevronLeft, ChevronRight, Clock, Check } from 'lucide-react'
 import { fetchSlots } from '@/app/actions'
 import { sendConfirmationEmail } from '@/app/actions/emails'
-import { createClient } from '@/utils/supabase/client' // For submitting the booking
 import { createBookingAction } from '@/app/actions/booking'
+import { toast } from '@/utils/toast'
+import AddToCalendar from '@/components/AddToCalendar'
 import clsx from 'clsx'
 
 type Slot = {
@@ -61,7 +62,12 @@ export default function BookingFlow({
     const [notes, setNotes] = useState('')
     const [submitting, setSubmitting] = useState(false)
     const [completed, setCompleted] = useState(false)
-    const [error, setError] = useState<string | null>(null)
+    const [bookingDetails, setBookingDetails] = useState<{
+        serviceName: string
+        startTime: Date
+        endTime: Date
+        location?: string
+    } | null>(null)
 
     // Calendar Helpers
     const monthStart = startOfMonth(currentMonth)
@@ -104,16 +110,15 @@ export default function BookingFlow({
 
         // Validate required fields
         if (!clientName.trim()) {
-            setError('Please enter your name')
+            toast.error('Please enter your name')
             return
         }
         if (!clientPhone.trim()) {
-            setError('Please enter your phone number')
+            toast.error('Please enter your phone number')
             return
         }
 
         setSubmitting(true)
-        setError(null)
 
         try {
             // Call Server Action
@@ -137,24 +142,55 @@ export default function BookingFlow({
             // Trigger Email
             await sendConfirmationEmail(data.id)
 
+            // Store booking details for calendar export
+            const startTime = new Date(selectedSlot.start)
+            const endTime = new Date(startTime.getTime() + selectedService.duration_minutes * 60000)
+
+            setBookingDetails({
+                serviceName: selectedService.name,
+                startTime,
+                endTime,
+                location: selectedService.location_type === 'online'
+                    ? 'Online'
+                    : selectedService.default_location || undefined
+            })
+
             setCompleted(true)
-        } catch (e: any) {
+            toast.success('Booking confirmed! Check your email for details.')
+        } catch (e: unknown) {
             console.error(e)
-            setError(e.message || 'Booking failed')
+            const errorMessage = e instanceof Error ? e.message : 'Booking failed. Please try again.'
+            toast.error(errorMessage)
         } finally {
             setSubmitting(false)
         }
     }
 
-    if (completed) {
+    if (completed && bookingDetails) {
         return (
-            <div className="flex flex-col items-center justify-center p-8 space-y-4 animate-in fade-in zoom-in duration-300">
+            <div className="flex flex-col items-center justify-center p-8 space-y-6 animate-in fade-in zoom-in duration-300">
                 <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
                     <Check className="w-8 h-8 text-green-600 dark:text-green-400" />
                 </div>
-                <h2 className="text-2xl font-bold text-center">Booking Confirmed!</h2>
-                <p className="text-gray-500 text-center">Check your email for details.</p>
-                <button onClick={() => window.location.reload()} className="text-blue-600 underline">
+                <div className="text-center space-y-2">
+                    <h2 className="text-2xl font-bold">Booking Confirmed!</h2>
+                    <p className="text-gray-500">Check your email for details.</p>
+                </div>
+
+                <AddToCalendar
+                    event={{
+                        title: `${bookingDetails.serviceName} with ${profile.full_name || profile.username}`,
+                        description: `Booking for ${bookingDetails.serviceName}`,
+                        location: bookingDetails.location,
+                        startTime: bookingDetails.startTime,
+                        endTime: bookingDetails.endTime,
+                    }}
+                />
+
+                <button
+                    onClick={() => window.location.reload()}
+                    className="text-blue-600 hover:text-blue-700 underline transition-colors"
+                >
                     Book another
                 </button>
             </div>
@@ -298,8 +334,8 @@ export default function BookingFlow({
                                                 isSelected
                                                     ? "bg-white text-[#1e293b] font-semibold"
                                                     : isPast
-                                                    ? "text-gray-700 cursor-not-allowed opacity-30"
-                                                    : "hover:bg-gray-700 text-white",
+                                                        ? "text-gray-700 cursor-not-allowed opacity-30"
+                                                        : "hover:bg-gray-700 text-white",
                                                 isTodayDate && !isSelected && !isPast && "text-blue-400 font-bold"
                                             )}
                                         >
@@ -396,10 +432,6 @@ export default function BookingFlow({
                                 />
                             </div>
                         </div>
-
-                        {error && (
-                            <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg">{error}</div>
-                        )}
 
                         <button
                             onClick={handleBooking}

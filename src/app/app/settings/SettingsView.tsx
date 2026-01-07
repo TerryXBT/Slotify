@@ -3,9 +3,11 @@
 import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { signOut, updateProfile } from './actions'
-import { User, Mail, Phone, MapPin, LogOut, ChevronRight, Camera, X } from 'lucide-react'
+import { User, Mail, Phone, MapPin, LogOut, ChevronRight, Camera, X, Lock, Eye, EyeOff } from 'lucide-react'
 import SignOutConfirmDialog from '@/components/SignOutConfirmDialog'
+import PushNotifications from '@/components/PushNotifications'
 import { createClient } from '@/utils/supabase/client'
+import { toast } from '@/utils/toast'
 import Cropper from 'react-easy-crop'
 import getCroppedImg, { Area } from '@/utils/cropImage'
 
@@ -13,9 +15,16 @@ export default function SettingsView({ profile }: { profile: any }) {
     const router = useRouter()
     const [isEditing, setIsEditing] = useState(false)
     const [isSaving, setIsSaving] = useState(false)
-    const [showSuccess, setShowSuccess] = useState(false)
     const [showSignOutConfirm, setShowSignOutConfirm] = useState(false)
     const [isSigningOut, setIsSigningOut] = useState(false)
+
+    // Password change state
+    const [showPasswordDialog, setShowPasswordDialog] = useState(false)
+    const [newPassword, setNewPassword] = useState('')
+    const [confirmPassword, setConfirmPassword] = useState('')
+    const [isChangingPassword, setIsChangingPassword] = useState(false)
+    const [showNewPassword, setShowNewPassword] = useState(false)
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
     // Avatar upload state
     const [uploading, setUploading] = useState(false)
@@ -37,13 +46,13 @@ export default function SettingsView({ profile }: { profile: any }) {
 
         // Check file size (max 5MB)
         if (file.size > 5 * 1024 * 1024) {
-            alert('File size must be less than 5MB')
+            toast.error('File size must be less than 5MB')
             return
         }
 
         // Check file type
         if (!file.type.startsWith('image/')) {
-            alert('Please upload an image file')
+            toast.error('Please upload an image file')
             return
         }
 
@@ -88,9 +97,10 @@ export default function SettingsView({ profile }: { profile: any }) {
             setAvatarUrl(publicUrl)
             setCropModalOpen(false)
             setImageSrc(null)
+            toast.success('Avatar uploaded successfully')
         } catch (error) {
             console.error('Upload error:', error)
-            alert('Failed to upload avatar')
+            toast.error('Failed to upload avatar')
         } finally {
             setUploading(false)
         }
@@ -105,10 +115,11 @@ export default function SettingsView({ profile }: { profile: any }) {
         }
         const res = await updateProfile(formData)
         if (res?.success) {
-            setShowSuccess(true)
-            setTimeout(() => setShowSuccess(false), 2000)
+            toast.success('Profile saved successfully!')
             setIsEditing(false)
             router.refresh()
+        } else {
+            toast.error('Failed to save profile')
         }
         setIsSaving(false)
     }
@@ -124,6 +135,7 @@ export default function SettingsView({ profile }: { profile: any }) {
             router.push('/login')
         } catch (error) {
             console.error('Sign out error:', error)
+            toast.error('Failed to sign out. Please try again.')
             setIsSigningOut(false)
             setShowSignOutConfirm(false)
         }
@@ -131,6 +143,41 @@ export default function SettingsView({ profile }: { profile: any }) {
 
     const handleCancelSignOut = () => {
         setShowSignOutConfirm(false)
+    }
+
+    const handlePasswordChange = async () => {
+        // Validation
+        if (!newPassword || newPassword.length < 6) {
+            toast.error('Password must be at least 6 characters')
+            return
+        }
+
+        if (newPassword !== confirmPassword) {
+            toast.error('Passwords do not match')
+            return
+        }
+
+        setIsChangingPassword(true)
+        try {
+            const supabase = createClient()
+            const { error } = await supabase.auth.updateUser({
+                password: newPassword
+            })
+
+            if (error) throw error
+
+            toast.success('Password updated successfully!')
+            setShowPasswordDialog(false)
+            setNewPassword('')
+            setConfirmPassword('')
+            setShowNewPassword(false)
+            setShowConfirmPassword(false)
+        } catch (error: any) {
+            console.error('Password change error:', error)
+            toast.error(error.message || 'Failed to update password')
+        } finally {
+            setIsChangingPassword(false)
+        }
     }
 
     return (
@@ -141,13 +188,6 @@ export default function SettingsView({ profile }: { profile: any }) {
                     <h1 className="text-2xl font-bold text-white">Settings</h1>
                 </div>
             </div>
-
-            {/* Success Toast */}
-            {showSuccess && (
-                <div className="fixed top-4 left-1/2 -translate-x-1/2 bg-green-600 text-white px-4 py-2 rounded-full text-sm font-medium z-50 shadow-lg">
-                    Profile saved!
-                </div>
-            )}
 
             {/* Profile Section */}
             <div className="bg-[#1C1C1E] mt-4 mx-4 rounded-2xl overflow-hidden">
@@ -312,11 +352,23 @@ export default function SettingsView({ profile }: { profile: any }) {
                 )}
             </div>
 
+            {/* Notifications Section */}
+            <div className="mt-4 mx-4">
+                <PushNotifications />
+            </div>
+
             {/* Account Section */}
             <div className="bg-[#1C1C1E] mt-4 mx-4 rounded-2xl overflow-hidden">
                 <div className="px-4 py-3 border-b border-gray-800">
                     <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Account</h2>
                 </div>
+                <button
+                    onClick={() => setShowPasswordDialog(true)}
+                    className="w-full px-4 py-4 flex items-center gap-3 hover:bg-gray-900/50 transition-colors text-white border-b border-gray-800"
+                >
+                    <Lock className="w-5 h-5" />
+                    <span className="font-medium">Change Password</span>
+                </button>
                 <button
                     onClick={handleSignOutClick}
                     className="w-full px-4 py-4 flex items-center gap-3 hover:bg-gray-900/50 transition-colors text-red-500"
@@ -333,6 +385,154 @@ export default function SettingsView({ profile }: { profile: any }) {
                 onConfirm={handleConfirmSignOut}
                 isLoading={isSigningOut}
             />
+
+            {/* Change Password Dialog */}
+            {showPasswordDialog && (
+                <>
+                    {/* Backdrop */}
+                    <div
+                        className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50"
+                        onClick={() => !isChangingPassword && setShowPasswordDialog(false)}
+                    />
+
+                    {/* Dialog */}
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <div className="bg-[#1C1C1E] rounded-3xl max-w-md w-full shadow-2xl border border-gray-800 overflow-hidden animate-in zoom-in-95 fade-in duration-200">
+                            {/* Header */}
+                            <div className="bg-gradient-to-r from-blue-600 to-blue-500 p-6 relative">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                                            <Lock className="w-6 h-6 text-white" />
+                                        </div>
+                                        <h3 className="text-2xl font-bold text-white">Change Password</h3>
+                                    </div>
+                                    <button
+                                        onClick={() => !isChangingPassword && setShowPasswordDialog(false)}
+                                        className="text-white/80 hover:text-white transition-colors p-1 hover:bg-white/10 rounded-full"
+                                        disabled={isChangingPassword}
+                                    >
+                                        <X className="w-6 h-6" />
+                                    </button>
+                                </div>
+                                <p className="text-blue-100 text-sm mt-3">
+                                    Create a strong password with at least 6 characters
+                                </p>
+                            </div>
+
+                            {/* Body */}
+                            <div className="p-6 space-y-5">
+                                {/* New Password */}
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-300 mb-2.5">
+                                        New Password
+                                    </label>
+                                    <div className="relative">
+                                        <input
+                                            type={showNewPassword ? "text" : "password"}
+                                            value={newPassword}
+                                            onChange={(e) => setNewPassword(e.target.value)}
+                                            placeholder="••••••••"
+                                            className="w-full px-4 py-3.5 pr-12 bg-black/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                                            disabled={isChangingPassword}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowNewPassword(!showNewPassword)}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300 transition-colors p-1"
+                                            disabled={isChangingPassword}
+                                        >
+                                            {showNewPassword ? (
+                                                <EyeOff className="w-5 h-5" />
+                                            ) : (
+                                                <Eye className="w-5 h-5" />
+                                            )}
+                                        </button>
+                                    </div>
+                                    {newPassword && newPassword.length < 6 && (
+                                        <p className="text-xs text-red-400 mt-2 flex items-center gap-1">
+                                            <span>⚠</span>
+                                            <span>Password must be at least 6 characters</span>
+                                        </p>
+                                    )}
+                                </div>
+
+                                {/* Confirm Password */}
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-300 mb-2.5">
+                                        Confirm Password
+                                    </label>
+                                    <div className="relative">
+                                        <input
+                                            type={showConfirmPassword ? "text" : "password"}
+                                            value={confirmPassword}
+                                            onChange={(e) => setConfirmPassword(e.target.value)}
+                                            placeholder="••••••••"
+                                            className="w-full px-4 py-3.5 pr-12 bg-black/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                                            disabled={isChangingPassword}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300 transition-colors p-1"
+                                            disabled={isChangingPassword}
+                                        >
+                                            {showConfirmPassword ? (
+                                                <EyeOff className="w-5 h-5" />
+                                            ) : (
+                                                <Eye className="w-5 h-5" />
+                                            )}
+                                        </button>
+                                    </div>
+                                    {confirmPassword && newPassword !== confirmPassword && (
+                                        <p className="text-xs text-red-400 mt-2 flex items-center gap-1">
+                                            <span>⚠</span>
+                                            <span>Passwords do not match</span>
+                                        </p>
+                                    )}
+                                    {confirmPassword && newPassword === confirmPassword && newPassword.length >= 6 && (
+                                        <p className="text-xs text-green-400 mt-2 flex items-center gap-1">
+                                            <span>✓</span>
+                                            <span>Passwords match</span>
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Footer */}
+                            <div className="px-6 pb-6 flex gap-3">
+                                <button
+                                    onClick={() => {
+                                        setShowPasswordDialog(false)
+                                        setNewPassword('')
+                                        setConfirmPassword('')
+                                        setShowNewPassword(false)
+                                        setShowConfirmPassword(false)
+                                    }}
+                                    disabled={isChangingPassword}
+                                    className="flex-1 px-4 py-3.5 bg-gray-700/50 hover:bg-gray-700 text-white rounded-xl font-semibold transition-all disabled:opacity-50 active:scale-95"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handlePasswordChange}
+                                    disabled={isChangingPassword || !newPassword || !confirmPassword || newPassword !== confirmPassword || newPassword.length < 6}
+                                    className="flex-1 px-4 py-3.5 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 shadow-lg shadow-blue-500/25"
+                                >
+                                    {isChangingPassword ? (
+                                        <span className="flex items-center justify-center gap-2">
+                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            Updating...
+                                        </span>
+                                    ) : (
+                                        'Update Password'
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </>
+            )}
 
             {/* Crop Modal */}
             {cropModalOpen && imageSrc && (

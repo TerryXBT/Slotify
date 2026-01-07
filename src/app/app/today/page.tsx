@@ -137,10 +137,12 @@ export default async function TodayPage() {
                     {nextBooking ? (
                         <UpNextCard booking={nextBooking} />
                     ) : (
-                        <div className="py-8 bg-[#1C1C1E] rounded-2xl flex flex-col items-center justify-center text-center">
-                            <Clock className="w-8 h-8 text-gray-600 mb-3" />
-                            <p className="text-gray-400 font-medium">No upcoming bookings</p>
-                            <p className="text-gray-600 text-sm mt-1">You're clear for now</p>
+                        <div className="bg-[#1C1C1E] rounded-2xl py-12 flex flex-col items-center justify-center text-center">
+                            <div className="w-16 h-16 mb-4 rounded-full bg-gray-800 flex items-center justify-center">
+                                <Clock className="w-8 h-8 text-gray-400" />
+                            </div>
+                            <h3 className="text-lg font-semibold text-white mb-2">No upcoming bookings</h3>
+                            <p className="text-sm text-gray-400 max-w-sm">You're clear for now. Enjoy your free time!</p>
                         </div>
                     )}
                 </section>

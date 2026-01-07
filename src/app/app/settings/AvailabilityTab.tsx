@@ -167,7 +167,7 @@ export default function AvailabilityTab({
         if (copySourceDay === null) return
 
         const sourceRules = localRules.filter(r => r.day_of_week === copySourceDay)
-        let newRules = localRules.filter(r => !selectedCopyDays.includes(r.day_of_week))
+        const newRules = localRules.filter(r => !selectedCopyDays.includes(r.day_of_week))
 
         selectedCopyDays.forEach(targetDay => {
             sourceRules.forEach(src => {

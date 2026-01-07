@@ -3,6 +3,7 @@ import withPWA from 'next-pwa';
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   /* config options here */
+  turbopack: {}, // Silence Turbopack/webpack conflict with next-pwa
   reactStrictMode: true,
   // Allow access from local network during development
   allowedDevOrigins: [

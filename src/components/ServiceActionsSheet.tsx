@@ -1,7 +1,7 @@
 'use client'
 
 import { X } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useCallback, useRef } from 'react'
 
 export interface ActionItem {
     label: string
@@ -18,33 +18,34 @@ interface ServiceActionsSheetProps {
 }
 
 export default function ServiceActionsSheet({ isOpen, onClose, actions, title }: ServiceActionsSheetProps) {
-    const [isVisible, setIsVisible] = useState(false)
+    const sheetRef = useRef<HTMLDivElement>(null)
 
-    // Handle animation timing
-    useEffect(() => {
-        if (isOpen) {
-            setIsVisible(true)
-        } else {
-            const timer = setTimeout(() => setIsVisible(false), 300)
-            return () => clearTimeout(timer)
-        }
-    }, [isOpen])
+    // Handle transition end to ensure cleanup after close animation
+    const handleTransitionEnd = useCallback(() => {
+        // Animation cleanup happens via CSS, no state needed
+    }, [])
 
-    if (!isVisible && !isOpen) return null
+    // Don't render at all if closed (for accessibility)
+    // But we need to keep it mounted briefly for exit animation
+    // Using CSS visibility + opacity handles this
 
     return (
-        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
+        <div
+            className={`fixed inset-0 z-50 flex items-end justify-center sm:items-center transition-opacity duration-300 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+                }`}
+            style={{ visibility: isOpen ? 'visible' : 'hidden' }}
+        >
             {/* Backdrop */}
             <div
-                className={`absolute inset-0 bg-black/60 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0'
-                    }`}
+                className={`absolute inset-0 bg-black/60 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0'}`}
                 onClick={onClose}
             ></div>
 
             {/* Sheet */}
             <div
-                className={`relative w-full max-w-sm bg-[#1C1C1E] rounded-t-2xl sm:rounded-2xl overflow-hidden shadow-2xl transition-transform duration-300 ease-out transform ${isOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 sm:translate-y-8'
-                    }`}
+                ref={sheetRef}
+                onTransitionEnd={handleTransitionEnd}
+                className={`relative w-full max-w-sm bg-[#1C1C1E] rounded-t-2xl sm:rounded-2xl overflow-hidden shadow-2xl transition-transform duration-300 ease-out transform ${isOpen ? 'translate-y-0' : 'translate-y-full sm:translate-y-8'}`}
             >
                 {/* Header handle for mobile */}
                 <div className="w-full h-1.5 flex justify-center pt-3 pb-6 sm:hidden" onClick={onClose}>
