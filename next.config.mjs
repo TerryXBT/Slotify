@@ -4,6 +4,11 @@ import withPWA from 'next-pwa';
 const nextConfig = {
   /* config options here */
   reactStrictMode: true,
+  // Allow access from local network during development
+  allowedDevOrigins: [
+    'http://192.168.0.57:3000',
+    'http://localhost:3000',
+  ],
 };
 
 export default withPWA({
