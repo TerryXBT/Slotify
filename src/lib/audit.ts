@@ -29,7 +29,8 @@ export async function writeAuditLog(params: AuditLogParams): Promise<void> {
     const supabase = createAdminClient()
 
     try {
-        const { error } = await supabase
+        // audit_logs table exists but may not be in generated types yet
+        const { error } = await (supabase as any)
             .from('audit_logs')
             .insert({
                 entity_type: params.entityType,
@@ -107,7 +108,8 @@ export async function getAuditLogs(
 ) {
     const supabase = createAdminClient()
 
-    const { data, error } = await supabase
+    // audit_logs table exists but may not be in generated types yet
+    const { data, error } = await (supabase as any)
         .from('audit_logs')
         .select('*')
         .eq('entity_type', entityType)

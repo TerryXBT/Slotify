@@ -113,6 +113,10 @@ export default function BookingFlow({
             toast.error('Please enter your name')
             return
         }
+        if (!clientEmail.trim()) {
+            toast.error('Please enter your email address')
+            return
+        }
         if (!clientPhone.trim()) {
             toast.error('Please enter your phone number')
             return
@@ -406,11 +410,12 @@ export default function BookingFlow({
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium mb-1">Email (Optional)</label>
+                                <label className="block text-sm font-medium mb-1">Email</label>
                                 <input
                                     type="email"
                                     value={clientEmail}
                                     onChange={e => setClientEmail(e.target.value)}
+                                    required
                                     className="w-full p-2 border rounded-lg dark:bg-gray-900 dark:border-gray-700 focus:ring-2 focus:ring-blue-500 outline-none"
                                     placeholder="you@example.com"
                                 />
@@ -439,7 +444,7 @@ export default function BookingFlow({
 
                         <button
                             onClick={handleBooking}
-                            disabled={submitting || !clientName || !clientPhone}
+                            disabled={submitting || !clientName || !clientEmail || !clientPhone}
                             className="w-full bg-black text-white dark:bg-white dark:text-black py-3 rounded-lg font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                         >
                             {submitting ? 'Confirming...' : 'Confirm Booking'}

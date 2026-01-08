@@ -64,7 +64,7 @@ export const serviceSchema = z.object({
         .optional(),
 
     location_type: z.enum(['physical', 'virtual'], {
-        errorMap: () => ({ message: 'Please select a valid location type' })
+        error: 'Please select a valid location type'
     }),
 
     default_location: z.string()
@@ -173,9 +173,12 @@ export type LoginFormData = z.infer<typeof loginSchema>
  */
 export function formatZodErrors(errors: z.ZodError): Record<string, string> {
     const formatted: Record<string, string> = {}
-    errors.errors.forEach(error => {
+    // Zod v4 uses 'issues' property
+    const issues = errors.issues || (errors as any).errors || []
+    issues.forEach((error: any) => {
         const path = error.path.join('.')
         formatted[path] = error.message
     })
     return formatted
 }
+

@@ -86,7 +86,7 @@ export async function createBookingAction(params: CreateBookingParams) {
                 status: 'confirmed'
             },
             undefined, // No authenticated user for public bookings
-            client_email
+            client_email || undefined
         ).catch(err => console.error('Audit log failed:', err))
 
         return { success: true, data: booking, cancelToken }
