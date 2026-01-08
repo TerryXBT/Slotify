@@ -5,6 +5,7 @@ import { startOfMonth, endOfMonth, eachDayOfInterval, isToday, addMinutes, start
 import { ChevronLeft, ChevronRight, Globe, Loader2 } from 'lucide-react'
 import { getAvailableSlots } from '@/app/actions/availability'
 import { createBookingAction } from '@/app/actions/booking'
+import { bookingSchema, formatZodErrors } from '@/lib/validations'
 
 interface Availability {
     day_of_week: number
@@ -31,6 +32,9 @@ export default function BookingForm({ service, providerId, providerName, availab
     const [clientEmail, setClientEmail] = useState('')
     const [clientPhone, setClientPhone] = useState('')
     const [notes, setNotes] = useState('')
+
+    // Validation errors
+    const [errors, setErrors] = useState<Record<string, string>>({})
 
     // Get available times for selected date
     const [availableTimes, setAvailableTimes] = useState<string[]>([])
@@ -82,6 +86,21 @@ export default function BookingForm({ service, providerId, providerName, availab
         e.preventDefault()
         if (!selectedDate || !selectedTime) return
 
+        // Validate form data
+        const validation = bookingSchema.safeParse({
+            client_name: clientName,
+            client_email: clientEmail || '',
+            client_phone: clientPhone,
+            notes: notes || ''
+        })
+
+        if (!validation.success) {
+            setErrors(formatZodErrors(validation.error))
+            return
+        }
+
+        // Clear errors if validation passed
+        setErrors({})
         setLoading(true)
 
         try {
@@ -299,23 +318,28 @@ export default function BookingForm({ service, providerId, providerName, availab
                                 required
                                 value={clientName}
                                 onChange={(e) => setClientName(e.target.value)}
-                                className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className={`w-full px-4 py-3 rounded-lg border ${errors.client_name ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'} bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                                 placeholder="John Doe"
                             />
+                            {errors.client_name && (
+                                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.client_name}</p>
+                            )}
                         </div>
 
                         <div>
                             <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
-                                Email *
+                                Email
                             </label>
                             <input
                                 type="email"
-                                required
                                 value={clientEmail}
                                 onChange={(e) => setClientEmail(e.target.value)}
-                                className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className={`w-full px-4 py-3 rounded-lg border ${errors.client_email ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'} bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                                 placeholder="john@example.com"
                             />
+                            {errors.client_email && (
+                                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.client_email}</p>
+                            )}
                         </div>
 
                         <div>
@@ -327,9 +351,12 @@ export default function BookingForm({ service, providerId, providerName, availab
                                 required
                                 value={clientPhone}
                                 onChange={(e) => setClientPhone(e.target.value)}
-                                className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className={`w-full px-4 py-3 rounded-lg border ${errors.client_phone ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'} bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                                 placeholder="+1 (555) 000-0000"
                             />
+                            {errors.client_phone && (
+                                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.client_phone}</p>
+                            )}
                         </div>
 
                         <div>
@@ -340,9 +367,14 @@ export default function BookingForm({ service, providerId, providerName, availab
                                 value={notes}
                                 onChange={(e) => setNotes(e.target.value)}
                                 rows={4}
-                                className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                                maxLength={500}
+                                className={`w-full px-4 py-3 rounded-lg border ${errors.notes ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'} bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none`}
                                 placeholder="Please share anything that will help prepare for our meeting."
                             />
+                            {errors.notes && (
+                                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.notes}</p>
+                            )}
+                            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{notes.length}/500 characters</p>
                         </div>
 
                         <button

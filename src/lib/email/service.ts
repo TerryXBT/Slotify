@@ -3,6 +3,7 @@ export interface EmailService {
     sendRescheduleProposal(to: string, clientName: string, link: string): Promise<void>
     sendRescheduleConfirmation(to: string, clientName: string, serviceName: string, date: string, providerName: string): Promise<void>
     sendCancellationNotice(to: string, clientName: string, serviceName: string, date: string): Promise<void>
+    sendBookingReminder(to: string, clientName: string, serviceName: string, date: string, providerName: string, location?: string): Promise<void>
 }
 
 export class ConsoleEmailService implements EmailService {
@@ -47,6 +48,21 @@ export class ConsoleEmailService implements EmailService {
       Body:
         Hi ${clientName},
         Your appointment for ${serviceName} on ${date} has been cancelled.
+    `)
+    }
+
+    async sendBookingReminder(to: string, clientName: string, serviceName: string, date: string, providerName: string, location?: string) {
+        console.log(`
+      [EMAIL SEND] To: ${to}
+      Subject: Reminder: ${serviceName} Tomorrow
+      Body:
+        Hi ${clientName},
+        This is a friendly reminder about your upcoming appointment:
+        Service: ${serviceName}
+        Date & Time: ${date}
+        Provider: ${providerName}
+        ${location ? `Location: ${location}` : ''}
+        See you soon!
     `)
     }
 }
@@ -163,6 +179,35 @@ function createCancellationNoticeHTML(clientName: string, serviceName: string, d
     `.trim()
 }
 
+function createBookingReminderHTML(clientName: string, serviceName: string, date: string, providerName: string, location?: string): string {
+    return `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+    <div style="background: linear-gradient(135deg, #ffa500 0%, #ff8c00 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+        <h1 style="color: white; margin: 0;">⏰ Reminder: Tomorrow's Appointment</h1>
+    </div>
+    <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
+        <p style="font-size: 16px;">Hi ${clientName},</p>
+        <p style="font-size: 16px;">This is a friendly reminder about your upcoming appointment tomorrow!</p>
+        <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ffa500;">
+            <p style="margin: 5px 0;"><strong>Service:</strong> ${serviceName}</p>
+            <p style="margin: 5px 0;"><strong>Date & Time:</strong> ${date}</p>
+            <p style="margin: 5px 0;"><strong>Provider:</strong> ${providerName}</p>
+            ${location ? `<p style="margin: 5px 0;"><strong>Location:</strong> ${location}</p>` : ''}
+        </div>
+        <p style="font-size: 16px;">We're looking forward to seeing you!</p>
+        <p style="font-size: 14px; color: #666;">If you need to reschedule or cancel, please contact us as soon as possible.</p>
+    </div>
+</body>
+</html>
+    `.trim()
+}
+
 export class SMTPEmailService implements EmailService {
     private transporter: any
     private fromEmail: string
@@ -256,6 +301,21 @@ export class SMTPEmailService implements EmailService {
             throw error
         }
     }
+
+    async sendBookingReminder(to: string, clientName: string, serviceName: string, date: string, providerName: string, location?: string): Promise<void> {
+        try {
+            const info = await this.transporter.sendMail({
+                from: this.fromEmail,
+                to,
+                subject: `Reminder: ${serviceName} Tomorrow!`,
+                html: createBookingReminderHTML(clientName, serviceName, date, providerName, location)
+            })
+            console.log('[SMTP] Booking reminder sent:', info.messageId)
+        } catch (error) {
+            console.error('[SMTP] Failed to send booking reminder email:', error)
+            throw error
+        }
+    }
 }
 
 export class ResendEmailService implements EmailService {
@@ -326,6 +386,20 @@ export class ResendEmailService implements EmailService {
             })
         } catch (error) {
             console.error('Failed to send cancellation notice email:', error)
+            throw error
+        }
+    }
+
+    async sendBookingReminder(to: string, clientName: string, serviceName: string, date: string, providerName: string, location?: string): Promise<void> {
+        try {
+            await this.resend.emails.send({
+                from: this.fromEmail,
+                to,
+                subject: `Reminder: ${serviceName} Tomorrow!`,
+                html: createBookingReminderHTML(clientName, serviceName, date, providerName, location)
+            })
+        } catch (error) {
+            console.error('Failed to send booking reminder email:', error)
             throw error
         }
     }

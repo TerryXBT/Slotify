@@ -30,35 +30,7 @@ export async function getAvailableSlots(
         return { slots: [] }
     }
 
-    // 2. Fetch Existing Bookings for this day (to exclude busy times)
-    // We need to fetch bookings that overlap with the entire day's potential range
-    // For simplicity, we'll fetch all bookings for the provider on this date
-    // Note: This relies on local time string matching which is tricky across TZs.
-    // For V1 we assume the provided dateString is the target day in provider's TZ.
-    // Ideally we'd use range query on start_at/end_at in UTC.
-
-    // Construct UTC range for the day is hard without knowing provider TZ in this context easily.
-    // Strategy: Fetch all confirmed bookings for the provider that overlap with 
-    // the requested 24h period (in UTC).
-    // For now, let's stick to the simpler rule-based generation first, 
-    // and we will add booking conflict filtering.
-
-    const startOfDayStr = `${dateString}T00:00:00`
-    const endOfDayStr = `${dateString}T23:59:59`
-
-    // Using a broader range search to catch TZ shifts
-    const { data: bookings } = await supabase
-        .from('bookings')
-        .select('start_at, end_at')
-        .eq('provider_id', providerId)
-        .eq('status', 'confirmed')
-        .or(`or(start_at.gte.${startOfDayStr},end_at.lte.${endOfDayStr})`) // Simple approximation, refining below
-
-    // Better: just fetch all bookings for that provider that might overlap.
-    // Since we generate slots in LOCAL time, we need to convert them to UTC to check against bookings.
-    // But we don't know the Provider's TZ offset here easily without fetching Profile.
-    // Let's fetch Profile to get TZ.
-
+    // 2. Fetch provider timezone and existing bookings
     const { data: profile } = await supabase
         .from('profiles')
         .select('timezone')
@@ -67,33 +39,65 @@ export async function getAvailableSlots(
 
     const timeZone = profile?.timezone || 'UTC'
 
+    // Convert the local date to UTC range using date-fns-tz
+    const { toZonedTime, fromZonedTime } = require('date-fns-tz')
+
+    // Create start and end of day in provider's timezone
+    const startOfDayLocal = toZonedTime(parse(`${dateString} 00:00:00`, 'yyyy-MM-dd HH:mm:ss', new Date()), timeZone)
+    const endOfDayLocal = toZonedTime(parse(`${dateString} 23:59:59`, 'yyyy-MM-dd HH:mm:ss', new Date()), timeZone)
+
+    // Convert to UTC for database query
+    const startOfDayUTC = fromZonedTime(startOfDayLocal, timeZone)
+    const endOfDayUTC = fromZonedTime(endOfDayLocal, timeZone)
+
+    // Fetch all confirmed bookings that overlap with this day
+    const { data: bookings } = await supabase
+        .from('bookings')
+        .select('start_at, end_at')
+        .eq('provider_id', providerId)
+        .eq('status', 'confirmed')
+        .gte('end_at', startOfDayUTC.toISOString())
+        .lte('start_at', endOfDayUTC.toISOString())
+
     // Generate potential slots based on rules
     const slots: string[] = []
 
     for (const rule of rules) {
-        // parse 'HH:mm:ss' to a Date object on the target date
-        let current = parse(rule.start_time_local, 'HH:mm:ss', date)
-        const end = parse(rule.end_time_local, 'HH:mm:ss', date)
+        // Parse 'HH:mm:ss' to a Date object on the target date in provider's timezone
+        const startTimeParts = rule.start_time_local.split(':').map(Number)
+        const endTimeParts = rule.end_time_local.split(':').map(Number)
 
-        while (isBefore(current, end)) {
-            const slotStart = current
-            const slotEnd = addMinutes(current, durationMinutes)
+        // Create dates in provider's timezone
+        let currentLocal = new Date(date)
+        currentLocal.setHours(startTimeParts[0], startTimeParts[1], startTimeParts[2], 0)
 
-            if (isBefore(slotEnd, end) || slotEnd.getTime() === end.getTime()) {
-                // Check if this slot conflicts with any booking
-                // We need to convert slotStart (Local) to ISO String (UTC) to compare
-                // Since 'date' was created from 'YYYY-MM-DD' key, it might be local or UTC. 
-                // We need robust TZ handling. 
+        const endLocal = new Date(date)
+        endLocal.setHours(endTimeParts[0], endTimeParts[1], endTimeParts[2], 0)
 
-                // For this V1 refactor, we will rely on the conflict check at submission time 
-                // as the primary gate, but do best-effort filtering here. 
-                // Getting the Exact UTC time for a local slot requires 'date-fns-tz' or similar.
-                // If not available, we skip strict booking filtering here for now 
-                // and rely on the API route check, OR we do string based filtering if we trust the inputs.
+        while (isBefore(currentLocal, endLocal)) {
+            const slotStartLocal = currentLocal
+            const slotEndLocal = addMinutes(currentLocal, durationMinutes)
 
-                slots.push(format(current, 'h:mma'))
+            if (isBefore(slotEndLocal, endLocal) || slotEndLocal.getTime() === endLocal.getTime()) {
+                // Convert slot times to UTC for comparison with bookings
+                const slotStartUTC = fromZonedTime(slotStartLocal, timeZone)
+                const slotEndUTC = fromZonedTime(slotEndLocal, timeZone)
+
+                // Check if this slot conflicts with any existing booking
+                const hasConflict = bookings?.some(booking => {
+                    const bookingStart = new Date(booking.start_at)
+                    const bookingEnd = new Date(booking.end_at)
+
+                    // Check for overlap: slot starts before booking ends AND slot ends after booking starts
+                    return slotStartUTC < bookingEnd && slotEndUTC > bookingStart
+                })
+
+                if (!hasConflict) {
+                    // Slot is available - format it in local time for display
+                    slots.push(format(currentLocal, 'h:mma'))
+                }
             }
-            current = addMinutes(current, durationMinutes)
+            currentLocal = addMinutes(currentLocal, durationMinutes)
         }
     }
 
