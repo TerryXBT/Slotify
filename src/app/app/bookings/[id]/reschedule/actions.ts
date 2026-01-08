@@ -2,7 +2,7 @@
 
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
-import { nanoid } from 'nanoid' // We might need to install this, or just use crypto
+import { emailService } from '@/lib/email/service'
 
 function generateToken() {
     // Simple random string for P0
@@ -23,11 +23,19 @@ export async function createRescheduleProposal(prevState: any, formData: FormDat
         return { error: 'Please select at least one slot' }
     }
 
-    // Verify ownership of booking
-    const { data: booking } = await supabase.from('bookings').select('provider_id, service_id, services(duration_minutes)').eq('id', bookingId).single()
+    // Verify ownership of booking and get client info
+    const { data: booking } = await supabase
+        .from('bookings')
+        .select('provider_id, service_id, client_name, client_email, services(duration_minutes)')
+        .eq('id', bookingId)
+        .single()
 
     if (!booking || booking.provider_id !== user.id) {
         return { error: 'Booking not found or access denied' }
+    }
+
+    if (!booking.client_email) {
+        return { error: 'Cannot send reschedule request: client email not found' }
     }
 
     // Supabase join weirdness: services might be array or object
@@ -77,8 +85,19 @@ export async function createRescheduleProposal(prevState: any, formData: FormDat
     // 3. Update Booking Status -> 'pending_reschedule'
     await supabase.from('bookings').update({ status: 'pending_reschedule' }).eq('id', bookingId)
 
+    // 4. Send reschedule proposal email to client
+    try {
+        const rescheduleLink = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/reschedule/${token}`
+        await emailService.sendRescheduleProposal(
+            booking.client_email,
+            booking.client_name,
+            rescheduleLink
+        )
+    } catch (emailError) {
+        console.error('Failed to send reschedule email:', emailError)
+        // Don't fail the entire operation if email fails
+    }
+
     // Redirect to a "Success/Share" page
-    // For P0, let's just redirect to the booking detail which should now show the link?
-    // Or a dedicated share page.
     redirect(`/app/bookings/${bookingId}?reschedule_token=${token}`)
 }

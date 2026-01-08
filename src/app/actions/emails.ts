@@ -1,43 +1,69 @@
 'use server'
 
 import { emailService } from '@/lib/email/service'
-import { createClient } from '@/utils/supabase/server'
+import { createAdminClient } from '@/utils/supabase/admin'
+import { format } from 'date-fns'
+import { toZonedTime } from 'date-fns-tz'
 
-export async function sendConfirmationEmail(bookingId: string) {
-    const supabase = await createClient() // Access as anon is restricted for reading Booking?
-    // Actually, RLS prevents anon from reading booking details unless we use Admin.
-    // However, this action runs on server. We can use Service Role or just pass the details in payload?
-    // Passing details is insecure (user can spoof emails).
-    // Best practice: Use Service Role to fetch booking details by ID and verified it exists, then send.
+export async function sendConfirmationEmail(bookingId: string, cancelToken?: string) {
+    console.log('[EMAIL] sendConfirmationEmail called with:', { bookingId, cancelToken })
 
-    const adminClient = await createClient()
-    // Wait, createClient uses cookies. We need admin client for server-side trusted read if RLS blocks us.
-    // But wait, the standard createClient here is scoped to the user (who is Anon for public booking).
-    // Anon CANNOT read the booking they just created if strict RLS (insert allowed, select not).
+    const admin = createAdminClient()
 
-    // We should use the SUPABASE_SERVICE_ROLE_KEY to create a trusted client.
-    const { createClient: createSupabaseClient } = require('@supabase/supabase-js')
-    const admin = createSupabaseClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
-
-    const { data: booking } = await admin
+    const { data: booking, error: fetchError } = await admin
         .from('bookings')
-        .select('*, services(name), profiles(full_name)')
+        .select('*, services(name), profiles(full_name, timezone)')
         .eq('id', bookingId)
         .single()
 
-    if (!booking) {
-        console.error('Booking not found for email')
+    if (fetchError) {
+        console.error('[EMAIL] Failed to fetch booking:', fetchError)
         return
     }
 
-    await emailService.sendBookingConfirmation(
-        booking.client_email,
-        booking.client_name,
-        booking.services.name,
-        new Date(booking.start_at).toLocaleString(),
-        booking.profiles.full_name
-    )
+    if (!booking) {
+        console.error('[EMAIL] Booking not found for email')
+        return
+    }
+
+    console.log('[EMAIL] Booking fetched:', { id: booking.id, client_email: booking.client_email })
+
+    if (!booking.client_email) {
+        console.warn('[EMAIL] No client email for booking', bookingId)
+        return
+    }
+
+    // Construct cancel link if token is provided
+    let cancelLink: string | undefined
+    if (cancelToken) {
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+        cancelLink = `${baseUrl}/cancel/${cancelToken}`
+    }
+
+    const servicesData = booking.services as any
+    const serviceName = (Array.isArray(servicesData) ? servicesData[0]?.name : servicesData?.name) || 'Your Appointment'
+    const profilesData = booking.profiles as any
+    const providerName = (Array.isArray(profilesData) ? profilesData[0]?.full_name : profilesData?.full_name) || 'Provider'
+    const timezone = (Array.isArray(profilesData) ? profilesData[0]?.timezone : profilesData?.timezone) || 'UTC'
+
+    // Format date in provider's timezone
+    const zonedDate = toZonedTime(new Date(booking.start_at), timezone)
+    const formattedDate = format(zonedDate, 'EEEE, MMMM d, yyyy \'at\' h:mm a zzz')
+
+    console.log('[EMAIL] About to send email to:', booking.client_email)
+
+    try {
+        await emailService.sendBookingConfirmation(
+            booking.client_email,
+            booking.client_name,
+            serviceName,
+            formattedDate,
+            providerName,
+            cancelLink
+        )
+        console.log('[EMAIL] ✅ Email sent successfully!')
+    } catch (error) {
+        console.error('[EMAIL] ❌ Failed to send email:', error)
+        throw error
+    }
 }

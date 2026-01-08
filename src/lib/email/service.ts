@@ -1,11 +1,12 @@
 export interface EmailService {
-    sendBookingConfirmation(to: string, clientName: string, serviceName: string, date: string, providerName: string): Promise<void>
+    sendBookingConfirmation(to: string, clientName: string, serviceName: string, date: string, providerName: string, cancelLink?: string): Promise<void>
     sendRescheduleProposal(to: string, clientName: string, link: string): Promise<void>
+    sendRescheduleConfirmation(to: string, clientName: string, serviceName: string, date: string, providerName: string): Promise<void>
     sendCancellationNotice(to: string, clientName: string, serviceName: string, date: string): Promise<void>
 }
 
 export class ConsoleEmailService implements EmailService {
-    async sendBookingConfirmation(to: string, clientName: string, serviceName: string, date: string, providerName: string) {
+    async sendBookingConfirmation(to: string, clientName: string, serviceName: string, date: string, providerName: string, cancelLink?: string) {
         console.log(`
       [EMAIL SEND] To: ${to}
       Subject: Booking Confirmed: ${serviceName} with ${providerName}
@@ -13,6 +14,7 @@ export class ConsoleEmailService implements EmailService {
         Hi ${clientName},
         Your booking for ${serviceName} on ${date} is confirmed!
         We look forward to seeing you.
+        ${cancelLink ? `Cancel: ${cancelLink}` : ''}
     `)
     }
 
@@ -27,6 +29,17 @@ export class ConsoleEmailService implements EmailService {
     `)
     }
 
+    async sendRescheduleConfirmation(to: string, clientName: string, serviceName: string, date: string, providerName: string) {
+        console.log(`
+      [EMAIL SEND] To: ${to}
+      Subject: Reschedule Confirmed: ${serviceName} with ${providerName}
+      Body:
+        Hi ${clientName},
+        Your rescheduled appointment for ${serviceName} on ${date} is confirmed!
+        We look forward to seeing you.
+    `)
+    }
+
     async sendCancellationNotice(to: string, clientName: string, serviceName: string, date: string) {
         console.log(`
       [EMAIL SEND] To: ${to}
@@ -38,5 +51,193 @@ export class ConsoleEmailService implements EmailService {
     }
 }
 
-// In P0, we instantiate the mock service. In P1, we'd check ENV for Resend vs Console.
-export const emailService = new ConsoleEmailService()
+// HTML Email Templates
+function createBookingConfirmationHTML(clientName: string, serviceName: string, date: string, providerName: string, cancelLink?: string): string {
+    return `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+        <h1 style="color: white; margin: 0;">Booking Confirmed!</h1>
+    </div>
+    <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
+        <p style="font-size: 16px;">Hi ${clientName},</p>
+        <p style="font-size: 16px;">Great news! Your booking has been confirmed.</p>
+        <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #667eea;">
+            <p style="margin: 5px 0;"><strong>Service:</strong> ${serviceName}</p>
+            <p style="margin: 5px 0;"><strong>Date & Time:</strong> ${date}</p>
+            <p style="margin: 5px 0;"><strong>Provider:</strong> ${providerName}</p>
+        </div>
+        <p style="font-size: 16px;">We look forward to seeing you!</p>
+        ${cancelLink ? `
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;">
+            <p style="font-size: 14px; color: #666;">Need to cancel? <a href="${cancelLink}" style="color: #667eea;">Click here</a></p>
+        </div>
+        ` : ''}
+    </div>
+</body>
+</html>
+    `.trim()
+}
+
+function createRescheduleProposalHTML(clientName: string, link: string): string {
+    return `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+    <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+        <h1 style="color: white; margin: 0;">Reschedule Request</h1>
+    </div>
+    <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
+        <p style="font-size: 16px;">Hi ${clientName},</p>
+        <p style="font-size: 16px;">Your provider has requested to reschedule your appointment.</p>
+        <p style="font-size: 16px;">Please click the button below to choose a new time:</p>
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="${link}" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">Choose New Time</a>
+        </div>
+        <p style="font-size: 14px; color: #666;">Or copy this link: <a href="${link}" style="color: #f5576c;">${link}</a></p>
+    </div>
+</body>
+</html>
+    `.trim()
+}
+
+function createRescheduleConfirmationHTML(clientName: string, serviceName: string, date: string, providerName: string): string {
+    return `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+    <div style="background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+        <h1 style="color: white; margin: 0;">Reschedule Confirmed!</h1>
+    </div>
+    <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
+        <p style="font-size: 16px;">Hi ${clientName},</p>
+        <p style="font-size: 16px;">Your appointment has been successfully rescheduled.</p>
+        <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #84fab0;">
+            <p style="margin: 5px 0;"><strong>Service:</strong> ${serviceName}</p>
+            <p style="margin: 5px 0;"><strong>New Date & Time:</strong> ${date}</p>
+            <p style="margin: 5px 0;"><strong>Provider:</strong> ${providerName}</p>
+        </div>
+        <p style="font-size: 16px;">We look forward to seeing you at the new time!</p>
+    </div>
+</body>
+</html>
+    `.trim()
+}
+
+function createCancellationNoticeHTML(clientName: string, serviceName: string, date: string): string {
+    return `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+    <div style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+        <h1 style="color: white; margin: 0;">Appointment Cancelled</h1>
+    </div>
+    <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
+        <p style="font-size: 16px;">Hi ${clientName},</p>
+        <p style="font-size: 16px;">Your appointment has been cancelled.</p>
+        <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ff6b6b;">
+            <p style="margin: 5px 0;"><strong>Service:</strong> ${serviceName}</p>
+            <p style="margin: 5px 0;"><strong>Date & Time:</strong> ${date}</p>
+        </div>
+        <p style="font-size: 16px;">If you'd like to book again in the future, we'd be happy to see you.</p>
+    </div>
+</body>
+</html>
+    `.trim()
+}
+
+export class ResendEmailService implements EmailService {
+    private resend: any
+    private fromEmail: string
+
+    constructor() {
+        const { Resend } = require('resend')
+        this.resend = new Resend(process.env.RESEND_API_KEY)
+        this.fromEmail = process.env.RESEND_FROM_EMAIL || 'noreply@slotify.com'
+    }
+
+    async sendBookingConfirmation(to: string, clientName: string, serviceName: string, date: string, providerName: string, cancelLink?: string): Promise<void> {
+        try {
+            await this.resend.emails.send({
+                from: this.fromEmail,
+                to,
+                subject: `Booking Confirmed: ${serviceName} with ${providerName}`,
+                html: createBookingConfirmationHTML(clientName, serviceName, date, providerName, cancelLink)
+            })
+        } catch (error) {
+            console.error('Failed to send booking confirmation email:', error)
+            throw error
+        }
+    }
+
+    async sendRescheduleProposal(to: string, clientName: string, link: string): Promise<void> {
+        try {
+            await this.resend.emails.send({
+                from: this.fromEmail,
+                to,
+                subject: 'Reschedule Request for Your Appointment',
+                html: createRescheduleProposalHTML(clientName, link)
+            })
+        } catch (error) {
+            console.error('Failed to send reschedule proposal email:', error)
+            throw error
+        }
+    }
+
+    async sendRescheduleConfirmation(to: string, clientName: string, serviceName: string, date: string, providerName: string): Promise<void> {
+        try {
+            await this.resend.emails.send({
+                from: this.fromEmail,
+                to,
+                subject: `Reschedule Confirmed: ${serviceName} with ${providerName}`,
+                html: createRescheduleConfirmationHTML(clientName, serviceName, date, providerName)
+            })
+        } catch (error) {
+            console.error('Failed to send reschedule confirmation email:', error)
+            throw error
+        }
+    }
+
+    async sendCancellationNotice(to: string, clientName: string, serviceName: string, date: string): Promise<void> {
+        try {
+            await this.resend.emails.send({
+                from: this.fromEmail,
+                to,
+                subject: 'Appointment Cancelled',
+                html: createCancellationNoticeHTML(clientName, serviceName, date)
+            })
+        } catch (error) {
+            console.error('Failed to send cancellation notice email:', error)
+            throw error
+        }
+    }
+}
+
+// Choose email service based on environment variable
+const useResend = !!process.env.RESEND_API_KEY
+console.log('[EMAIL SERVICE] Initializing...', {
+    hasResendKey: useResend,
+    fromEmail: process.env.RESEND_FROM_EMAIL,
+    service: useResend ? 'ResendEmailService' : 'ConsoleEmailService'
+})
+
+export const emailService = useResend
+    ? new ResendEmailService()
+    : new ConsoleEmailService()
