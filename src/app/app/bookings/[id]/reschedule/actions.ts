@@ -5,8 +5,9 @@ import { redirect } from 'next/navigation'
 import { emailService } from '@/lib/email/service'
 
 function generateToken() {
-    // Simple random string for P0
-    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+    // Use crypto.randomUUID() for cryptographically secure tokens
+    // Remove hyphens to make it URL-friendly and compact
+    return crypto.randomUUID().replace(/-/g, '')
 }
 
 export async function createRescheduleProposal(prevState: any, formData: FormData) {

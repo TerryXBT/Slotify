@@ -13,7 +13,9 @@ interface CreateBookingParams {
 }
 
 function generateCancelToken() {
-    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+    // Use crypto.randomUUID() for cryptographically secure tokens
+    // Remove hyphens to make it URL-friendly and compact
+    return crypto.randomUUID().replace(/-/g, '')
 }
 
 export async function createBookingAction(params: CreateBookingParams) {

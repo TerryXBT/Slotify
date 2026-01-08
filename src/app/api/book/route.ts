@@ -1,8 +1,34 @@
 import { createAdminClient } from '@/utils/supabase/admin'
 import { NextRequest, NextResponse } from 'next/server'
+import { checkRateLimit, getClientIdentifier } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
     try {
+        // Rate limiting: 10 bookings per hour per IP
+        const clientId = getClientIdentifier(request)
+        const rateLimit = checkRateLimit(clientId, {
+            limit: 10,
+            windowSeconds: 3600 // 1 hour
+        })
+
+        if (!rateLimit.success) {
+            return NextResponse.json(
+                {
+                    error: 'Too many booking requests. Please try again later.',
+                    retryAfter: rateLimit.reset
+                },
+                {
+                    status: 429,
+                    headers: {
+                        'X-RateLimit-Limit': rateLimit.limit.toString(),
+                        'X-RateLimit-Remaining': rateLimit.remaining.toString(),
+                        'X-RateLimit-Reset': rateLimit.reset.toString(),
+                        'Retry-After': (rateLimit.reset - Math.floor(Date.now() / 1000)).toString()
+                    }
+                }
+            )
+        }
+
         const supabase = createAdminClient()
 
         const body = await request.json()

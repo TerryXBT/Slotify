@@ -163,6 +163,101 @@ function createCancellationNoticeHTML(clientName: string, serviceName: string, d
     `.trim()
 }
 
+export class SMTPEmailService implements EmailService {
+    private transporter: any
+    private fromEmail: string
+
+    constructor() {
+        const nodemailer = require('nodemailer')
+        this.fromEmail = process.env.SMTP_FROM_EMAIL || 'noreply@slotify.com'
+
+        const port = parseInt(process.env.SMTP_PORT || '587')
+        const isGmail = process.env.SMTP_HOST?.includes('gmail.com')
+
+        this.transporter = nodemailer.createTransport({
+            host: process.env.SMTP_HOST || '127.0.0.1',
+            port: port,
+            secure: port === 465, // true for 465, false for other ports
+            auth: process.env.SMTP_USER ? {
+                user: process.env.SMTP_USER,
+                pass: process.env.SMTP_PASS
+            } : undefined,
+            // Gmail specific settings
+            ...(isGmail && {
+                service: 'gmail'
+            })
+        })
+
+        console.log('[SMTP] Transporter created:', {
+            host: process.env.SMTP_HOST || '127.0.0.1',
+            port: port,
+            secure: port === 465,
+            from: this.fromEmail,
+            service: isGmail ? 'Gmail' : 'Custom SMTP'
+        })
+    }
+
+    async sendBookingConfirmation(to: string, clientName: string, serviceName: string, date: string, providerName: string, cancelLink?: string): Promise<void> {
+        try {
+            const info = await this.transporter.sendMail({
+                from: this.fromEmail,
+                to,
+                subject: `Booking Confirmed: ${serviceName} with ${providerName}`,
+                html: createBookingConfirmationHTML(clientName, serviceName, date, providerName, cancelLink)
+            })
+            console.log('[SMTP] Email sent successfully:', info.messageId)
+        } catch (error) {
+            console.error('[SMTP] Failed to send booking confirmation email:', error)
+            throw error
+        }
+    }
+
+    async sendRescheduleProposal(to: string, clientName: string, link: string): Promise<void> {
+        try {
+            const info = await this.transporter.sendMail({
+                from: this.fromEmail,
+                to,
+                subject: 'Reschedule Request for Your Appointment',
+                html: createRescheduleProposalHTML(clientName, link)
+            })
+            console.log('[SMTP] Reschedule proposal sent:', info.messageId)
+        } catch (error) {
+            console.error('[SMTP] Failed to send reschedule proposal email:', error)
+            throw error
+        }
+    }
+
+    async sendRescheduleConfirmation(to: string, clientName: string, serviceName: string, date: string, providerName: string): Promise<void> {
+        try {
+            const info = await this.transporter.sendMail({
+                from: this.fromEmail,
+                to,
+                subject: `Reschedule Confirmed: ${serviceName} with ${providerName}`,
+                html: createRescheduleConfirmationHTML(clientName, serviceName, date, providerName)
+            })
+            console.log('[SMTP] Reschedule confirmation sent:', info.messageId)
+        } catch (error) {
+            console.error('[SMTP] Failed to send reschedule confirmation email:', error)
+            throw error
+        }
+    }
+
+    async sendCancellationNotice(to: string, clientName: string, serviceName: string, date: string): Promise<void> {
+        try {
+            const info = await this.transporter.sendMail({
+                from: this.fromEmail,
+                to,
+                subject: 'Appointment Cancelled',
+                html: createCancellationNoticeHTML(clientName, serviceName, date)
+            })
+            console.log('[SMTP] Cancellation notice sent:', info.messageId)
+        } catch (error) {
+            console.error('[SMTP] Failed to send cancellation notice email:', error)
+            throw error
+        }
+    }
+}
+
 export class ResendEmailService implements EmailService {
     private resend: any
     private fromEmail: string
@@ -175,14 +270,20 @@ export class ResendEmailService implements EmailService {
 
     async sendBookingConfirmation(to: string, clientName: string, serviceName: string, date: string, providerName: string, cancelLink?: string): Promise<void> {
         try {
-            await this.resend.emails.send({
+            const result = await this.resend.emails.send({
                 from: this.fromEmail,
                 to,
                 subject: `Booking Confirmed: ${serviceName} with ${providerName}`,
                 html: createBookingConfirmationHTML(clientName, serviceName, date, providerName, cancelLink)
             })
+            console.log('[RESEND] Email send result:', JSON.stringify(result, null, 2))
+
+            // Check if Resend returned an error
+            if (result.error) {
+                throw new Error(`Resend API error: ${result.error.message}`)
+            }
         } catch (error) {
-            console.error('Failed to send booking confirmation email:', error)
+            console.error('[RESEND] Failed to send booking confirmation email:', error)
             throw error
         }
     }
@@ -231,13 +332,19 @@ export class ResendEmailService implements EmailService {
 }
 
 // Choose email service based on environment variable
-const useResend = !!process.env.RESEND_API_KEY
+const useSmtp = !!process.env.SMTP_HOST || process.env.USE_SMTP === 'true'
+const useResend = !useSmtp && !!process.env.RESEND_API_KEY
+
 console.log('[EMAIL SERVICE] Initializing...', {
-    hasResendKey: useResend,
-    fromEmail: process.env.RESEND_FROM_EMAIL,
-    service: useResend ? 'ResendEmailService' : 'ConsoleEmailService'
+    useSMTP: useSmtp,
+    hasResendKey: !!process.env.RESEND_API_KEY,
+    smtpHost: process.env.SMTP_HOST,
+    fromEmail: process.env.SMTP_FROM_EMAIL || process.env.RESEND_FROM_EMAIL,
+    service: useSmtp ? 'SMTPEmailService (Mailpit)' : useResend ? 'ResendEmailService' : 'ConsoleEmailService'
 })
 
-export const emailService = useResend
-    ? new ResendEmailService()
-    : new ConsoleEmailService()
+export const emailService = useSmtp
+    ? new SMTPEmailService()
+    : useResend
+        ? new ResendEmailService()
+        : new ConsoleEmailService()
