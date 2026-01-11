@@ -35,7 +35,7 @@ export async function updateProfile(formData: FormData) {
 
     const { error } = await (adminClient as any)
         .from('profiles')
-        .update(updateData)
+        .update(updateData as any)
         .eq('id', user.id)
 
     if (error) {
