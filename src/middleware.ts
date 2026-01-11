@@ -8,14 +8,13 @@ export async function middleware(request: NextRequest) {
 export const config = {
     matcher: [
         /*
-         * Match all request paths except for the ones starting with:
+         * Match all request paths except:
+         * - api (API routes)
          * - _next/static (static files)
          * - _next/image (image optimization files)
          * - favicon.ico (favicon file)
-         * - manifest.json (PWA manifest)
-         * - api/cron (cron jobs)
-         * Feel free to modify this pattern to include more paths.
+         * - public folder files
          */
-        '/((?!_next/static|_next/image|favicon.ico|manifest.json|api/cron|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+        '/((?!api|_next/static|_next/image|favicon.ico|manifest.json|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|json)$).*)',
     ],
 }
