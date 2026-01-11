@@ -1,0 +1,101 @@
+================================================================
+VERCEL 环境变量 - 快速参考
+================================================================
+
+部署时请将以下变量复制粘贴到 Vercel 环境变量配置中
+
+----------------------------------------------------------------
+✅ SENTRY 配置（已完成 - 直接复制）
+----------------------------------------------------------------
+
+NEXT_PUBLIC_SENTRY_DSN
+https://585031005b7e3d7efaf78d1790171ccc@o4510677488041984.ingest.us.sentry.io/4510677505015808
+
+SENTRY_ORG
+slotify
+
+SENTRY_PROJECT
+slotify
+
+SENTRY_AUTH_TOKEN
+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
+
+----------------------------------------------------------------
+✅ 应用配置（已生成 - 直接复制）
+----------------------------------------------------------------
+
+NEXT_PUBLIC_APP_URL
+https://slotify.vercel.app
+（临时值，部署后更新为实际 URL）
+
+CRON_SECRET
+somrOXlcl+hr7amhUvOhdpyKddBT66i1pd9wmEmKd7A=
+
+----------------------------------------------------------------
+⏳ SUPABASE 配置（需要您填写）
+----------------------------------------------------------------
+
+NEXT_PUBLIC_SUPABASE_URL
+获取位置: Supabase Dashboard → Settings → API → Project URL
+您的值: _______________________________________________
+
+NEXT_PUBLIC_SUPABASE_ANON_KEY
+获取位置: Supabase Dashboard → Settings → API → anon public
+您的值: _______________________________________________
+
+SUPABASE_SERVICE_ROLE_KEY
+获取位置: Supabase Dashboard → Settings → API → service_role secret
+您的值: _______________________________________________
+
+----------------------------------------------------------------
+⏳ 邮件服务（可选 - 推荐配置 Resend）
+----------------------------------------------------------------
+
+RESEND_API_KEY
+获取位置: https://resend.com → API Keys
+您的值: _______________________________________________
+
+RESEND_FROM_EMAIL
+示例: noreply@yourdomain.com
+您的值: _______________________________________________
+
+================================================================
+配置检查清单
+================================================================
+
+在 Vercel 点击 "Deploy" 前，确认：
+
+[✅] NEXT_PUBLIC_SENTRY_DSN - 已复制上方的值
+[✅] SENTRY_ORG - 已复制上方的值 (slotify)
+[✅] SENTRY_PROJECT - 已复制上方的值 (slotify)
+[✅] SENTRY_AUTH_TOKEN - 已复制上方的值
+[✅] NEXT_PUBLIC_APP_URL - 已复制上方的值（临时）
+[✅] CRON_SECRET - 已复制上方的值
+
+[ ] NEXT_PUBLIC_SUPABASE_URL - 需要从 Supabase 获取
+[ ] NEXT_PUBLIC_SUPABASE_ANON_KEY - 需要从 Supabase 获取
+[ ] SUPABASE_SERVICE_ROLE_KEY - 需要从 Supabase 获取
+
+[ ] RESEND_API_KEY - 可选
+[ ] RESEND_FROM_EMAIL - 可选
+
+最少需要: 9 个变量（前 6 个必需变量）
+推荐配置: 11 个变量（包含邮件服务）
+
+================================================================
+快速操作步骤
+================================================================
+
+1. 打开 https://vercel.com/login
+2. Add New → Project
+3. 导入 Slotify 仓库
+4. 展开 Environment Variables
+5. 逐个添加上述 9-11 个变量
+6. 点击 Deploy
+7. 等待构建完成
+8. 更新 NEXT_PUBLIC_APP_URL 为实际 URL
+9. 重新部署
+
+预计时间: 10-15 分钟
+
+================================================================

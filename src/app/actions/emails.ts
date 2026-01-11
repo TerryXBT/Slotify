@@ -5,8 +5,17 @@ import { createAdminClient } from '@/utils/supabase/admin'
 import { format } from 'date-fns'
 import { toZonedTime } from 'date-fns-tz'
 
+// Types for Supabase join data
+interface ServiceData {
+    name?: string
+}
+
+interface ProfileData {
+    full_name?: string | null
+    timezone?: string
+}
+
 export async function sendConfirmationEmail(bookingId: string, cancelToken?: string) {
-    console.log('[EMAIL] sendConfirmationEmail called with:', { bookingId, cancelToken })
 
     const admin = createAdminClient()
 
@@ -26,8 +35,6 @@ export async function sendConfirmationEmail(bookingId: string, cancelToken?: str
         return
     }
 
-    console.log('[EMAIL] Booking fetched:', { id: booking.id, client_email: booking.client_email })
-
     if (!booking.client_email) {
         console.warn('[EMAIL] No client email for booking', bookingId)
         return
@@ -40,17 +47,15 @@ export async function sendConfirmationEmail(bookingId: string, cancelToken?: str
         cancelLink = `${baseUrl}/cancel/${cancelToken}`
     }
 
-    const servicesData = booking.services as any
+    const servicesData = booking.services as ServiceData | ServiceData[] | null
     const serviceName = (Array.isArray(servicesData) ? servicesData[0]?.name : servicesData?.name) || 'Your Appointment'
-    const profilesData = booking.profiles as any
+    const profilesData = booking.profiles as ProfileData | ProfileData[] | null
     const providerName = (Array.isArray(profilesData) ? profilesData[0]?.full_name : profilesData?.full_name) || 'Provider'
     const timezone = (Array.isArray(profilesData) ? profilesData[0]?.timezone : profilesData?.timezone) || 'UTC'
 
     // Format date in provider's timezone
     const zonedDate = toZonedTime(new Date(booking.start_at), timezone)
     const formattedDate = format(zonedDate, 'EEEE, MMMM d, yyyy \'at\' h:mm a zzz')
-
-    console.log('[EMAIL] About to send email to:', booking.client_email)
 
     try {
         await emailService.sendBookingConfirmation(
@@ -61,7 +66,6 @@ export async function sendConfirmationEmail(bookingId: string, cancelToken?: str
             providerName,
             cancelLink
         )
-        console.log('[EMAIL] ✅ Email sent successfully!')
     } catch (error) {
         console.error('[EMAIL] ❌ Failed to send email:', error)
         throw error

@@ -1,0 +1,29 @@
+=====================================================
+✅ SENTRY 配置完成
+=====================================================
+生成日期: 2026-01-09
+状态: 已完成，可以部署
+
+-----------------------------------------------------
+完整的 Sentry 配置信息
+-----------------------------------------------------
+
+NEXT_PUBLIC_SENTRY_DSN=https://585031005b7e3d7efaf78d1790171ccc@o4510677488041984.ingest.us.sentry.io/4510677505015808
+
+SENTRY_ORG=slotify
+
+SENTRY_PROJECT=slotify
+
+SENTRY_AUTH_TOKEN=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
+
+-----------------------------------------------------
+⚠️ 安全提示
+-----------------------------------------------------
+
+这些是敏感信息，请妥善保管：
+- DSN 可以公开（将出现在客户端代码中）
+- Auth Token 必须保密（仅用于构建时上传 source maps）
+- 不要提交到 Git 仓库
+- 仅在 Vercel 环境变量中配置
+
+=====================================================

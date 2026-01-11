@@ -1,0 +1,95 @@
+================================================================
+VERCEL 环境变量 - 完整配置清单
+================================================================
+
+请在 Vercel 项目配置中逐个添加以下 13 个变量
+
+----------------------------------------------------------------
+1. SUPABASE 配置（3个）- 需要您填写
+----------------------------------------------------------------
+
+NEXT_PUBLIC_SUPABASE_URL
+值: [从 Supabase Dashboard 复制]
+示例: https://abcdefgh.supabase.co
+
+NEXT_PUBLIC_SUPABASE_ANON_KEY
+值: [从 Supabase Dashboard 复制]
+示例: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+SUPABASE_SERVICE_ROLE_KEY
+值: [从 Supabase Dashboard 复制]
+示例: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+----------------------------------------------------------------
+2. 应用配置（2个）- 已准备好 ✅
+----------------------------------------------------------------
+
+NEXT_PUBLIC_APP_URL
+https://slotify.vercel.app
+（临时值，部署后更新为实际 URL）
+
+CRON_SECRET
+somrOXlcl+hr7amhUvOhdpyKddBT66i1pd9wmEmKd7A=
+
+----------------------------------------------------------------
+3. SENTRY 配置（4个）- 已准备好 ✅
+----------------------------------------------------------------
+
+NEXT_PUBLIC_SENTRY_DSN
+https://585031005b7e3d7efaf78d1790171ccc@o4510677488041984.ingest.us.sentry.io/4510677505015808
+
+SENTRY_ORG
+slotify
+
+SENTRY_PROJECT
+slotify
+
+SENTRY_AUTH_TOKEN
+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
+
+----------------------------------------------------------------
+4. GMAIL SMTP 配置（4个）- 已准备好 ✅
+----------------------------------------------------------------
+
+USE_SMTP
+true
+
+SMTP_HOST
+smtp.gmail.com
+
+SMTP_PORT
+587
+
+SMTP_USER
+tche1230@gmail.com
+
+SMTP_PASS
+qngamiziirtcqlfe
+
+SMTP_FROM_EMAIL
+tche1230@gmail.com
+
+================================================================
+配置进度
+================================================================
+
+✅ Sentry (4个) - 已完成
+✅ 应用配置 (2个) - 已完成
+✅ Gmail SMTP (4个) - 已完成
+⏳ Supabase (3个) - 等待您从 Dashboard 获取
+
+总计: 13 个变量
+已完成: 10 个
+待完成: 3 个
+
+================================================================
+下一步操作
+================================================================
+
+1. 访问 https://supabase.com/dashboard
+2. 选择您的项目
+3. Settings → API
+4. 复制 3 个 Supabase 配置值
+5. 前往 Vercel 部署
+
+================================================================

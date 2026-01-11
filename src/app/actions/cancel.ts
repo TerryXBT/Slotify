@@ -48,8 +48,8 @@ export async function cancelBookingViaToken(token: string) {
         .eq('type', 'cancel')
         .single()
 
-    // Explicitly cast bookings to any to avoid "provider_id does not exist on type..." error
-    const bookingProviderId = actionToken?.bookings ? (actionToken.bookings as any).provider_id : null;
+    // Note: bookings relationship data is accessed but not currently used
+    // The token is validated by checking if it exists and is not expired
 
     if (!actionToken || new Date(actionToken.expires_at) < new Date()) {
         return { error: 'Invalid or expired token' }

@@ -14,13 +14,15 @@ Sentry.init({
   environment: process.env.NODE_ENV,
 
   // Filter out sensitive information
-  beforeSend(event, hint) {
+  beforeSend(event) {
     // Remove sensitive data from breadcrumbs
     if (event.breadcrumbs) {
       event.breadcrumbs = event.breadcrumbs.map((breadcrumb) => {
         if (breadcrumb.data) {
           // Remove email and phone from data
-          const { email, phone, client_email, client_phone, ...rest } = breadcrumb.data as any
+          const data = breadcrumb.data as Record<string, unknown>
+          const { email, phone, client_email, client_phone, ...rest } = data
+          void email; void phone; void client_email; void client_phone; // Intentionally unused
           return { ...breadcrumb, data: rest }
         }
         return breadcrumb

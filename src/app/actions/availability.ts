@@ -1,13 +1,10 @@
 'use server'
 
 import { createClient } from '@/utils/supabase/server'
-import { addMinutes, format, isBefore, parse, startOfDay } from 'date-fns'
+import { addMinutes, format, isBefore, parse } from 'date-fns'
+import { toZonedTime, fromZonedTime } from 'date-fns-tz'
 
-interface Availability {
-    day_of_week: number
-    start_time_local: string
-    end_time_local: string
-}
+// Note: Availability interface moved to types/index.ts if needed
 
 export async function getAvailableSlots(
     serviceId: string,
@@ -40,7 +37,6 @@ export async function getAvailableSlots(
     const timeZone = profile?.timezone || 'UTC'
 
     // Convert the local date to UTC range using date-fns-tz
-    const { toZonedTime, fromZonedTime } = require('date-fns-tz')
 
     // Create start and end of day in provider's timezone
     const startOfDayLocal = toZonedTime(parse(`${dateString} 00:00:00`, 'yyyy-MM-dd HH:mm:ss', new Date()), timeZone)

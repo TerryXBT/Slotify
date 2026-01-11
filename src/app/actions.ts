@@ -6,8 +6,9 @@ export async function fetchSlots(username: string, serviceId: string, date: stri
     try {
         const slots = await getAvailableSlots(username, serviceId, date)
         return { success: true, slots }
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Error fetching slots:', error)
-        return { success: false, error: error.message || 'Failed to fetch slots' }
+        const message = error instanceof Error ? error.message : 'Failed to fetch slots'
+        return { success: false, error: message }
     }
 }

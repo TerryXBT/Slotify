@@ -13,7 +13,9 @@ Sentry.init({
   beforeSend(event) {
     // Remove sensitive data from extra
     if (event.extra) {
-      const { email, phone, client_email, client_phone, ...rest } = event.extra as any
+      const extra = event.extra as Record<string, unknown>
+      const { email, phone, client_email, client_phone, ...rest } = extra
+      void email; void phone; void client_email; void client_phone; // Intentionally unused
       event.extra = rest
     }
 

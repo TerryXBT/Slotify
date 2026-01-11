@@ -2,9 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
     bookingSchema,
     serviceSchema,
-    profileSchema,
     signupSchema,
-    loginSchema,
     availabilityRuleSchema,
     formatZodErrors
 } from '@/lib/validations'

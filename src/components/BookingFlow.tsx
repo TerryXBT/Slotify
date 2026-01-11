@@ -143,12 +143,8 @@ export default function BookingFlow({
             const data = result.data
             if (!data) throw new Error('Booking created but no data returned')
 
-            console.log('[CLIENT] About to send confirmation email:', { bookingId: data.id, cancelToken: result.cancelToken })
-
             // Trigger Email with cancel token
             await sendConfirmationEmail(data.id, result.cancelToken)
-
-            console.log('[CLIENT] Email sent successfully')
 
             // Store booking details for calendar export
             const startTime = new Date(selectedSlot.start)

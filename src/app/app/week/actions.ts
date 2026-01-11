@@ -69,10 +69,7 @@ export async function createManualBooking(formData: FormData) {
     const date = formData.get('date') as string
     const time = formData.get('time') as string
 
-    console.log('🔵 createManualBooking called with:', { clientName, clientEmail, clientPhone, serviceId, date, time })
-
     if (!clientName || !clientPhone || !serviceId || !date || !time) {
-        console.log('🔴 Missing fields:', { clientName: !!clientName, clientPhone: !!clientPhone, serviceId: !!serviceId, date: !!date, time: !!time })
         return { error: 'Missing required fields' }
     }
 

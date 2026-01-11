@@ -13,6 +13,11 @@ interface CreateBookingParams {
     notes?: string | null
 }
 
+// Type for RPC response
+interface RpcBookingResponse {
+    id: string
+}
+
 function generateCancelToken() {
     // Use crypto.randomUUID() for cryptographically secure tokens
     // Remove hyphens to make it URL-friendly and compact
@@ -20,7 +25,7 @@ function generateCancelToken() {
 }
 
 export async function createBookingAction(params: CreateBookingParams) {
-    const supabase = createAdminClient() as any
+    const supabase = createAdminClient()
     const { provider_id, service_id, start_at, client_name, client_email, client_phone, notes } = params
 
     try {
@@ -30,9 +35,9 @@ export async function createBookingAction(params: CreateBookingParams) {
             p_service_id: service_id,
             p_start_at: start_at,
             p_client_name: client_name,
-            p_client_email: client_email,
+            p_client_email: client_email || '',
             p_client_phone: client_phone,
-            p_notes: notes
+            p_notes: notes || ''
         })
 
         if (error) {
@@ -40,6 +45,14 @@ export async function createBookingAction(params: CreateBookingParams) {
             // Return user-friendly error messages
             return { error: error.message || 'Failed to create booking' }
         }
+
+        // Cast the RPC response to our expected type
+        const rpcResult = data as unknown as RpcBookingResponse | null
+        if (!rpcResult?.id) {
+            return { error: 'Booking creation failed - no ID returned' }
+        }
+
+        const bookingId = rpcResult.id
 
         // Generate cancel token (expires in 24 hours before the appointment)
         const cancelToken = generateCancelToken()
@@ -50,7 +63,7 @@ export async function createBookingAction(params: CreateBookingParams) {
             .insert({
                 token: cancelToken,
                 type: 'cancel',
-                booking_id: data.id,
+                booking_id: bookingId,
                 expires_at: expiresAt
             })
 
@@ -63,7 +76,7 @@ export async function createBookingAction(params: CreateBookingParams) {
         const { data: booking, error: fetchError } = await supabase
             .from('bookings')
             .select('*')
-            .eq('id', data.id)
+            .eq('id', bookingId)
             .single()
 
         if (fetchError) {
@@ -73,7 +86,7 @@ export async function createBookingAction(params: CreateBookingParams) {
 
         // Write audit log (async, non-blocking)
         auditBookingChange(
-            data.id,
+            bookingId,
             'create',
             undefined,
             {
@@ -95,3 +108,4 @@ export async function createBookingAction(params: CreateBookingParams) {
         return { error: 'An unexpected error occurred' }
     }
 }
+

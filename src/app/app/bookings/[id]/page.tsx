@@ -4,11 +4,10 @@ import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import {
     ArrowLeft, Calendar, Clock, MapPin,
-    MessageSquare, Phone, Mail, User,
-    MoreHorizontal, Ban, RefreshCw, Video, ExternalLink
+    MessageSquare, Phone, Mail,
+    MoreHorizontal, Video, ExternalLink
 } from 'lucide-react'
 import { cancelBookingAsPro } from '@/app/actions/cancel'
-import StatusBadge from '@/components/StatusBadge'
 
 export default async function BookingDetailPage({
     params

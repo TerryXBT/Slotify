@@ -5,6 +5,17 @@ import { emailService } from '@/lib/email/service'
 import { format } from 'date-fns'
 import { toZonedTime } from 'date-fns-tz'
 
+// Types for Supabase join data
+interface ServiceData {
+    name?: string
+    default_location?: string | null
+}
+
+interface ProfileData {
+    full_name?: string | null
+    timezone?: string
+}
+
 /**
  * Send booking reminders for appointments happening in 24 hours
  * This function should be called by a cron job daily
@@ -20,11 +31,6 @@ export async function sendBookingReminders() {
     const now = new Date()
     const reminderWindowStart = new Date(now.getTime() + 23 * 60 * 60 * 1000) // 23 hours
     const reminderWindowEnd = new Date(now.getTime() + 25 * 60 * 60 * 1000) // 25 hours
-
-    console.log('[REMINDERS] Checking for bookings between:', {
-        start: reminderWindowStart.toISOString(),
-        end: reminderWindowEnd.toISOString()
-    })
 
     // Fetch all confirmed bookings in the next 24 hours that have client emails
     const { data: bookings, error } = await admin
@@ -48,11 +54,8 @@ export async function sendBookingReminders() {
     }
 
     if (!bookings || bookings.length === 0) {
-        console.log('[REMINDERS] No bookings found for reminders')
         return { sent: 0, message: 'No bookings to remind' }
     }
-
-    console.log(`[REMINDERS] Found ${bookings.length} booking(s) to remind`)
 
     let successCount = 0
     let failureCount = 0
@@ -60,8 +63,8 @@ export async function sendBookingReminders() {
     // Send reminders
     for (const booking of bookings) {
         try {
-            const service = booking.services as any
-            const profile = booking.profiles as any
+            const service = booking.services as ServiceData | ServiceData[] | null
+            const profile = booking.profiles as ProfileData | ProfileData[] | null
 
             const serviceName = (Array.isArray(service) ? service[0]?.name : service?.name) || 'Your Appointment'
             const providerName = (Array.isArray(profile) ? profile[0]?.full_name : profile?.full_name) || 'Provider'
@@ -72,26 +75,21 @@ export async function sendBookingReminders() {
             const zonedDate = toZonedTime(new Date(booking.start_at), timezone)
             const formattedDate = format(zonedDate, 'EEEE, MMMM d, yyyy \'at\' h:mm a zzz')
 
-            console.log(`[REMINDERS] Sending reminder to ${booking.client_email} for booking ${booking.id}`)
-
             await emailService.sendBookingReminder(
                 booking.client_email!,
                 booking.client_name,
                 serviceName,
                 formattedDate,
                 providerName,
-                location
+                location ?? undefined
             )
 
             successCount++
-            console.log(`[REMINDERS] ✅ Reminder sent to ${booking.client_email}`)
         } catch (error) {
             failureCount++
             console.error(`[REMINDERS] ❌ Failed to send reminder for booking ${booking.id}:`, error)
         }
     }
-
-    console.log(`[REMINDERS] Complete: ${successCount} sent, ${failureCount} failed`)
 
     return {
         sent: successCount,

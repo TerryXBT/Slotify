@@ -1,0 +1,186 @@
+==========================================================
+VERCEL 环境变量配置清单
+==========================================================
+
+请在 Vercel 项目设置中逐个添加以下变量。
+
+----------------------------------------------------------
+1. SUPABASE 配置（3 个变量）
+----------------------------------------------------------
+
+变量名: NEXT_PUBLIC_SUPABASE_URL
+说明: Supabase 项目 URL
+获取: Supabase Dashboard → Settings → API → Project URL
+示例: https://abcdefghijklmnop.supabase.co
+您的值: _______________________________________________
+
+
+变量名: NEXT_PUBLIC_SUPABASE_ANON_KEY
+说明: Supabase 匿名密钥（公开密钥）
+获取: Supabase Dashboard → Settings → API → Project API keys → anon public
+示例: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+您的值: _______________________________________________
+
+
+变量名: SUPABASE_SERVICE_ROLE_KEY
+说明: Supabase 服务角色密钥（保密！）
+获取: Supabase Dashboard → Settings → API → Project API keys → service_role secret
+示例: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+您的值: _______________________________________________
+
+
+----------------------------------------------------------
+2. 应用配置（2 个变量）
+----------------------------------------------------------
+
+变量名: NEXT_PUBLIC_APP_URL
+说明: 应用的公开 URL
+首次部署: https://slotify.vercel.app（临时值，部署后更新）
+部署后: 使用 Vercel 给您的实际 URL
+您的值: https://slotify.vercel.app
+
+
+变量名: CRON_SECRET
+说明: Cron 任务的安全密钥
+生成方法: openssl rand -base64 32
+示例: 3K8j2Nm9Pq7Rt5Vx8Wz1Yb4Cd6Ef9Hg==
+您的值: _______________________________________________
+
+
+----------------------------------------------------------
+3. SENTRY 配置（4 个变量）
+----------------------------------------------------------
+
+⚠️ 如果您还没有 Sentry 账号，请先完成以下步骤：
+1. 访问 https://sentry.io/signup/
+2. 使用 GitHub 登录
+3. 选择 Developer (Free) 计划
+4. 创建 Next.js 项目，项目名: slotify
+
+变量名: NEXT_PUBLIC_SENTRY_DSN
+说明: Sentry 数据源名称（DSN）
+获取: Sentry 创建项目后立即显示，或 Settings → Client Keys (DSN)
+格式: https://[KEY]@o[ORG_ID].ingest.sentry.io/[PROJECT_ID]
+示例: https://abc123@o456789.ingest.sentry.io/123456
+您的值: _______________________________________________
+
+
+变量名: SENTRY_ORG
+说明: Sentry 组织 Slug
+获取: 在 Sentry URL 中查看 https://sentry.io/organizations/YOUR-ORG-SLUG/
+示例: slotify 或 your-username
+您的值: _______________________________________________
+
+
+变量名: SENTRY_PROJECT
+说明: Sentry 项目名称
+值: slotify
+您的值: slotify
+
+
+变量名: SENTRY_AUTH_TOKEN
+说明: Sentry 认证令牌（用于上传 source maps）
+获取: Sentry → Settings → Developer Settings → Auth Tokens → Create New Token
+权限: project:read, project:releases, project:write, org:read
+Token 名称: vercel-deployment
+示例: sntrys_1234567890abcdefghijklmnopqrstuvwxyz
+您的值: _______________________________________________
+
+
+----------------------------------------------------------
+4. 邮件服务配置（选择一种）
+----------------------------------------------------------
+
+方案 A：Resend（推荐）
+------------------------
+
+变量名: RESEND_API_KEY
+说明: Resend API 密钥
+获取: https://resend.com → API Keys → Create API Key
+注册: 免费 100 邮件/天
+示例: re_123456789_abcdefghijklmnopqrstuvwxyz
+您的值: _______________________________________________
+
+
+变量名: RESEND_FROM_EMAIL
+说明: 发件人邮箱地址
+要求: 需要在 Resend 中验证域名
+示例: noreply@yourdomain.com
+您的值: _______________________________________________
+
+
+方案 B：SMTP（例如 Gmail）
+------------------------
+
+变量名: SMTP_HOST
+值: smtp.gmail.com
+
+变量名: SMTP_PORT
+值: 587
+
+变量名: SMTP_USER
+说明: Gmail 邮箱地址
+您的值: _______________________________________________
+
+变量名: SMTP_PASS
+说明: Gmail 应用专用密码（非登录密码！）
+获取: Google Account → Security → 2-Step Verification → App passwords
+您的值: _______________________________________________
+
+变量名: SMTP_FROM_EMAIL
+说明: 发件人显示邮箱
+您的值: _______________________________________________
+
+变量名: USE_SMTP
+值: true
+
+
+----------------------------------------------------------
+5. 生成 CRON_SECRET（重要！）
+----------------------------------------------------------
+
+请在终端运行以下命令生成随机密钥：
+
+  openssl rand -base64 32
+
+或在浏览器控制台运行：
+
+  btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(32))))
+
+生成的值: _______________________________________________
+
+
+==========================================================
+配置完成检查清单
+==========================================================
+
+在点击 Vercel "Deploy" 按钮前，请确认：
+
+[ ] NEXT_PUBLIC_SUPABASE_URL - 已设置
+[ ] NEXT_PUBLIC_SUPABASE_ANON_KEY - 已设置
+[ ] SUPABASE_SERVICE_ROLE_KEY - 已设置
+[ ] NEXT_PUBLIC_APP_URL - 已设置（可先用临时值）
+[ ] CRON_SECRET - 已生成并设置
+[ ] NEXT_PUBLIC_SENTRY_DSN - 已设置
+[ ] SENTRY_ORG - 已设置
+[ ] SENTRY_PROJECT - 已设置为 slotify
+[ ] SENTRY_AUTH_TOKEN - 已设置
+[ ] 邮件服务 - 已选择并配置（Resend 或 SMTP）
+
+最少需要配置的变量数: 9 个（不含邮件服务）
+推荐配置的变量数: 11 个（包含 Resend）
+
+
+==========================================================
+下一步
+==========================================================
+
+1. 完成 Sentry 注册和配置
+2. 在 Vercel 项目设置中添加所有环境变量
+3. 点击 "Deploy" 按钮
+4. 等待构建完成（2-5 分钟）
+5. 访问应用 URL 验证部署
+
+祝部署顺利！🚀
+
+==========================================================
