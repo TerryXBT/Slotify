@@ -1,7 +1,19 @@
-import { type NextRequest } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { updateSession } from '@/utils/supabase/middleware'
 
 export async function middleware(request: NextRequest) {
+    // Skip middleware for static files and specific paths
+    const path = request.nextUrl.pathname
+    if (
+        path.startsWith('/_next') ||
+        path.startsWith('/api') ||
+        path === '/manifest.json' ||
+        path === '/favicon.ico' ||
+        /\.(svg|png|jpg|jpeg|gif|webp|ico)$/.test(path)
+    ) {
+        return NextResponse.next()
+    }
+
     return await updateSession(request)
 }
 
