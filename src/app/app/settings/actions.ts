@@ -247,7 +247,7 @@ export async function permanentlyDeleteService(id: string) {
         const adminClient = createAdminClient()
 
         // First, delete all related bookings
-        const { error: bookingsError } = await adminClient
+        const { error: bookingsError } = await (adminClient as any)
             .from('bookings')
             .delete()
             .eq('service_id', id)
@@ -258,7 +258,7 @@ export async function permanentlyDeleteService(id: string) {
         }
 
         // Then, permanently delete the service
-        const { error: serviceError } = await adminClient
+        const { error: serviceError } = await (adminClient as any)
             .from('services')
             .delete()
             .eq('id', id)
@@ -387,7 +387,7 @@ export async function deleteAvailabilityRule(id: string) {
 
         const adminClient = createAdminClient()
 
-        const { error } = await adminClient
+        const { error } = await (adminClient as any)
             .from('availability_rules')
             .delete()
             .eq('id', id)
