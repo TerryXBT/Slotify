@@ -380,59 +380,67 @@ export default function BookingFlow({
                 {/* Confirmation Form */}
                 {selectedSlot && (
                     <div className="space-y-6 animate-in slide-in-from-right-4 fade-in duration-300">
-                        <button onClick={() => setSelectedSlot(null)} className="text-sm text-gray-400 hover:text-gray-600">
-                            ← Back to times
+                        <button
+                            onClick={() => setSelectedSlot(null)}
+                            className="flex items-center gap-1 text-sm text-blue-400 hover:text-blue-300 transition-colors font-medium"
+                        >
+                            <ChevronLeft className="w-4 h-4" />
+                            Back to times
                         </button>
 
-                        <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl space-y-2">
-                            <div className="font-semibold text-lg">{selectedService?.name}</div>
-                            <div className="flex text-sm text-gray-500 space-x-4">
-                                <div className="flex items-center"><Clock className="w-4 h-4 mr-1" /> {selectedService?.duration_minutes} mins</div>
+                        <div className="bg-gradient-to-br from-blue-900/40 to-purple-900/40 border border-blue-500/30 p-5 rounded-xl space-y-3 shadow-lg">
+                            <div className="font-semibold text-xl text-white">{selectedService?.name}</div>
+                            <div className="flex text-sm text-gray-300 space-x-4">
+                                <div className="flex items-center">
+                                    <Clock className="w-4 h-4 mr-1.5" />
+                                    {selectedService?.duration_minutes} mins
+                                </div>
                             </div>
-                            <div className="text-blue-600 font-medium">
+                            <div className="text-blue-300 font-semibold text-base pt-2 border-t border-blue-500/20">
                                 {format(new Date(selectedSlot.start), 'EEEE, MMMM d')} at {format(new Date(selectedSlot.start), 'h:mm a')}
                             </div>
                         </div>
 
-                        <div className="space-y-4">
+                        <div className="space-y-5">
                             <div>
-                                <label className="block text-sm font-medium mb-1">Name</label>
+                                <label className="block text-sm font-semibold mb-2 text-gray-200">Name</label>
                                 <input
                                     type="text"
                                     value={clientName}
                                     onChange={e => setClientName(e.target.value)}
-                                    className="w-full p-2 border rounded-lg dark:bg-gray-900 dark:border-gray-700 focus:ring-2 focus:ring-blue-500 outline-none"
+                                    className="w-full px-4 py-3 border-2 rounded-lg bg-[#2d3748] border-gray-600 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                                     placeholder="Your Name"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium mb-1">Email</label>
+                                <label className="block text-sm font-semibold mb-2 text-gray-200">Email</label>
                                 <input
                                     type="email"
                                     value={clientEmail}
                                     onChange={e => setClientEmail(e.target.value)}
                                     required
-                                    className="w-full p-2 border rounded-lg dark:bg-gray-900 dark:border-gray-700 focus:ring-2 focus:ring-blue-500 outline-none"
+                                    className="w-full px-4 py-3 border-2 rounded-lg bg-[#2d3748] border-gray-600 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                                     placeholder="you@example.com"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium mb-1">Phone Number</label>
+                                <label className="block text-sm font-semibold mb-2 text-gray-200">Phone Number</label>
                                 <input
                                     type="tel"
                                     value={clientPhone}
                                     onChange={e => setClientPhone(e.target.value)}
                                     required
-                                    className="w-full p-2 border rounded-lg dark:bg-gray-900 dark:border-gray-700 focus:ring-2 focus:ring-blue-500 outline-none"
+                                    className="w-full px-4 py-3 border-2 rounded-lg bg-[#2d3748] border-gray-600 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                                     placeholder="+1 234 567 890"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium mb-1">Notes (Optional)</label>
+                                <label className="block text-sm font-semibold mb-2 text-gray-200">Notes (Optional)</label>
                                 <textarea
                                     value={notes}
                                     onChange={e => setNotes(e.target.value)}
-                                    className="w-full p-2 border rounded-lg dark:bg-gray-900 dark:border-gray-700 focus:ring-2 focus:ring-blue-500 outline-none"
+                                    rows={3}
+                                    className="w-full px-4 py-3 border-2 rounded-lg bg-[#2d3748] border-gray-600 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none"
                                     placeholder="Anything needed to prepare?"
                                 />
                             </div>
@@ -441,9 +449,16 @@ export default function BookingFlow({
                         <button
                             onClick={handleBooking}
                             disabled={submitting || !clientName || !clientEmail || !clientPhone}
-                            className="w-full bg-black text-white dark:bg-white dark:text-black py-3 rounded-lg font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 rounded-lg font-semibold text-lg hover:from-blue-500 hover:to-purple-500 disabled:opacity-40 disabled:cursor-not-allowed disabled:from-gray-600 disabled:to-gray-600 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                         >
-                            {submitting ? 'Confirming...' : 'Confirm Booking'}
+                            {submitting ? (
+                                <span className="flex items-center justify-center gap-2">
+                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                    Confirming...
+                                </span>
+                            ) : (
+                                'Confirm Booking'
+                            )}
                         </button>
                     </div>
                 )}
