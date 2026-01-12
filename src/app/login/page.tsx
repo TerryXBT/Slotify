@@ -3,65 +3,107 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
 
-export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string, success?: string }> }) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
-    const { error } = await searchParams
+    const { error, success } = await searchParams
 
     if (user) {
         redirect('/app/today')
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-black p-4">
-            <form className="bg-white dark:bg-zinc-900 p-8 rounded-2xl shadow-xl w-full max-w-sm space-y-6 border border-gray-100 dark:border-zinc-800">
-                {error && (
-                    <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded-lg text-sm font-medium">
-                        {error}
-                    </div>
-                )}
+        <div className="min-h-screen flex items-center justify-center bg-[#1a1a1a] p-4">
+            {/* Background Gradient Effect */}
+            <div className="absolute inset-0 overflow-hidden">
+                <div className="absolute top-1/4 -left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
+                <div className="absolute bottom-1/4 -right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" />
+            </div>
 
-                <div className="text-center">
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Welcome Back</h1>
-                    <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Sign in to manage your bookings</p>
+            <div className="relative w-full max-w-md">
+                {/* Logo/Brand */}
+                <div className="text-center mb-8">
+                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-blue-500 to-purple-600 mb-4 shadow-2xl">
+                        <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                    <h1 className="text-3xl font-bold text-white mb-2">Slotify</h1>
+                    <p className="text-gray-400 text-sm">Professional booking platform</p>
                 </div>
 
-                <div className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Email</label>
-                        <input
-                            id="email"
-                            name="email"
-                            type="email"
-                            required
-                            className="w-full p-3 rounded-lg border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                            placeholder="you@example.com"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Password</label>
-                        <input
-                            id="password"
-                            name="password"
-                            type="password"
-                            required
-                            className="w-full p-3 rounded-lg border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                            placeholder="••••••••"
-                        />
-                    </div>
-                </div>
+                {/* Login Form */}
+                <form className="relative rounded-3xl overflow-hidden">
+                    {/* Glassmorphism Background */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/[0.12] via-white/[0.08] to-white/[0.05] backdrop-blur-3xl" />
+                    <div className="absolute inset-0 rounded-3xl border border-white/20" />
 
-                <div className="space-y-4 pt-2">
-                    <button formAction={login} className="w-full bg-black text-white dark:bg-white dark:text-black py-3.5 rounded-xl font-bold hover:opacity-90 transition-opacity">
-                        Sign In
-                    </button>
-                    <div className="text-center">
-                        <Link href="/signup" className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline">
-                            Don&apos;t have an account? Sign Up
-                        </Link>
+                    <div className="relative z-10 p-8 space-y-6">
+                        {error && (
+                            <div className="relative rounded-2xl p-4 overflow-hidden">
+                                <div className="absolute inset-0 bg-red-500/20 backdrop-blur-xl" />
+                                <div className="absolute inset-0 rounded-2xl border border-red-500/30" />
+                                <p className="relative z-10 text-red-400 text-sm font-medium text-center">{error}</p>
+                            </div>
+                        )}
+
+                        {success && (
+                            <div className="relative rounded-2xl p-4 overflow-hidden">
+                                <div className="absolute inset-0 bg-green-500/20 backdrop-blur-xl" />
+                                <div className="absolute inset-0 rounded-2xl border border-green-500/30" />
+                                <p className="relative z-10 text-green-400 text-sm font-medium text-center">{success}</p>
+                            </div>
+                        )}
+
+                        <div className="text-center">
+                            <h2 className="text-2xl font-bold text-white mb-1">Welcome Back</h2>
+                            <p className="text-gray-400 text-sm">Sign in to manage your bookings</p>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-semibold text-white/90 mb-2">Email</label>
+                                <input
+                                    id="email"
+                                    name="email"
+                                    type="email"
+                                    required
+                                    className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                    placeholder="you@example.com"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-semibold text-white/90 mb-2">Password</label>
+                                <input
+                                    id="password"
+                                    name="password"
+                                    type="password"
+                                    required
+                                    className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                    placeholder="••••••••"
+                                />
+                            </div>
+                        </div>
+
+                        <button
+                            formAction={login}
+                            className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-4 rounded-xl font-bold text-[17px] hover:opacity-90 active:scale-[0.98] transition-all shadow-xl shadow-blue-500/25"
+                        >
+                            Sign In
+                        </button>
+
+                        <div className="text-center">
+                            <Link href="/signup" className="text-sm font-semibold text-blue-400 hover:text-blue-300 transition-colors">
+                                Don&apos;t have an account? Sign Up
+                            </Link>
+                        </div>
                     </div>
-                </div>
-            </form>
+                </form>
+
+                <p className="text-center text-gray-500 text-xs mt-6">
+                    By continuing, you agree to our Terms of Service and Privacy Policy
+                </p>
+            </div>
         </div>
     )
 }
