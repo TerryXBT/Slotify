@@ -144,10 +144,11 @@ export default function CalendarView({ initialDate, avatarUrl, displayName, serv
         <div className="flex flex-col h-screen bg-[#1a1a1a] pb-24 text-white font-sans selection:bg-blue-500/30 relative">
             {/* Header */}
             <div className="pt-14 px-5 pb-6">
-                <div className="flex items-center justify-between mb-8">
-                    <h1 className="text-[34px] font-bold tracking-tight">Bookings</h1>
+                <h1 className="text-[34px] font-bold tracking-tight mb-4">Bookings</h1>
+
+                <div className="flex items-center justify-between mb-6">
+                    <span className="text-[15px] font-medium text-white">{format(date, 'MMMM yyyy')}</span>
                     <div className="flex items-center gap-3">
-                        <span className="text-[15px] font-medium text-white">{format(date, 'MMMM yyyy')}</span>
                         <div className="flex items-center gap-1">
                             <button onClick={prevWeek} className="p-2 hover:bg-white/10 rounded-full transition-colors"><ChevronLeft className="w-5 h-5 text-white" /></button>
                             <button onClick={nextWeek} className="p-2 hover:bg-white/10 rounded-full transition-colors"><ChevronRight className="w-5 h-5 text-white" /></button>
