@@ -17,7 +17,7 @@ export default async function AvailabilityPage() {
         .order('day_of_week')
 
     return (
-        <div className="min-h-screen bg-black">
+        <div className="min-h-screen bg-[#1a1a1a]">
             <AvailabilityTab availabilityRules={availabilityRules || []} />
         </div>
     )

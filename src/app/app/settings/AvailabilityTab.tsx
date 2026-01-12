@@ -242,9 +242,9 @@ export default function AvailabilityTab({
     }
 
     return (
-        <div className="min-h-screen bg-black text-white font-sans selection:bg-blue-500/30 pb-20">
+        <div className="min-h-screen bg-[#1a1a1a] text-white font-sans selection:bg-blue-500/30 pb-20">
             {/* Header */}
-            <div className="px-4 pt-14 pb-2 flex items-center justify-between bg-black sticky top-0 z-10">
+            <div className="px-4 pt-14 pb-2 flex items-center justify-between bg-[#1a1a1a]/80 backdrop-blur-md sticky top-0 z-10 border-b border-white/5">
                 <Link href="/app/services" className="flex items-center gap-1 text-blue-500 active:opacity-50 transition-opacity -ml-2 p-2">
                     <ChevronLeft className="w-6 h-6" />
                     <span className="text-[17px]">Back</span>
@@ -265,67 +265,77 @@ export default function AvailabilityTab({
 
             {/* List */}
             <div className="px-4 mt-6">
-                <div className="bg-[#1C1C1E] rounded-xl overflow-hidden divide-y divide-gray-800/80">
-                    {DAYS.map(day => {
-                        const isOpen = localRules.some(r => r.day_of_week === day.id)
-                        return (
-                            <div
-                                key={day.id}
-                                onClick={() => setEditingDayId(day.id)} // Open sheet even if closed, to easy open
-                                className="flex items-center justify-between px-4 py-3.5 active:bg-gray-800/50 cursor-pointer transition-colors"
-                            >
-                                <span className="text-[17px] text-white font-medium w-24">{day.label}</span>
+                <div className="relative rounded-2xl overflow-hidden">
+                    {/* Glassmorphism Background */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/[0.07] via-white/[0.05] to-white/[0.03] backdrop-blur-2xl" />
+                    <div className="absolute inset-0 rounded-2xl border border-white/10" />
 
-                                <div className="flex-1 flex items-center justify-end gap-3">
-                                    <span className={clsx(
-                                        "text-[17px]",
-                                        isOpen ? "text-gray-400" : "text-gray-600"
-                                    )}>
-                                        {getDayStatusText(day.id)}
-                                    </span>
+                    <div className="relative z-10 divide-y divide-white/5">
+                        {DAYS.map(day => {
+                            const isOpen = localRules.some(r => r.day_of_week === day.id)
+                            return (
+                                <div
+                                    key={day.id}
+                                    onClick={() => setEditingDayId(day.id)}
+                                    className="flex items-center justify-between px-4 py-3.5 active:bg-white/5 cursor-pointer transition-colors"
+                                >
+                                    <span className="text-[17px] text-white font-medium w-24">{day.label}</span>
 
-                                    {/* Toggle */}
-                                    <div
-                                        onClick={(e) => handleToggleDay(e, day.id, isOpen)}
-                                        className={clsx(
-                                            "w-[51px] h-[31px] rounded-full relative transition-colors duration-200 ease-in-out flex-shrink-0",
-                                            isOpen ? "bg-[#34C759]" : "bg-[#39393D]"
-                                        )}
-                                    >
-                                        <span
+                                    <div className="flex-1 flex items-center justify-end gap-3">
+                                        <span className={clsx(
+                                            "text-[17px]",
+                                            isOpen ? "text-gray-400" : "text-gray-600"
+                                        )}>
+                                            {getDayStatusText(day.id)}
+                                        </span>
+
+                                        {/* Toggle */}
+                                        <div
+                                            onClick={(e) => handleToggleDay(e, day.id, isOpen)}
                                             className={clsx(
-                                                "absolute top-[2px] w-[27px] h-[27px] bg-white rounded-full shadow transition-transform duration-200 ease-in-out",
-                                                isOpen ? "left-[22px]" : "left-[2px]"
+                                                "w-[51px] h-[31px] rounded-full relative transition-colors duration-200 ease-in-out flex-shrink-0",
+                                                isOpen ? "bg-[#34C759]" : "bg-[#39393D]"
                                             )}
-                                        />
+                                        >
+                                            <span
+                                                className={clsx(
+                                                    "absolute top-[2px] w-[27px] h-[27px] bg-white rounded-full shadow transition-transform duration-200 ease-in-out",
+                                                    isOpen ? "left-[22px]" : "left-[2px]"
+                                                )}
+                                            />
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        )
-                    })}
+                            )
+                        })}
+                    </div>
                 </div>
             </div>
 
             {/* Edit Day Modal (Centered) */}
             {editingDayId !== null && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-black/70 backdrop-blur-[2px]" onClick={() => setEditingDayId(null)} />
-                    <div className="relative w-full max-w-sm bg-[#1C1C1E] rounded-2xl shadow-2xl ring-1 ring-white/10 animate-in fade-in zoom-in-95 duration-200">
+                    <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setEditingDayId(null)} />
+                    <div className="relative w-full max-w-sm rounded-2xl shadow-2xl animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
+                        {/* Glassmorphism Background for Modal */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/[0.12] via-white/[0.08] to-white/[0.05] backdrop-blur-3xl" />
+                        <div className="absolute inset-0 rounded-2xl border border-white/20" />
+
                         {/* Sheet Header */}
-                        <div className="px-4 py-3 border-b border-gray-800/50 flex items-center justify-between">
+                        <div className="relative z-10 px-4 py-3 border-b border-white/10 flex items-center justify-between">
                             <span className="text-[17px] font-semibold text-white">
                                 {DAYS.find(d => d.id === editingDayId)?.label}
                             </span>
                             <button
                                 onClick={() => setEditingDayId(null)}
-                                className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-gray-400"
+                                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
                             >
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
 
                         {/* Sheet Content */}
-                        <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
+                        <div className="relative z-10 p-4 space-y-4 max-h-[70vh] overflow-y-auto">
                             {localRules.filter(r => r.day_of_week === editingDayId).length === 0 ? (
                                 <div className="py-8 text-center">
                                     <p className="text-gray-500 mb-4">Closed on this day</p>
@@ -348,7 +358,7 @@ export default function AvailabilityTab({
                                                         <select
                                                             value={rule.start_time}
                                                             onChange={(e) => handleUpdateRule(realIndex, 'start_time', e.target.value)}
-                                                            className="w-full appearance-none bg-[#2C2C2E] text-white rounded-lg px-3 py-2.5 text-[17px] text-center font-medium focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                            className="w-full appearance-none bg-white/5 border border-white/10 text-white rounded-lg px-3 py-2.5 text-[17px] text-center font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                         >
                                                             {TIME_OPTIONS.map(opt => (
                                                                 <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -360,7 +370,7 @@ export default function AvailabilityTab({
                                                         <select
                                                             value={rule.end_time}
                                                             onChange={(e) => handleUpdateRule(realIndex, 'end_time', e.target.value)}
-                                                            className="w-full appearance-none bg-[#2C2C2E] text-white rounded-lg px-3 py-2.5 text-[17px] text-center font-medium focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                            className="w-full appearance-none bg-white/5 border border-white/10 text-white rounded-lg px-3 py-2.5 text-[17px] text-center font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                         >
                                                             {TIME_OPTIONS.map(opt => (
                                                                 <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -370,7 +380,7 @@ export default function AvailabilityTab({
                                                 </div>
                                                 <button
                                                     onClick={() => handleDeleteRule(realIndex)}
-                                                    className="p-2.5 bg-[#2C2C2E] text-gray-400 hover:text-red-500 rounded-lg transition-colors"
+                                                    className="p-2.5 bg-white/5 border border-white/10 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
                                                 >
                                                     <Trash2 className="w-5 h-5" />
                                                 </button>
@@ -406,18 +416,22 @@ export default function AvailabilityTab({
             {copySheetOpen && (
                 <div className="fixed inset-0 z-[60] flex items-end justify-center">
                     <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setCopySheetOpen(false)} />
-                    <div className="relative w-full max-w-md bg-[#1C1C1E] rounded-t-2xl shadow-2xl animate-in slide-in-from-bottom duration-300">
-                        <div className="px-4 py-3 border-b border-gray-800/50 flex items-center justify-between">
+                    <div className="relative w-full max-w-md rounded-t-2xl shadow-2xl animate-in slide-in-from-bottom duration-300 overflow-hidden">
+                        {/* Glassmorphism Background */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/[0.12] via-white/[0.08] to-white/[0.05] backdrop-blur-3xl" />
+                        <div className="absolute inset-0 rounded-t-2xl border border-white/20 border-b-0" />
+
+                        <div className="relative z-10 px-4 py-3 border-b border-white/10 flex items-center justify-between">
                             <span className="text-[17px] font-semibold text-white">
                                 Copy {DAYS.find(d => d.id === copySourceDay)?.label}'s schedule to...
                             </span>
-                            <button onClick={() => setCopySheetOpen(false)} className="w-8 h-8 rounded-full bg-gray-800 text-gray-400 flex items-center justify-center">
+                            <button onClick={() => setCopySheetOpen(false)} className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
-                        <div className="p-4 space-y-1 max-h-[60vh] overflow-y-auto">
+                        <div className="relative z-10 p-4 space-y-1 max-h-[60vh] overflow-y-auto">
                             {DAYS.filter(d => d.id !== copySourceDay).map(day => (
-                                <label key={day.id} className="flex items-center justify-between p-3 rounded-xl bg-[#2C2C2E] active:bg-gray-700 cursor-pointer transition-colors">
+                                <label key={day.id} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10 active:bg-white/10 cursor-pointer transition-colors">
                                     <span className="font-medium text-white">{day.label}</span>
                                     <div className={clsx(
                                         "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors",
@@ -437,11 +451,11 @@ export default function AvailabilityTab({
                                 </label>
                             ))}
                         </div>
-                        <div className="p-4 border-t border-gray-800/50">
+                        <div className="relative z-10 p-4 border-t border-white/10">
                             <button
                                 onClick={handleApplyCopy}
                                 disabled={selectedCopyDays.length === 0}
-                                className="w-full py-3 bg-blue-600 text-white font-bold rounded-xl disabled:opacity-50"
+                                className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-colors active:scale-95"
                             >
                                 Apply
                             </button>

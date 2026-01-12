@@ -1,19 +1,21 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Bell, BellOff } from 'lucide-react'
 import { toast } from '@/utils/toast'
 
 export default function PushNotifications() {
-  // Use initializer functions to avoid setState in useEffect
-  const [isSupported] = useState(() =>
-    typeof window !== 'undefined' && 'Notification' in window && 'serviceWorker' in navigator
-  )
-  const [permission, setPermission] = useState<NotificationPermission>(() =>
-    typeof window !== 'undefined' && 'Notification' in window
-      ? Notification.permission
-      : 'default'
-  )
+  const [mounted, setMounted] = useState(false)
+  const [isSupported, setIsSupported] = useState(false)
+  const [permission, setPermission] = useState<NotificationPermission>('default')
+
+  useEffect(() => {
+    setMounted(true)
+    setIsSupported('Notification' in window && 'serviceWorker' in navigator)
+    if ('Notification' in window) {
+      setPermission(Notification.permission)
+    }
+  }, [])
 
   const requestPermission = async () => {
     if (!isSupported) {
@@ -47,7 +49,7 @@ export default function PushNotifications() {
     }
   }
 
-  if (!isSupported) {
+  if (!mounted || !isSupported) {
     return null
   }
 

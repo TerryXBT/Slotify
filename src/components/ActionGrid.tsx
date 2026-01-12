@@ -31,17 +31,22 @@ export default function ActionGrid() {
     ]
 
     return (
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 gap-4">
             {actions.map((action) => (
                 <Link
                     key={action.label}
                     href={action.href}
-                    className="flex flex-col items-center gap-2 group"
+                    className="relative flex items-center gap-4 p-4 rounded-2xl active:scale-[0.98] transition-all group overflow-hidden"
                 >
-                    <div className="w-16 h-16 rounded-full bg-[#1C1C1E] flex items-center justify-center active:scale-90 transition-transform group-active:bg-gray-800">
+                    {/* Glassmorphism Background */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/[0.07] via-white/[0.05] to-white/[0.03] backdrop-blur-2xl" />
+                    <div className="absolute inset-0 rounded-2xl border border-white/10" />
+                    <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/[0.08] to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
+
+                    <div className="relative z-10 w-12 h-12 rounded-full bg-white/[0.08] backdrop-blur-xl border border-white/10 flex items-center justify-center group-active:scale-95 transition-transform">
                         <div className={action.color}>{action.icon}</div>
                     </div>
-                    <span className="text-[12px] font-medium text-gray-400">
+                    <span className="relative z-10 text-sm font-semibold text-white">
                         {action.label}
                     </span>
                 </Link>

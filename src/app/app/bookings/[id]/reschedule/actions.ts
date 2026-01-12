@@ -3,6 +3,8 @@
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import { emailService } from '@/lib/email/service'
+import { format } from 'date-fns'
+import { toZonedTime } from 'date-fns-tz'
 
 function generateToken() {
     // Use crypto.randomUUID() for cryptographically secure tokens
@@ -10,6 +12,85 @@ function generateToken() {
     return crypto.randomUUID().replace(/-/g, '')
 }
 
+/**
+ * Direct reschedule - provider picks one new time and it's immediately updated
+ */
+export async function directReschedule(prevState: any, formData: FormData) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) return { error: 'Not authenticated' }
+
+    const bookingId = formData.get('bookingId') as string
+    const newStartAt = formData.get('newStartAt') as string // ISO string
+
+    if (!bookingId || !newStartAt) {
+        return { error: 'Missing booking ID or new time' }
+    }
+
+    // Verify ownership of booking and get full details
+    const { data: booking } = await supabase
+        .from('bookings')
+        .select('*, services(name, duration_minutes), profiles!bookings_provider_id_fkey(full_name, timezone)')
+        .eq('id', bookingId)
+        .single()
+
+    if (!booking || booking.provider_id !== user.id) {
+        return { error: 'Booking not found or access denied' }
+    }
+
+    // Calculate new end time
+    const servicesData = booking.services as any
+    const duration = (Array.isArray(servicesData) ? servicesData[0]?.duration_minutes : servicesData?.duration_minutes) || 30
+    const serviceName = (Array.isArray(servicesData) ? servicesData[0]?.name : servicesData?.name) || 'Service'
+
+    const startDate = new Date(newStartAt)
+    const endDate = new Date(startDate.getTime() + duration * 60000)
+
+    // Update booking
+    const { error: updateError } = await supabase
+        .from('bookings')
+        .update({
+            start_at: startDate.toISOString(),
+            end_at: endDate.toISOString(),
+            status: 'confirmed'
+        })
+        .eq('id', bookingId)
+
+    if (updateError) {
+        console.error('Failed to update booking:', updateError)
+        return { error: 'Failed to reschedule booking' }
+    }
+
+    // Send confirmation email to client
+    if (booking.client_email) {
+        try {
+            const profilesData = booking.profiles as any
+            const timezone = (Array.isArray(profilesData) ? profilesData[0]?.timezone : profilesData?.timezone) || 'UTC'
+            const providerName = (Array.isArray(profilesData) ? profilesData[0]?.full_name : profilesData?.full_name) || 'Your Provider'
+
+            const zonedDate = toZonedTime(startDate, timezone)
+            const formattedDate = format(zonedDate, 'EEEE, MMMM d, yyyy \'at\' h:mm a')
+
+            await emailService.sendRescheduleConfirmation(
+                booking.client_email,
+                booking.client_name,
+                serviceName,
+                formattedDate,
+                providerName
+            )
+        } catch (emailError) {
+            console.error('Failed to send reschedule confirmation email:', emailError)
+            // Don't fail the entire operation if email fails
+        }
+    }
+
+    redirect(`/app/bookings/${bookingId}?rescheduled=true`)
+}
+
+/**
+ * Original proposal-based reschedule (kept for backward compatibility)
+ */
 export async function createRescheduleProposal(prevState: any, formData: FormData) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()

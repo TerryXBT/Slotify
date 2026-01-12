@@ -141,17 +141,29 @@ export default function CalendarView({ initialDate, avatarUrl, displayName, serv
     }
 
     return (
-        <div className="flex flex-col h-screen bg-black pb-24 text-white font-sans selection:bg-blue-500/30 relative">
+        <div className="flex flex-col h-screen bg-[#1a1a1a] pb-24 text-white font-sans selection:bg-blue-500/30 relative">
             {/* Header */}
             <div className="pt-14 px-5 pb-6">
                 <div className="flex items-center justify-between mb-8">
                     <h1 className="text-[34px] font-bold tracking-tight">Bookings</h1>
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3">
                         <span className="text-[15px] font-medium text-white">{format(date, 'MMMM yyyy')}</span>
-                        <div className="flex items-center">
+                        <div className="flex items-center gap-1">
                             <button onClick={prevWeek} className="p-2 hover:bg-white/10 rounded-full transition-colors"><ChevronLeft className="w-5 h-5 text-white" /></button>
                             <button onClick={nextWeek} className="p-2 hover:bg-white/10 rounded-full transition-colors"><ChevronRight className="w-5 h-5 text-white" /></button>
                         </div>
+                        {!isSameDay(selectedDate, new Date()) && (
+                            <button
+                                onClick={() => {
+                                    const today = new Date()
+                                    setDate(today)
+                                    setSelectedDate(today)
+                                }}
+                                className="px-3 py-1 bg-blue-600 hover:bg-blue-500 rounded-full text-xs font-semibold text-white transition-colors active:scale-95"
+                            >
+                                Today
+                            </button>
+                        )}
                     </div>
                 </div>
 
@@ -213,7 +225,10 @@ export default function CalendarView({ initialDate, avatarUrl, displayName, serv
 
             {/* Filters */}
             <div className="px-5 mb-6">
-                <div className="bg-[#1C1C1E] p-1 rounded-lg flex relative">
+                <div className="relative rounded-xl p-1 flex overflow-hidden">
+                    {/* Glassmorphism Background */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/[0.07] via-white/[0.05] to-white/[0.03] backdrop-blur-2xl" />
+                    <div className="absolute inset-0 rounded-xl border border-white/10" />
                     <button
                         onClick={() => setFilter('upcoming')}
                         className={clsx(
@@ -249,7 +264,10 @@ export default function CalendarView({ initialDate, avatarUrl, displayName, serv
                 {loading ? (
                     <div className="flex flex-col gap-3">
                         {[1, 2, 3].map(i => (
-                            <div key={i} className="h-24 bg-[#1C1C1E] rounded-xl animate-pulse" />
+                            <div key={i} className="relative h-24 rounded-2xl animate-pulse overflow-hidden">
+                                <div className="absolute inset-0 bg-gradient-to-br from-white/[0.07] via-white/[0.05] to-white/[0.03] backdrop-blur-2xl" />
+                                <div className="absolute inset-0 rounded-2xl border border-white/10" />
+                            </div>
                         ))}
                     </div>
                 ) : sortedBookings.length > 0 ? (
@@ -257,9 +275,14 @@ export default function CalendarView({ initialDate, avatarUrl, displayName, serv
                         <Link
                             href={`/app/bookings/${booking.id}`}
                             key={booking.id}
-                            className="group block bg-[#1C1C1E] p-5 rounded-2xl active:scale-[0.98] transition-all border border-transparent hover:border-gray-700"
+                            className="relative group block p-5 rounded-2xl active:scale-[0.98] transition-all overflow-hidden"
                         >
-                            <div className="flex justify-between items-start mb-3">
+                            {/* Glassmorphism Background */}
+                            <div className="absolute inset-0 bg-gradient-to-br from-white/[0.07] via-white/[0.05] to-white/[0.03] backdrop-blur-2xl" />
+                            <div className="absolute inset-0 rounded-2xl border border-white/10" />
+                            <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/[0.08] to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
+
+                            <div className="relative z-10 flex justify-between items-start mb-3">
                                 <div>
                                     <h3 className="text-[17px] font-bold text-white mb-0.5 leading-tight">
                                         {booking.client_name}
@@ -271,7 +294,7 @@ export default function CalendarView({ initialDate, avatarUrl, displayName, serv
                                 <StatusBadge status={booking.status} />
                             </div>
 
-                            <div className="flex items-center gap-3 pt-3 border-t border-gray-800/50">
+                            <div className="relative z-10 flex items-center gap-3 pt-3 border-t border-white/10">
                                 <span className="text-[15px] font-semibold text-gray-300">
                                     {format(new Date(booking.start_at), 'h:mm a')}
                                 </span>
@@ -283,12 +306,24 @@ export default function CalendarView({ initialDate, avatarUrl, displayName, serv
                         </Link>
                     ))
                 ) : (
-                    <div className="flex flex-col items-center justify-center py-20 text-gray-500">
-                        <div className="w-12 h-12 rounded-full border-2 border-dashed border-gray-700 flex items-center justify-center mb-4">
-                            <List className="w-5 h-5 text-gray-600" />
+                    <div className="relative rounded-3xl py-16 flex flex-col items-center justify-center text-center overflow-hidden">
+                        {/* Glassmorphism Background */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/[0.07] via-white/[0.05] to-white/[0.03] backdrop-blur-2xl" />
+                        <div className="absolute inset-0 rounded-3xl border border-white/10" />
+                        <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/[0.08] to-transparent opacity-60" />
+
+                        <div className="relative z-10 w-16 h-16 mb-4 rounded-full bg-white/[0.08] backdrop-blur-xl border border-white/10 flex items-center justify-center">
+                            <List className="w-8 h-8 text-white/50" />
                         </div>
-                        <p className="text-[15px] font-medium text-gray-400">No events found</p>
-                        <p className="text-[13px] text-gray-600 mt-1">Check other filters</p>
+                        <p className="relative z-10 text-lg font-semibold text-white mb-1">No events found</p>
+                        <p className="relative z-10 text-sm text-white/50 mb-6">Check other filters or create a new booking</p>
+                        <button
+                            onClick={() => setIsManualBookingOpen(true)}
+                            className="relative z-10 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-xl text-sm font-semibold text-white transition-colors active:scale-95 flex items-center gap-2"
+                        >
+                            <Plus className="w-4 h-4" />
+                            Create New Booking
+                        </button>
                     </div>
                 )}
             </div>
@@ -421,10 +456,13 @@ function ManualBookingModal({ services, onClose, onSubmit, isSubmitting }: Manua
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
-            <div className="relative w-full max-w-sm bg-[#1C1C1E] rounded-2xl shadow-2xl ring-1 ring-white/10 animate-in fade-in zoom-in-95 duration-200 overflow-hidden max-h-[90vh] overflow-y-auto">
+            <div className="relative w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
+                {/* Glassmorphism Background for Modal */}
+                <div className="absolute inset-0 bg-gradient-to-br from-white/[0.12] via-white/[0.08] to-white/[0.05] backdrop-blur-3xl" />
+                <div className="absolute inset-0 rounded-2xl border border-white/20" />
 
                 {/* Header */}
-                <div className="px-4 py-4 border-b border-gray-800 flex items-center justify-between bg-[#2C2C2E] sticky top-0 z-10">
+                <div className="relative z-10 px-4 py-4 border-b border-white/10 flex items-center justify-between sticky top-0 backdrop-blur-md">
                     <h3 className="text-[17px] font-semibold text-white">New Reservation</h3>
                     <button
                         onClick={onClose}
@@ -436,7 +474,7 @@ function ManualBookingModal({ services, onClose, onSubmit, isSubmitting }: Manua
                 </div>
 
                 {/* Form */}
-                <form onSubmit={handleSubmit} className="p-4 space-y-4">
+                <form onSubmit={handleSubmit} className="relative z-10 p-4 space-y-4">
                     {/* Client Name */}
                     <div>
                         <label className="text-[13px] text-gray-500 font-medium ml-1 mb-1 block">Client Name *</label>

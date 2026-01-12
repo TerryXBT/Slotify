@@ -18,7 +18,7 @@ export default async function AppLayout({
     }
 
     return (
-        <div className="min-h-screen bg-black pb-24 text-gray-100 font-sans">
+        <div className="min-h-screen bg-[#1a1a1a] pb-24 text-gray-100 font-sans">
             {/* Main Content */}
             <main>
                 {children}

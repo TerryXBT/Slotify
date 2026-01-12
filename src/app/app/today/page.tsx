@@ -100,82 +100,91 @@ export default async function TodayPage() {
     const freeHours = Math.max(0, Math.floor(freeMinutes / 60))
 
     return (
-        <div className="min-h-screen bg-black font-sans pb-24 text-white selection:bg-blue-500/30">
+        <div className="min-h-screen bg-[#1a1a1a] font-sans pb-32 text-white selection:bg-blue-500/30">
 
             {/* Large Header */}
-            <header className="pt-16 pb-6 px-5 flex justify-between items-start">
+            <header className="pt-14 pb-4 px-6 flex justify-between items-center bg-[#1a1a1a]/80 backdrop-blur-md sticky top-0 z-50 border-b border-white/5">
                 <div>
-                    <h1 className="text-[34px] font-bold text-white tracking-tight leading-tight">
+                    <h1 className="text-3xl font-bold text-white tracking-tight">
                         Today
                     </h1>
-                    <p className="text-[15px] text-gray-500 font-medium mt-1">
-                        {format(new Date(), 'EEEE, MMMM d')}
+                    <p className="text-sm text-zinc-400 font-medium mt-0.5 uppercase tracking-wide">
+                        {format(new Date(), 'MMMM d')}
                     </p>
                 </div>
-                {/* Moved left slightly with mr-2 */}
-                <Link href="/app/settings" className="relative active:scale-95 transition-transform mt-1 mr-2">
+                <Link href="/app/settings" className="relative active:opacity-70 transition-all hover:scale-105">
                     {profile.avatar_url ? (
                         <img
                             src={profile.avatar_url}
                             alt="Profile"
-                            className="w-10 h-10 rounded-full object-cover ring-2 ring-gray-900 grayscale-[0.3]"
+                            className="w-10 h-10 rounded-full object-cover ring-2 ring-zinc-800 grayscale-[0.2] transition-all"
                         />
                     ) : (
-                        <div className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 font-semibold text-[16px]">
+                        <div className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 font-semibold text-sm transition-all">
                             {profile.full_name?.[0] || profile.username[0].toUpperCase()}
                         </div>
                     )}
                 </Link>
             </header>
 
-            <main className="px-5 space-y-6">
+            <main className="px-6 space-y-10 mt-6">
 
                 {/* SECTION 1: Up Next */}
                 <section>
-                    <h2 className="text-[17px] font-bold text-white mb-3 tracking-tight">Next Activity</h2>
+                    <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-xl font-bold text-white tracking-tight">Up Next</h2>
+                    </div>
 
                     {nextBooking ? (
                         <UpNextCard booking={nextBooking} />
                     ) : (
-                        <div className="bg-[#1C1C1E] rounded-2xl py-12 flex flex-col items-center justify-center text-center">
-                            <div className="w-16 h-16 mb-4 rounded-full bg-gray-800 flex items-center justify-center">
-                                <Clock className="w-8 h-8 text-gray-400" />
+                        <div className="relative rounded-3xl py-12 flex flex-col items-center justify-center text-center overflow-hidden">
+                            {/* Glassmorphism Background */}
+                            <div className="absolute inset-0 bg-gradient-to-br from-white/[0.07] via-white/[0.05] to-white/[0.03] backdrop-blur-2xl" />
+                            <div className="absolute inset-0 rounded-3xl border border-white/10" />
+                            <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/[0.08] to-transparent opacity-60" />
+
+                            <div className="relative z-10 w-16 h-16 mb-4 rounded-full bg-white/[0.08] backdrop-blur-xl border border-white/10 flex items-center justify-center">
+                                <Clock className="w-8 h-8 text-white/50" />
                             </div>
-                            <h3 className="text-lg font-semibold text-white mb-2">No upcoming bookings</h3>
-                            <p className="text-sm text-gray-400 max-w-sm">You're clear for now. Enjoy your free time!</p>
+                            <h3 className="relative z-10 text-lg font-semibold text-white mb-1">No upcoming bookings</h3>
+                            <p className="relative z-10 text-sm text-white/50 max-w-[200px] leading-relaxed">You're all clear for now.</p>
                         </div>
                     )}
                 </section>
 
-                {/* SECTION 2: Rest of Today (Moved Up) */}
+                {/* SECTION 2: Rest of Today */}
                 {restOfToday.length > 0 && (
                     <section>
-                        <h2 className="text-[19px] font-bold text-white mb-3 tracking-tight">Rest of Today</h2>
-                        <div className="space-y-px bg-[#1C1C1E] rounded-2xl overflow-hidden">
+                        <h2 className="text-xl font-bold text-white mb-4 tracking-tight">Rest of Today</h2>
+                        <div className="relative space-y-px rounded-3xl overflow-hidden">
+                            {/* Glassmorphism Background */}
+                            <div className="absolute inset-0 bg-gradient-to-br from-white/[0.07] via-white/[0.05] to-white/[0.03] backdrop-blur-2xl" />
+                            <div className="absolute inset-0 rounded-3xl border border-white/10" />
                             {restOfToday.map((b: any, index: number) => (
                                 <Link
                                     key={b.id}
                                     href={`/app/bookings/${b.id}`}
-                                    className={`block p-4 hover:bg-gray-800/50 active:bg-gray-800 transition-colors ${index !== restOfToday.length - 1 ? 'border-b border-gray-800' : ''}`}
+                                    className={`relative block p-6 hover:bg-white/5 active:bg-white/10 transition-all ${index !== restOfToday.length - 1 ? 'border-b border-white/5' : ''}`}
                                 >
                                     <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-4">
+                                        <div className="flex items-center gap-6">
                                             {/* Time Layout */}
-                                            <div className="flex flex-col items-center w-12 text-center">
-                                                <span className="text-white font-medium text-[16px] leading-tight">
+                                            <div className="flex flex-col items-start min-w-[4rem]">
+                                                <span className="text-white font-bold text-xl leading-none">
                                                     {format(new Date(b.start_at), 'h:mm')}
                                                 </span>
-                                                <span className="text-gray-500 text-[11px] font-bold uppercase tracking-wide">
+                                                <span className="text-zinc-500 text-xs font-bold uppercase mt-1">
                                                     {format(new Date(b.start_at), 'a')}
                                                 </span>
                                             </div>
 
                                             <div>
-                                                <h4 className="text-[16px] font-semibold text-white">{b.client_name}</h4>
-                                                <p className="text-[13px] text-gray-500">{b.services?.name}</p>
+                                                <h4 className="text-base font-bold text-white tracking-tight mb-0.5">{b.client_name}</h4>
+                                                <p className="text-sm text-zinc-400 font-medium">{b.services?.name}</p>
                                             </div>
                                         </div>
-                                        <ChevronRight className="w-5 h-5 text-gray-600" />
+                                        <ChevronRight className="w-5 h-5 text-zinc-500" />
                                     </div>
                                 </Link>
                             ))}
@@ -183,56 +192,54 @@ export default async function TodayPage() {
                     </section>
                 )}
 
-                {/* SECTION 3: Services (Horizontal) */}
+                {/* SECTION 3: Services */}
                 <section>
-                    <div className="flex items-center justify-between mb-3">
-                        <h2 className="text-[19px] font-bold text-white tracking-tight">Services</h2>
+                    <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-xl font-bold text-white tracking-tight">Services</h2>
                         <Link
                             href="/app/services"
-                            className="text-[15px] font-medium text-blue-500 active:opacity-70 transition-opacity"
+                            className="text-sm font-semibold text-blue-500 active:opacity-60 transition-opacity"
                         >
-                            Manage
+                            See All
                         </Link>
                     </div>
 
-                    <div className="flex gap-4 overflow-x-auto pb-4 -mx-5 px-5 no-scrollbar snap-x">
-                        {services && services.filter((s: any) => s.is_active).length > 0 ? (
-                            <>
-                                {services.filter((s: any) => s.is_active).map((service: any) => (
-                                    <ServiceCard
-                                        key={service.id}
-                                        service={service}
-                                        username={profile.username}
-                                    />
-                                ))}
-                                {/* Add New Service Card Placeholder */}
-                                <Link
-                                    href="/app/services/new"
-                                    className="bg-[#1C1C1E] rounded-2xl w-32 h-32 flex flex-col items-center justify-center gap-2 active:scale-95 transition-all text-gray-500 border border-gray-800/50 flex-shrink-0 snap-start"
-                                >
-                                    <Plus className="w-6 h-6" />
-                                    <span className="text-xs font-medium">Add New</span>
-                                </Link>
-                            </>
-                        ) : (
+                    <div className="relative">
+                        <div className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 no-scrollbar snap-x">
+                            {services && services.filter((s: any) => s.is_active).map((service: any) => (
+                                <ServiceCard
+                                    key={service.id}
+                                    service={service}
+                                    username={profile.username}
+                                />
+                            ))}
+
+                            {/* Add New */}
                             <Link
                                 href="/app/services/new"
-                                className="w-full py-6 bg-[#1C1C1E] rounded-2xl flex flex-col items-center text-gray-500 active:scale-95 transition-all"
+                                className="w-36 h-36 flex flex-col items-center justify-center gap-3 active:scale-95 transition-all flex-shrink-0 snap-start group"
                             >
-                                <Plus className="w-6 h-6 mb-2" />
-                                <span className="text-sm font-medium">Create your first service</span>
+                                <div className="w-12 h-12 rounded-full bg-white/[0.08] backdrop-blur-xl border border-white/10 flex items-center justify-center transition-colors">
+                                    <Plus className="w-6 h-6 text-white/50 group-hover:text-white" />
+                                </div>
+                                <span className="text-sm font-semibold text-white/50 group-hover:text-white transition-colors">Add New</span>
                             </Link>
-                        )}
+                        </div>
+                        {/* Fade-out gradient indicator for scroll */}
+                        <div className="absolute right-0 top-0 bottom-4 w-12 bg-gradient-to-l from-[#1a1a1a] to-transparent pointer-events-none" />
                     </div>
                 </section>
 
-                {/* SECTION 4: Quick Actions (Moved Down) */}
+                {/* SECTION 4: Quick Actions */}
                 <section>
-                    <h2 className="text-[19px] font-bold text-white mb-3 tracking-tight">Quick Actions</h2>
+                    <h2 className="text-xl font-bold text-white mb-4 tracking-tight">Quick Actions</h2>
                     <ActionGrid />
                 </section>
 
-                <div className="py-8"></div>
+                <div className="py-2"></div>
+                <div className="text-center">
+                    <p className="text-[10px] text-zinc-700 font-medium uppercase tracking-widest">Powered by Slotify</p>
+                </div>
             </main>
         </div>
     )

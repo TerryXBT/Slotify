@@ -122,7 +122,7 @@ export default function ServicesView({ profile, services, deletedServices, avail
     }
 
     return (
-        <div className="flex flex-col min-h-screen bg-black pb-24 font-sans selection:bg-blue-500/30">
+        <div className="flex flex-col min-h-screen bg-[#1a1a1a] pb-24 font-sans selection:bg-blue-500/30">
             {/* Header */}
             <div className="px-5 pt-16 pb-6 flex items-center justify-between">
                 <h1 className="text-[34px] font-bold text-white tracking-tight leading-tight">Services</h1>
@@ -138,7 +138,12 @@ export default function ServicesView({ profile, services, deletedServices, avail
             <main className="px-5 space-y-8">
                 {/* GROUP 1: Services List */}
                 <section>
-                    <div className="bg-[#1C1C1E] rounded-2xl overflow-hidden divide-y divide-gray-800/80">
+                    <div className="relative rounded-2xl overflow-hidden">
+                        {/* Glassmorphism Background */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/[0.07] via-white/[0.05] to-white/[0.03] backdrop-blur-2xl" />
+                        <div className="absolute inset-0 rounded-2xl border border-white/10" />
+
+                        <div className="relative z-10 divide-y divide-white/5">
                         {localServices.length > 0 ? (
                             localServices.map((service) => (
                                 <div
@@ -169,53 +174,51 @@ export default function ServicesView({ profile, services, deletedServices, avail
                             ))
                         ) : (
                             <div className="p-8 flex flex-col items-center justify-center text-center">
-                                <p className="text-gray-500 font-medium">No services yet</p>
+                                <p className="text-white/70 font-medium">No services yet</p>
                                 <Link href="/app/services/new" className="mt-2 text-blue-500 text-sm font-semibold">
                                     Create your first service
                                 </Link>
                             </div>
                         )}
+                        </div>
                     </div>
                 </section>
 
                 {/* GROUP 2: Business Profile */}
                 <section>
                     <h2 className="text-[13px] text-gray-500 uppercase font-medium ml-4 mb-2">Business Profile</h2>
-                    <div className="bg-[#1C1C1E] rounded-2xl overflow-hidden divide-y divide-gray-800/80">
+                    <div className="relative rounded-2xl overflow-hidden">
+                        {/* Glassmorphism Background */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/[0.07] via-white/[0.05] to-white/[0.03] backdrop-blur-2xl" />
+                        <div className="absolute inset-0 rounded-2xl border border-white/10" />
+
+                        <div className="relative z-10 divide-y divide-white/5">
                         <Link
                             href="/app/settings/availability"
-                            className="flex items-center justify-between px-4 py-4 active:bg-gray-800/50 group transition-colors"
+                            className="block px-4 py-4 active:bg-gray-800/50 group transition-colors"
                         >
-                            <span className="text-[17px] text-white font-medium">Weekly Hours</span>
-                            <div className="flex items-center gap-2">
-                                <span className="text-[17px] text-gray-500">
-                                    {(() => {
-                                        const activeDays = rulesByDay.filter(d => d.rules.length > 0)
-                                        const count = activeDays.length
-
-                                        if (count === 0) return 'Not set'
-                                        if (count === 7) return 'Every Day'
-
-                                        if (count === 6) {
-                                            const allIds = new Set([0, 1, 2, 3, 4, 5, 6])
-                                            const activeIds = new Set(activeDays.map(d => d.id))
-                                            const missingId = [...allIds].find(id => !activeIds.has(id))
-                                            const missingDay = DAYS.find(d => d.id === missingId)
-                                            return missingDay ? `Except ${missingDay.label}` : activeDays.map(d => d.short).join(', ')
-                                        }
-
-                                        // Weekdays check (Mon-Fri)
-                                        const isWeekdays = count === 5 && activeDays.every(d => d.id >= 1 && d.id <= 5)
-                                        if (isWeekdays) return 'Weekdays'
-
-                                        // Weekends check (Sat, Sun)
-                                        const isWeekends = count === 2 && activeDays.every(d => d.id === 0 || d.id === 6)
-                                        if (isWeekends) return 'Weekends'
-
-                                        return activeDays.map(d => d.short).join(', ')
-                                    })()}
-                                </span>
+                            <div className="flex items-center justify-between mb-3">
+                                <span className="text-[17px] text-white font-medium">Weekly Hours</span>
                                 <ChevronRight className="w-5 h-5 text-gray-600 group-hover:text-gray-400" />
+                            </div>
+                            {/* Mini Week View */}
+                            <div className="flex gap-1.5">
+                                {DAYS.map((day) => {
+                                    const hasRules = (rulesByDay.find(d => d.id === day.id)?.rules.length ?? 0) > 0
+                                    return (
+                                        <div key={day.id} className="flex-1 flex flex-col items-center gap-1">
+                                            <span className="text-[10px] text-gray-500 font-medium">{day.short[0]}</span>
+                                            <div className={clsx(
+                                                "w-full h-8 rounded flex items-center justify-center text-[9px] font-medium transition-colors",
+                                                hasRules
+                                                    ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
+                                                    : "bg-white/5 text-gray-600 border border-white/5"
+                                            )}>
+                                                {hasRules ? '✓' : '–'}
+                                            </div>
+                                        </div>
+                                    )
+                                })}
                             </div>
                         </Link>
 
@@ -232,27 +235,32 @@ export default function ServicesView({ profile, services, deletedServices, avail
                                 <Share2 className="w-5 h-5 text-blue-500" />
                             </div>
                         </div>
+                        </div>
                     </div>
                 </section>
 
                 {/* Recently Deleted */}
                 {deletedServices.length > 0 && (
                     <section>
-                        <div className="bg-[#1C1C1E] rounded-2xl overflow-hidden">
+                        <div className="relative rounded-2xl overflow-hidden">
+                            {/* Glassmorphism Background */}
+                            <div className="absolute inset-0 bg-gradient-to-br from-white/[0.07] via-white/[0.05] to-white/[0.03] backdrop-blur-2xl" />
+                            <div className="absolute inset-0 rounded-2xl border border-white/10" />
+
                             <button
                                 onClick={() => setShowTrash(!showTrash)}
-                                className="w-full px-4 py-3 flex items-center justify-between active:bg-gray-800/50"
+                                className="relative z-10 w-full px-4 py-3 flex items-center justify-between active:bg-white/5 transition-colors"
                             >
-                                <span className="text-[15px] text-gray-400 font-medium">Recently Deleted ({deletedServices.length})</span>
-                                <ChevronDown className={clsx("w-5 h-5 text-gray-500 transition-transform duration-200", showTrash && "rotate-180")} />
+                                <span className="text-[15px] text-white/70 font-medium">Recently Deleted ({deletedServices.length})</span>
+                                <ChevronDown className={clsx("w-5 h-5 text-white/50 transition-transform duration-200", showTrash && "rotate-180")} />
                             </button>
 
                             {showTrash && (
-                                <div className="border-t border-gray-800/50">
+                                <div className="relative z-10 border-t border-white/10">
                                     {deletedServices.map((service: any) => (
                                         <div
                                             key={service.id}
-                                            className="flex items-center justify-between px-4 py-3 border-b border-gray-800/50 last:border-0"
+                                            className="flex items-center justify-between px-4 py-3 border-b border-white/5 last:border-0"
                                         >
                                             <div>
                                                 <h4 className="text-[15px] text-gray-500 line-through">{service.name}</h4>
@@ -292,14 +300,18 @@ export default function ServicesView({ profile, services, deletedServices, avail
             {permanentDeleteModal.isOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={closePermanentDeleteModal} />
-                    <div className="relative bg-[#2C2C2E] rounded-2xl p-6 w-full max-w-[320px] shadow-2xl ring-1 ring-white/10">
-                        <div className="text-center">
+                    <div className="relative rounded-2xl p-6 w-full max-w-[320px] shadow-2xl overflow-hidden">
+                        {/* Glassmorphism Background */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/[0.12] via-white/[0.08] to-white/[0.05] backdrop-blur-3xl" />
+                        <div className="absolute inset-0 rounded-2xl border border-white/20" />
+
+                        <div className="relative z-10 text-center">
                             <h3 className="text-[17px] font-bold text-white mb-2">Delete "{permanentDeleteModal.serviceName}"?</h3>
                             <p className="text-white/80 text-[13px] mb-6 leading-relaxed">
                                 This action cannot be undone. All associated bookings will be permanently removed.
                             </p>
                         </div>
-                        <div className="flex gap-3">
+                        <div className="relative z-10 flex gap-3">
                             <button
                                 onClick={closePermanentDeleteModal}
                                 disabled={isPermanentlyDeleting}

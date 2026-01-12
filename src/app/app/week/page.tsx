@@ -28,7 +28,7 @@ export default async function WeekPage({ searchParams }: { searchParams: Promise
 
     // Pass control to client component for interactivity
     return (
-        <div className="min-h-screen bg-black font-sans">
+        <div className="min-h-screen bg-[#1a1a1a] font-sans">
             <CalendarView
                 initialDate={selectedDate}
                 avatarUrl={profile?.avatar_url}

@@ -56,9 +56,9 @@ export default function EditServiceView({ service, profile }: { service: any, pr
     }
 
     return (
-        <div className="min-h-screen bg-black text-white">
+        <div className="min-h-screen bg-[#1a1a1a] text-white">
             {/* Navigation Bar */}
-            <div className="flex items-center justify-between px-4 py-4 pt-14 bg-black/80 backdrop-blur-md sticky top-0 z-10 border-b border-gray-800/50">
+            <div className="flex items-center justify-between px-4 py-4 pt-14 bg-[#1a1a1a]/80 backdrop-blur-md sticky top-0 z-10 border-b border-white/5">
                 <Link href="/app/services" className="text-blue-500 text-[17px]">
                     Cancel
                 </Link>
@@ -74,7 +74,12 @@ export default function EditServiceView({ service, profile }: { service: any, pr
 
             <div className="p-4 space-y-6">
                 {/* Form Group */}
-                <div className="bg-[#1C1C1E] rounded-xl overflow-hidden divide-y divide-gray-800/80">
+                <div className="relative rounded-2xl overflow-hidden">
+                    {/* Glassmorphism Background */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/[0.07] via-white/[0.05] to-white/[0.03] backdrop-blur-2xl" />
+                    <div className="absolute inset-0 rounded-2xl border border-white/10" />
+
+                    <div className="relative z-10 divide-y divide-white/5">
                     {/* Name */}
                     <div className="flex items-center px-4 py-3">
                         <label className="w-24 text-[17px] text-white">Name</label>
@@ -120,13 +125,13 @@ export default function EditServiceView({ service, profile }: { service: any, pr
 
                     {/* Location Type */}
                     <div className="px-4 py-3">
-                        <div className="bg-gray-800/50 p-0.5 rounded-lg flex">
+                        <div className="bg-white/5 p-0.5 rounded-lg flex border border-white/10">
                             <button
                                 type="button"
                                 onClick={() => setLocationType('physical')}
                                 className={clsx(
-                                    "flex-1 py-1.5 px-3 rounded-[7px] text-[13px] font-medium transition-all shadow-sm flex items-center justify-center gap-1.5",
-                                    locationType === 'physical' ? "bg-[#636366] text-white" : "text-gray-400 hover:text-gray-300"
+                                    "flex-1 py-1.5 px-3 rounded-[7px] text-[13px] font-medium transition-all flex items-center justify-center gap-1.5",
+                                    locationType === 'physical' ? "bg-[#3A3A3C] text-white shadow-sm" : "text-gray-400 hover:text-gray-300"
                                 )}
                             >
                                 <MapPin className="w-3.5 h-3.5" />
@@ -136,8 +141,8 @@ export default function EditServiceView({ service, profile }: { service: any, pr
                                 type="button"
                                 onClick={() => setLocationType('online')}
                                 className={clsx(
-                                    "flex-1 py-1.5 px-3 rounded-[7px] text-[13px] font-medium transition-all shadow-sm flex items-center justify-center gap-1.5",
-                                    locationType === 'online' ? "bg-[#636366] text-white" : "text-gray-400 hover:text-gray-300"
+                                    "flex-1 py-1.5 px-3 rounded-[7px] text-[13px] font-medium transition-all flex items-center justify-center gap-1.5",
+                                    locationType === 'online' ? "bg-[#3A3A3C] text-white shadow-sm" : "text-gray-400 hover:text-gray-300"
                                 )}
                             >
                                 <Video className="w-3.5 h-3.5" />
@@ -178,6 +183,7 @@ export default function EditServiceView({ service, profile }: { service: any, pr
                                 )}
                             />
                         </button>
+                    </div>
                     </div>
                 </div>
 

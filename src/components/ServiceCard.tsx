@@ -55,22 +55,30 @@ export default function ServiceCard({ service, username }: ServiceCardProps) {
         <>
             <div
                 onClick={() => setIsSheetOpen(true)}
-                className="bg-[#1C1C1E] rounded-2xl w-32 h-32 p-3 flex flex-col justify-between active:scale-95 transition-all cursor-pointer relative overflow-hidden snap-start flex-shrink-0"
+                className="relative rounded-2xl w-36 h-36 p-4 flex flex-col justify-between active:scale-95 transition-all cursor-pointer overflow-hidden snap-start flex-shrink-0 group"
             >
-                <div className="flex justify-between items-start">
-                    {/* Placeholder Icon or First Letter */}
-                    <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 font-semibold text-sm">
+                {/* Glassmorphism Background */}
+                <div className="absolute inset-0 bg-gradient-to-br from-white/[0.07] via-white/[0.05] to-white/[0.03] backdrop-blur-2xl" />
+                <div className="absolute inset-0 rounded-2xl border border-white/10" />
+                <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/[0.08] to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
+
+                <div className="relative z-10 flex justify-between items-start">
+                    <div className="w-10 h-10 rounded-full bg-white/[0.08] backdrop-blur-xl border border-white/10 flex items-center justify-center text-white/70 group-hover:text-white font-semibold text-sm transition-colors">
                         {service.name[0].toUpperCase()}
                     </div>
+                    {/* Optional indicator of active/inactive if we want, but keeping it minimal */}
                 </div>
 
-                <div>
-                    <h3 className="text-[14px] font-semibold text-white leading-tight line-clamp-2 mb-1">
+                <div className="relative z-10 space-y-1">
+                    <h3 className="text-sm font-semibold text-white leading-tight line-clamp-2">
                         {service.name}
                     </h3>
-                    <p className="text-[12px] text-gray-500">
-                        {service.price_cents === 0 ? 'Free' : `$${(service.price_cents / 100).toFixed(2)}`}
-                    </p>
+                    <div className="flex items-center gap-2">
+                        <p className="text-xs text-white/70 font-medium bg-white/10 px-2 py-0.5 rounded-md inline-block backdrop-blur-sm">
+                            {service.price_cents === 0 ? 'Free' : `$${(service.price_cents / 100).toFixed(0)}`}
+                        </p>
+                        <span className="text-[10px] text-white/50 font-medium">{service.duration_minutes}m</span>
+                    </div>
                 </div>
             </div>
 

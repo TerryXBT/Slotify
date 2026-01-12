@@ -2,8 +2,9 @@
 
 import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { signOut, updateProfile } from './actions'
-import { User, Mail, Phone, MapPin, LogOut, ChevronRight, Camera, X, Lock, Eye, EyeOff } from 'lucide-react'
+import { User, Mail, Phone, MapPin, LogOut, ChevronRight, Camera, X, Lock, Eye, EyeOff, Share2, Calendar as CalendarIcon, Clock, Briefcase } from 'lucide-react'
 import SignOutConfirmDialog from '@/components/SignOutConfirmDialog'
 import PushNotifications from '@/components/PushNotifications'
 import { createClient } from '@/utils/supabase/client'
@@ -181,17 +182,21 @@ export default function SettingsView({ profile }: { profile: any }) {
     }
 
     return (
-        <div className="flex flex-col min-h-screen bg-black pb-24">
+        <div className="flex flex-col min-h-screen bg-[#1a1a1a] pb-24">
             {/* Header */}
-            <div className="bg-[#1C1C1E] border-b border-gray-800">
+            <div className="bg-[#1a1a1a]/80 backdrop-blur-md border-b border-white/5">
                 <div className="p-4">
                     <h1 className="text-2xl font-bold text-white">Settings</h1>
                 </div>
             </div>
 
             {/* Profile Section */}
-            <div className="bg-[#1C1C1E] mt-4 mx-4 rounded-2xl overflow-hidden">
-                <div className="px-4 py-3 border-b border-gray-800 flex items-center justify-between">
+            <div className="relative mt-4 mx-4 rounded-2xl overflow-hidden">
+                {/* Glassmorphism Background */}
+                <div className="absolute inset-0 bg-gradient-to-br from-white/[0.07] via-white/[0.05] to-white/[0.03] backdrop-blur-2xl" />
+                <div className="absolute inset-0 rounded-2xl border border-white/10" />
+
+                <div className="relative z-10 px-4 py-3 border-b border-white/10 flex items-center justify-between">
                     <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Profile</h2>
                     {!isEditing && (
                         <button
@@ -204,7 +209,7 @@ export default function SettingsView({ profile }: { profile: any }) {
                 </div>
 
                 {isEditing ? (
-                    <form onSubmit={handleProfileSubmit} className="p-4 space-y-4">
+                    <form onSubmit={handleProfileSubmit} className="relative z-10 p-4 space-y-4">
                         {/* Avatar */}
                         <div className="flex items-center gap-4">
                             <div className="relative group">
@@ -311,7 +316,7 @@ export default function SettingsView({ profile }: { profile: any }) {
                         </div>
                     </form>
                 ) : (
-                    <div className="p-4">
+                    <div className="relative z-10 p-4">
                         <div className="flex items-center gap-4 mb-4">
                             <div className="w-16 h-16 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden">
                                 {profile.avatar_url ? (
@@ -357,21 +362,80 @@ export default function SettingsView({ profile }: { profile: any }) {
                 <PushNotifications />
             </div>
 
+            {/* Quick Actions */}
+            <div className="relative mt-4 mx-4 rounded-2xl overflow-hidden">
+                {/* Glassmorphism Background */}
+                <div className="absolute inset-0 bg-gradient-to-br from-white/[0.07] via-white/[0.05] to-white/[0.03] backdrop-blur-2xl" />
+                <div className="absolute inset-0 rounded-2xl border border-white/10" />
+
+                <div className="relative z-10 px-4 py-3 border-b border-white/10">
+                    <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Quick Actions</h2>
+                </div>
+
+                <div className="relative z-10 grid grid-cols-2 gap-3 p-4">
+                    <a
+                        href={`/${profile?.username || profile?.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex flex-col items-center justify-center p-4 rounded-xl bg-white/5 hover:bg-white/10 active:scale-95 transition-all border border-white/10"
+                    >
+                        <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center mb-2">
+                            <Share2 className="w-5 h-5 text-blue-400" />
+                        </div>
+                        <span className="text-xs font-semibold text-white text-center">Share Booking Page</span>
+                    </a>
+
+                    <Link
+                        href="/app/week"
+                        className="flex flex-col items-center justify-center p-4 rounded-xl bg-white/5 hover:bg-white/10 active:scale-95 transition-all border border-white/10"
+                    >
+                        <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center mb-2">
+                            <CalendarIcon className="w-5 h-5 text-purple-400" />
+                        </div>
+                        <span className="text-xs font-semibold text-white text-center">View Calendar</span>
+                    </Link>
+
+                    <Link
+                        href="/app/settings/availability"
+                        className="flex flex-col items-center justify-center p-4 rounded-xl bg-white/5 hover:bg-white/10 active:scale-95 transition-all border border-white/10"
+                    >
+                        <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center mb-2">
+                            <Clock className="w-5 h-5 text-green-400" />
+                        </div>
+                        <span className="text-xs font-semibold text-white text-center">Set Hours</span>
+                    </Link>
+
+                    <Link
+                        href="/app/services"
+                        className="flex flex-col items-center justify-center p-4 rounded-xl bg-white/5 hover:bg-white/10 active:scale-95 transition-all border border-white/10"
+                    >
+                        <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center mb-2">
+                            <Briefcase className="w-5 h-5 text-orange-400" />
+                        </div>
+                        <span className="text-xs font-semibold text-white text-center">Manage Services</span>
+                    </Link>
+                </div>
+            </div>
+
             {/* Account Section */}
-            <div className="bg-[#1C1C1E] mt-4 mx-4 rounded-2xl overflow-hidden">
-                <div className="px-4 py-3 border-b border-gray-800">
+            <div className="relative mt-4 mx-4 rounded-2xl overflow-hidden">
+                {/* Glassmorphism Background */}
+                <div className="absolute inset-0 bg-gradient-to-br from-white/[0.07] via-white/[0.05] to-white/[0.03] backdrop-blur-2xl" />
+                <div className="absolute inset-0 rounded-2xl border border-white/10" />
+
+                <div className="relative z-10 px-4 py-3 border-b border-white/10">
                     <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Account</h2>
                 </div>
                 <button
                     onClick={() => setShowPasswordDialog(true)}
-                    className="w-full px-4 py-4 flex items-center gap-3 hover:bg-gray-900/50 transition-colors text-white border-b border-gray-800"
+                    className="relative z-10 w-full px-4 py-4 flex items-center gap-3 hover:bg-white/5 transition-colors text-white border-b border-white/10"
                 >
                     <Lock className="w-5 h-5" />
                     <span className="font-medium">Change Password</span>
                 </button>
                 <button
                     onClick={handleSignOutClick}
-                    className="w-full px-4 py-4 flex items-center gap-3 hover:bg-gray-900/50 transition-colors text-red-500"
+                    className="relative z-10 w-full px-4 py-4 flex items-center gap-3 hover:bg-white/5 transition-colors text-red-500"
                 >
                     <LogOut className="w-5 h-5" />
                     <span className="font-medium">Sign Out</span>
@@ -397,9 +461,13 @@ export default function SettingsView({ profile }: { profile: any }) {
 
                     {/* Dialog */}
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                        <div className="bg-[#1C1C1E] rounded-3xl max-w-md w-full shadow-2xl border border-gray-800 overflow-hidden animate-in zoom-in-95 fade-in duration-200">
+                        <div className="relative rounded-3xl max-w-md w-full shadow-2xl overflow-hidden animate-in zoom-in-95 fade-in duration-200">
+                            {/* Glassmorphism Background for Modal */}
+                            <div className="absolute inset-0 bg-gradient-to-br from-white/[0.12] via-white/[0.08] to-white/[0.05] backdrop-blur-3xl" />
+                            <div className="absolute inset-0 rounded-3xl border border-white/20" />
+
                             {/* Header */}
-                            <div className="bg-gradient-to-r from-blue-600 to-blue-500 p-6 relative">
+                            <div className="relative z-10 bg-gradient-to-r from-blue-600 to-blue-500 p-6">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
                                         <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
@@ -421,7 +489,7 @@ export default function SettingsView({ profile }: { profile: any }) {
                             </div>
 
                             {/* Body */}
-                            <div className="p-6 space-y-5">
+                            <div className="relative z-10 p-6 space-y-5">
                                 {/* New Password */}
                                 <div>
                                     <label className="block text-sm font-semibold text-gray-300 mb-2.5">
@@ -500,7 +568,7 @@ export default function SettingsView({ profile }: { profile: any }) {
                             </div>
 
                             {/* Footer */}
-                            <div className="px-6 pb-6 flex gap-3">
+                            <div className="relative z-10 px-6 pb-6 flex gap-3">
                                 <button
                                     onClick={() => {
                                         setShowPasswordDialog(false)
