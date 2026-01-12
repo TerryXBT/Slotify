@@ -1,26 +1,24 @@
 <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- White background -->
-  <rect width="512" height="512" fill="white"/>
+  <!-- Black background -->
+  <rect width="512" height="512" fill="#000000"/>
 
-  <!-- Calendar icon (centered, keeping original black design) -->
-  <g transform="translate(106, 126)">
-    <!-- Top rings -->
-    <rect x="35" y="0" width="22" height="50" rx="11" fill="#1a1a1a"/>
-    <rect x="93" y="0" width="22" height="50" rx="11" fill="#1a1a1a"/>
-    <rect x="151" y="0" width="22" height="50" rx="11" fill="#1a1a1a"/>
-
+  <!-- Calendar icon (centered, white outline design) -->
+  <g transform="translate(96, 96)">
     <!-- Calendar body -->
-    <path d="M 40 30 L 40 250 C 40 265 45 270 60 270 L 240 270 C 255 270 260 265 260 250 L 260 30 C 260 15 255 10 240 10 L 60 10 C 45 10 40 15 40 30 Z" fill="#1a1a1a"/>
-
-    <!-- White inner area -->
-    <rect x="65" y="65" width="170" height="180" rx="15" fill="white"/>
-
-    <!-- Checkmark -->
-    <path d="M 100 150 L 130 180 L 180 115"
-          stroke="#1a1a1a"
-          stroke-width="18"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          fill="none"/>
+    <rect x="20" y="40" width="280" height="240" rx="24" fill="none" stroke="white" stroke-width="16"/>
+    
+    <!-- Top binding tabs -->
+    <rect x="80" y="10" width="30" height="60" rx="8" fill="none" stroke="white" stroke-width="12"/>
+    <rect x="210" y="10" width="30" height="60" rx="8" fill="none" stroke="white" stroke-width="12"/>
+    
+    <!-- Grid cells - 3x2 -->
+    <!-- Row 1 -->
+    <rect x="55" y="100" width="55" height="55" rx="8" fill="none" stroke="white" stroke-width="10"/>
+    <rect x="132" y="100" width="55" height="55" rx="8" fill="none" stroke="white" stroke-width="10"/>
+    <rect x="209" y="100" width="55" height="55" rx="8" fill="none" stroke="white" stroke-width="10"/>
+    <!-- Row 2 -->
+    <rect x="55" y="175" width="55" height="55" rx="8" fill="none" stroke="white" stroke-width="10"/>
+    <rect x="132" y="175" width="55" height="55" rx="8" fill="none" stroke="white" stroke-width="10"/>
+    <rect x="209" y="175" width="55" height="55" rx="8" fill="none" stroke="white" stroke-width="10"/>
   </g>
 </svg>

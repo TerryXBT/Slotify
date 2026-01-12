@@ -1,6 +1,6 @@
 'use client'
 
-import { ReactNode } from 'react'
+import { ReactNode, useState, useEffect } from 'react'
 import { useIsMobile } from '@/hooks/useDeviceType'
 import { MobileLayout } from './MobileLayout'
 import { DesktopLayout } from './DesktopLayout'
@@ -45,10 +45,20 @@ export function ResponsiveLayout({
   avatarUrl,
 }: ResponsiveLayoutProps) {
   const isMobile = useIsMobile()
+  const [mounted, setMounted] = useState(false)
+
+  // Wait for client-side hydration to complete
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // During SSR and first render, show mobile layout to avoid hydration mismatch
-  // The hook will return false until mounted
-  if (isMobile || typeof window === 'undefined') {
+  if (!mounted) {
+    return <MobileLayout showBottomNav={showBottomNav}>{children}</MobileLayout>
+  }
+
+  // After hydration, switch to appropriate layout based on device
+  if (isMobile) {
     return <MobileLayout showBottomNav={showBottomNav}>{children}</MobileLayout>
   }
 
