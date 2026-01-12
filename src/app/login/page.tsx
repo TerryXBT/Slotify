@@ -13,96 +13,81 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-[#1a1a1a] p-4">
-            {/* Background Gradient Effect */}
-            <div className="absolute inset-0 overflow-hidden">
-                <div className="absolute top-1/4 -left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
-                <div className="absolute bottom-1/4 -right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" />
-            </div>
-
-            <div className="relative w-full max-w-md">
-                {/* Logo/Brand */}
-                <div className="text-center mb-8">
-                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-blue-500 to-purple-600 mb-4 shadow-2xl">
-                        <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        <div className="min-h-screen flex items-center justify-center bg-black p-6">
+            <div className="w-full max-w-md space-y-12">
+                {/* Logo/Brand - Minimal */}
+                <div className="text-center space-y-3">
+                    <div className="inline-flex items-center justify-center w-16 h-16 border-2 border-white rounded-2xl mb-6">
+                        <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
                     </div>
-                    <h1 className="text-3xl font-bold text-white mb-2">Slotify</h1>
-                    <p className="text-gray-400 text-sm">Professional booking platform</p>
+                    <h1 className="text-4xl font-light tracking-tight text-white">Slotify</h1>
                 </div>
 
-                {/* Login Form */}
-                <form className="relative rounded-3xl overflow-hidden">
-                    {/* Glassmorphism Background */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/[0.12] via-white/[0.08] to-white/[0.05] backdrop-blur-3xl" />
-                    <div className="absolute inset-0 rounded-3xl border border-white/20" />
+                {/* Error/Success Messages */}
+                {error && (
+                    <div className="border border-red-500/50 bg-red-500/5 px-4 py-3 rounded-lg">
+                        <p className="text-red-400 text-sm text-center font-light">{error}</p>
+                    </div>
+                )}
 
-                    <div className="relative z-10 p-8 space-y-6">
-                        {error && (
-                            <div className="relative rounded-2xl p-4 overflow-hidden">
-                                <div className="absolute inset-0 bg-red-500/20 backdrop-blur-xl" />
-                                <div className="absolute inset-0 rounded-2xl border border-red-500/30" />
-                                <p className="relative z-10 text-red-400 text-sm font-medium text-center">{error}</p>
-                            </div>
-                        )}
+                {success && (
+                    <div className="border border-green-500/50 bg-green-500/5 px-4 py-3 rounded-lg">
+                        <p className="text-green-400 text-sm text-center font-light">{success}</p>
+                    </div>
+                )}
 
-                        {success && (
-                            <div className="relative rounded-2xl p-4 overflow-hidden">
-                                <div className="absolute inset-0 bg-green-500/20 backdrop-blur-xl" />
-                                <div className="absolute inset-0 rounded-2xl border border-green-500/30" />
-                                <p className="relative z-10 text-green-400 text-sm font-medium text-center">{success}</p>
-                            </div>
-                        )}
+                {/* Login Form - Minimal */}
+                <form className="space-y-6">
+                    <div className="space-y-2">
+                        <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider">Email</label>
+                        <input
+                            id="email"
+                            name="email"
+                            type="email"
+                            required
+                            autoComplete="email"
+                            className="w-full px-0 py-3 bg-transparent border-b border-white/20 text-white placeholder-gray-600 focus:outline-none focus:border-white transition-colors text-lg font-light"
+                            placeholder="you@example.com"
+                        />
+                    </div>
 
-                        <div className="text-center">
-                            <h2 className="text-2xl font-bold text-white mb-1">Welcome Back</h2>
-                            <p className="text-gray-400 text-sm">Sign in to manage your bookings</p>
-                        </div>
+                    <div className="space-y-2">
+                        <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider">Password</label>
+                        <input
+                            id="password"
+                            name="password"
+                            type="password"
+                            required
+                            autoComplete="current-password"
+                            className="w-full px-0 py-3 bg-transparent border-b border-white/20 text-white placeholder-gray-600 focus:outline-none focus:border-white transition-colors text-lg font-light"
+                            placeholder="Enter your password"
+                        />
+                    </div>
 
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-semibold text-white/90 mb-2">Email</label>
-                                <input
-                                    id="email"
-                                    name="email"
-                                    type="email"
-                                    required
-                                    className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                    placeholder="you@example.com"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-semibold text-white/90 mb-2">Password</label>
-                                <input
-                                    id="password"
-                                    name="password"
-                                    type="password"
-                                    required
-                                    className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                    placeholder="••••••••"
-                                />
-                            </div>
-                        </div>
-
+                    <div className="pt-8 space-y-4">
                         <button
                             formAction={login}
-                            className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-4 rounded-xl font-bold text-[17px] hover:opacity-90 active:scale-[0.98] transition-all shadow-xl shadow-blue-500/25"
+                            className="w-full py-4 border-2 border-white text-white font-medium tracking-wide hover:bg-white hover:text-black transition-all duration-300 rounded-lg text-base"
                         >
                             Sign In
                         </button>
 
-                        <div className="text-center">
-                            <Link href="/signup" className="text-sm font-semibold text-blue-400 hover:text-blue-300 transition-colors">
-                                Don&apos;t have an account? Sign Up
+                        <div className="text-center pt-2">
+                            <Link href="/signup" className="text-sm text-gray-400 hover:text-white transition-colors font-light">
+                                Don't have an account? <span className="underline">Sign Up</span>
                             </Link>
                         </div>
                     </div>
                 </form>
 
-                <p className="text-center text-gray-500 text-xs mt-6">
-                    By continuing, you agree to our Terms of Service and Privacy Policy
-                </p>
+                {/* Footer */}
+                <div className="text-center">
+                    <p className="text-xs text-gray-600 font-light">
+                        Professional booking platform
+                    </p>
+                </div>
             </div>
         </div>
     )
