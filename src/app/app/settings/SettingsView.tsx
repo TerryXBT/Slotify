@@ -3,16 +3,24 @@
 import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { signOut, updateProfile } from './actions'
-import { User, Mail, Phone, MapPin, LogOut, ChevronRight, Camera, X, Lock, Eye, EyeOff, Share2, Calendar as CalendarIcon, Clock, Briefcase } from 'lucide-react'
+import { User, Mail, Phone, MapPin, LogOut, Lock, Eye, EyeOff, Share2, Calendar as CalendarIcon, Clock, Briefcase, Camera, X } from 'lucide-react'
 import SignOutConfirmDialog from '@/components/SignOutConfirmDialog'
 import PushNotifications from '@/components/PushNotifications'
 import { createClient } from '@/utils/supabase/client'
 import { toast } from '@/utils/toast'
 import Cropper from 'react-easy-crop'
 import getCroppedImg, { Area } from '@/utils/cropImage'
+import type { Profile } from '@/types'
 
-export default function SettingsView({ profile }: { profile: any }) {
+// Extended profile type for settings that includes UI-only fields
+interface SettingsProfile extends Profile {
+    email?: string | null  // May come from auth.users
+    location?: string | null  // UI field, may need migration
+}
+
+export default function SettingsView({ profile }: { profile: SettingsProfile }) {
     const router = useRouter()
     const [isEditing, setIsEditing] = useState(false)
     const [isSaving, setIsSaving] = useState(false)
@@ -173,9 +181,10 @@ export default function SettingsView({ profile }: { profile: any }) {
             setConfirmPassword('')
             setShowNewPassword(false)
             setShowConfirmPassword(false)
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Password change error:', error)
-            toast.error(error.message || 'Failed to update password')
+            const message = error instanceof Error ? error.message : 'Failed to update password'
+            toast.error(message)
         } finally {
             setIsChangingPassword(false)
         }
@@ -216,7 +225,14 @@ export default function SettingsView({ profile }: { profile: any }) {
                                 <label className="cursor-pointer block">
                                     <div className="w-16 h-16 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden">
                                         {avatarUrl || profile.avatar_url ? (
-                                            <img src={avatarUrl || profile.avatar_url} alt={profile.full_name || 'Avatar'} className="w-full h-full object-cover" />
+                                            <Image
+                                                src={avatarUrl || profile.avatar_url || ''}
+                                                alt={profile.full_name || 'Avatar'}
+                                                width={64}
+                                                height={64}
+                                                className="w-full h-full object-cover"
+                                                unoptimized={avatarUrl?.startsWith('blob:') || avatarUrl?.startsWith('data:')}
+                                            />
                                         ) : (
                                             <User className="w-8 h-8 text-gray-500" />
                                         )}
@@ -320,7 +336,13 @@ export default function SettingsView({ profile }: { profile: any }) {
                         <div className="flex items-center gap-4 mb-4">
                             <div className="w-16 h-16 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden">
                                 {profile.avatar_url ? (
-                                    <img src={profile.avatar_url} alt={profile.full_name || 'Avatar'} className="w-full h-full object-cover" />
+                                    <Image
+                                        src={profile.avatar_url}
+                                        alt={profile.full_name || 'Avatar'}
+                                        width={64}
+                                        height={64}
+                                        className="w-full h-full object-cover"
+                                    />
                                 ) : (
                                     <User className="w-8 h-8 text-gray-500" />
                                 )}

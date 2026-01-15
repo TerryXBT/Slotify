@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, Globe, Loader2 } from 'lucide-react'
 import { getAvailableSlots } from '@/app/actions/availability'
 import { createBookingAction } from '@/app/actions/booking'
 import { bookingSchema, formatZodErrors } from '@/lib/validations'
+import type { Service } from '@/types'
 
 interface Availability {
     day_of_week: number
@@ -14,7 +15,7 @@ interface Availability {
 }
 
 interface BookingFormProps {
-    service: any
+    service: Service
     providerId: string
     providerName: string
     availability: Availability[]

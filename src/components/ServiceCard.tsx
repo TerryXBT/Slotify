@@ -1,18 +1,17 @@
 'use client'
 
-import { MoreHorizontal, Link as LinkIcon, Edit, CheckCircle } from 'lucide-react'
-import { useState } from 'react'
+import { Link as LinkIcon, Edit, CheckCircle } from 'lucide-react'
+import { useState, useCallback, useMemo, memo } from 'react'
 import { useRouter } from 'next/navigation'
 import ServiceActionsSheet, { ActionItem } from './ServiceActionsSheet'
-import Link from 'next/link'
 
 interface Service {
     id: string
     name: string
     duration_minutes: number
-    price_cents: number
-    is_active: boolean
-    description?: string
+    price_cents: number | null
+    is_active: boolean | null
+    description?: string | null
 }
 
 interface ServiceCardProps {
@@ -20,25 +19,33 @@ interface ServiceCardProps {
     username: string
 }
 
-export default function ServiceCard({ service, username }: ServiceCardProps) {
+function ServiceCard({ service, username }: ServiceCardProps) {
     const [isSheetOpen, setIsSheetOpen] = useState(false)
     const [showToast, setShowToast] = useState(false)
     const router = useRouter()
 
-    const handleCopyLink = async () => {
+    const handleCopyLink = useCallback(async () => {
         const bookingUrl = `${window.location.origin}/book/${username}/${service.id}`
         await navigator.clipboard.writeText(bookingUrl)
 
         // Show local toast
         setShowToast(true)
         setTimeout(() => setShowToast(false), 3000)
-    }
+    }, [username, service.id])
 
-    const handleEditService = () => {
+    const handleEditService = useCallback(() => {
         router.push(`/app/services/${service.id}/edit`)
-    }
+    }, [router, service.id])
 
-    const actions: ActionItem[] = [
+    const handleOpenSheet = useCallback(() => {
+        setIsSheetOpen(true)
+    }, [])
+
+    const handleCloseSheet = useCallback(() => {
+        setIsSheetOpen(false)
+    }, [])
+
+    const actions: ActionItem[] = useMemo(() => [
         {
             label: 'Copy Booking Link',
             icon: <LinkIcon className="w-5 h-5" />,
@@ -49,12 +56,19 @@ export default function ServiceCard({ service, username }: ServiceCardProps) {
             icon: <Edit className="w-5 h-5" />,
             onClick: handleEditService
         }
-    ]
+    ], [handleCopyLink, handleEditService])
+
+    const priceDisplay = useMemo(() =>
+        service.price_cents == null || service.price_cents === 0
+            ? 'Free'
+            : `$${(service.price_cents / 100).toFixed(0)}`,
+        [service.price_cents]
+    )
 
     return (
         <>
             <div
-                onClick={() => setIsSheetOpen(true)}
+                onClick={handleOpenSheet}
                 className="relative rounded-2xl w-36 h-36 p-4 flex flex-col justify-between active:scale-95 transition-all cursor-pointer overflow-hidden snap-start flex-shrink-0 group"
             >
                 {/* Glassmorphism Background */}
@@ -75,7 +89,7 @@ export default function ServiceCard({ service, username }: ServiceCardProps) {
                     </h3>
                     <div className="flex items-center gap-2">
                         <p className="text-xs text-white/70 font-medium bg-white/10 px-2 py-0.5 rounded-md inline-block backdrop-blur-sm">
-                            {service.price_cents === 0 ? 'Free' : `$${(service.price_cents / 100).toFixed(0)}`}
+                            {priceDisplay}
                         </p>
                         <span className="text-[10px] text-white/50 font-medium">{service.duration_minutes}m</span>
                     </div>
@@ -84,7 +98,7 @@ export default function ServiceCard({ service, username }: ServiceCardProps) {
 
             <ServiceActionsSheet
                 isOpen={isSheetOpen}
-                onClose={() => setIsSheetOpen(false)}
+                onClose={handleCloseSheet}
                 actions={actions}
                 title={service.name}
             />
@@ -101,3 +115,5 @@ export default function ServiceCard({ service, username }: ServiceCardProps) {
         </>
     )
 }
+
+export default memo(ServiceCard)

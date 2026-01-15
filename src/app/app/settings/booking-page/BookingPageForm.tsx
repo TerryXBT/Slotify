@@ -4,6 +4,14 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
 import { updateProfile } from '../actions'
+import type { Profile } from '@/types'
+
+// Extended profile for booking page with additional UI fields
+interface BookingPageProfile extends Profile {
+    email?: string | null
+    location?: string | null
+    cancellation_policy?: string | null
+}
 
 const POLICY_TEMPLATES = [
     {
@@ -38,7 +46,7 @@ const POLICY_TEMPLATES = [
     }
 ]
 
-export default function BookingPageSettings({ profile }: { profile: any }) {
+export default function BookingPageSettings({ profile }: { profile: BookingPageProfile }) {
     const router = useRouter()
     const [selectedTemplate, setSelectedTemplate] = useState<string>(
         profile.cancellation_policy ? 'custom' : 'none'

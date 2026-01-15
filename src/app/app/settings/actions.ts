@@ -3,6 +3,7 @@
 import { createClient } from '@/utils/supabase/server'
 import { createAdminClient } from '@/utils/supabase/admin'
 import { revalidatePath } from 'next/cache'
+import type { ProfileUpdate } from '@/types'
 
 /**
  * Update User Profile
@@ -22,16 +23,16 @@ export async function updateProfile(formData: FormData) {
     const email = formData.get('email') as string | null
     const cancellationPolicy = formData.get('cancellation_policy') as string | null
 
-    const updateData: any = {
+    const updateData: Record<string, string | null> = {
         full_name: fullName
     }
 
     if (avatarUrl) updateData.avatar_url = avatarUrl
     if (bio) updateData.bio = bio
-    if (location) updateData.location = location
+    // Note: 'location' is not in profiles table, may need migration
     if (phone) updateData.phone = phone
-    if (email) updateData.email = email
-    if (cancellationPolicy) updateData.cancellation_policy = cancellationPolicy
+    // Note: 'email' is not in profiles table (lives in auth.users)
+    if (cancellationPolicy) updateData.cancellation_policy_text = cancellationPolicy
 
     const { error } = await (adminClient as any)
         .from('profiles')
@@ -320,7 +321,7 @@ export async function createAvailabilityRule(formData: FormData) {
         const start_time = formData.get('start_time') as string
         const end_time = formData.get('end_time') as string
 
-        const { error} = await (adminClient as any)
+        const { error } = await (adminClient as any)
             .from('availability_rules')
             .insert({
                 provider_id: user.id,
@@ -336,8 +337,9 @@ export async function createAvailabilityRule(formData: FormData) {
 
         revalidatePath('/app/settings')
         return { success: true }
-    } catch (error: any) {
-        return { error: error.message }
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Unknown error'
+        return { error: message }
     }
 }
 
@@ -371,8 +373,9 @@ export async function updateAvailabilityRule(id: string, formData: FormData) {
 
         revalidatePath('/app/settings')
         return { success: true }
-    } catch (error: any) {
-        return { error: error.message }
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Unknown error'
+        return { error: message }
     }
 }
 
@@ -400,7 +403,8 @@ export async function deleteAvailabilityRule(id: string) {
 
         revalidatePath('/app/settings')
         return { success: true }
-    } catch (error: any) {
-        return { error: error.message }
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Unknown error'
+        return { error: message }
     }
 }

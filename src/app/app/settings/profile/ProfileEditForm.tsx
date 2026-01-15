@@ -2,14 +2,16 @@
 
 import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { ChevronLeft, Camera, X } from 'lucide-react'
+import Image from 'next/image'
+import { ChevronLeft, Camera } from 'lucide-react'
 import { updateProfile, signOut } from '../actions'
 import { createClient } from '@/utils/supabase/client'
 import Cropper from 'react-easy-crop'
 import getCroppedImg, { Area } from '@/utils/cropImage'
 import SignOutConfirmDialog from '@/components/SignOutConfirmDialog'
+import type { Profile } from '@/types'
 
-export default function ProfileEditForm({ profile }: { profile: any }) {
+export default function ProfileEditForm({ profile }: { profile: Profile }) {
     const router = useRouter()
     const [uploading, setUploading] = useState(false)
     const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url || '')
@@ -149,10 +151,13 @@ export default function ProfileEditForm({ profile }: { profile: any }) {
                     <div className="relative group mb-2">
                         <label className="cursor-pointer block">
                             {avatarUrl || profile.avatar_url ? (
-                                <img
-                                    src={avatarUrl || profile.avatar_url}
+                                <Image
+                                    src={avatarUrl || profile.avatar_url || ''}
                                     alt="Avatar"
+                                    width={120}
+                                    height={120}
                                     className="w-[120px] h-[120px] rounded-full object-cover shadow-2xl"
+                                    unoptimized={avatarUrl?.startsWith('blob:') || avatarUrl?.startsWith('data:')}
                                 />
                             ) : (
                                 <div className="w-[120px] h-[120px] rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-[48px] font-semibold shadow-2xl">
@@ -232,13 +237,13 @@ export default function ProfileEditForm({ profile }: { profile: any }) {
                 {/* Safe bottom padding */}
                 <div className="h-8" />
 
-            {/* Sign Out Confirmation Dialog */}
-            <SignOutConfirmDialog
-                isOpen={showSignOutConfirm}
-                onClose={handleCancelSignOut}
-                onConfirm={handleConfirmSignOut}
-                isLoading={isSigningOut}
-            />
+                {/* Sign Out Confirmation Dialog */}
+                <SignOutConfirmDialog
+                    isOpen={showSignOutConfirm}
+                    onClose={handleCancelSignOut}
+                    onConfirm={handleConfirmSignOut}
+                    isLoading={isSigningOut}
+                />
             </form>
 
             {/* Crop Modal */}

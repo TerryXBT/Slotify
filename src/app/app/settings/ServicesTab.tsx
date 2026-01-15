@@ -5,11 +5,19 @@ import { useRouter } from 'next/navigation'
 import { Plus, Clock, DollarSign, Edit, Trash2, X, MapPin, Video } from 'lucide-react'
 import { createService, updateService, deleteService } from './actions'
 import clsx from 'clsx'
+import type { Service } from '@/types'
 
-export default function ServicesTab({ services }: { services: any[] }) {
+interface ServiceFormProps {
+    onSubmit: (e: React.FormEvent<HTMLFormElement>) => void
+    initialData?: Service | null
+    title: string
+    onClose: () => void
+}
+
+export default function ServicesTab({ services }: { services: Service[] }) {
     const router = useRouter()
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-    const [editingService, setEditingService] = useState<any>(null)
+    const [editingService, setEditingService] = useState<Service | null>(null)
     const [loading, setLoading] = useState(false)
     // Delete confirmation modal state
     const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; serviceId: string | null; serviceName: string }>({ isOpen: false, serviceId: null, serviceName: '' })
@@ -31,6 +39,7 @@ export default function ServicesTab({ services }: { services: any[] }) {
 
     async function handleUpdate(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault()
+        if (!editingService) return
         setLoading(true)
         const formData = new FormData(e.currentTarget)
         const res = await updateService(editingService.id, formData)
@@ -65,7 +74,7 @@ export default function ServicesTab({ services }: { services: any[] }) {
         closeDeleteModal()
     }
 
-    const ServiceForm = ({ onSubmit, initialData, title, onClose }: any) => {
+    const ServiceForm = ({ onSubmit, initialData, title, onClose }: ServiceFormProps) => {
         const [locationType, setLocationType] = useState(initialData?.location_type || 'physical')
 
         return (
@@ -142,7 +151,7 @@ export default function ServicesTab({ services }: { services: any[] }) {
                             </label>
                             <input
                                 name="default_location"
-                                defaultValue={initialData?.default_location}
+                                defaultValue={initialData?.default_location ?? ''}
                                 className="w-full p-3 rounded-xl bg-black border-none font-medium focus:ring-2 focus:ring-blue-500 text-white"
                                 placeholder={locationType === 'physical' ? 'e.g. Downtown Studio, 123 Main St' : 'e.g. https://meet.google.com/...'}
                             />
@@ -189,7 +198,7 @@ export default function ServicesTab({ services }: { services: any[] }) {
                             </div>
                             <div className="flex items-center gap-3 mt-1 text-xs text-gray-500 font-medium">
                                 <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {s.duration_minutes}m</span>
-                                <span className="flex items-center gap-1"><DollarSign className="w-3 h-3" /> ${(s.price_cents / 100).toFixed(2)}</span>
+                                <span className="flex items-center gap-1"><DollarSign className="w-3 h-3" /> ${((s.price_cents ?? 0) / 100).toFixed(2)}</span>
                             </div>
                         </div>
                         <div className="flex items-center gap-1">

@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createService, restoreService, permanentlyDeleteService } from '../settings/actions'
-import { Plus, Share2, Trash2, Undo2, X, ChevronDown, AlertTriangle, ChevronRight } from 'lucide-react'
+import { Plus, Share2, Undo2, X, ChevronDown, ChevronRight } from 'lucide-react'
 import clsx from 'clsx'
+import type { Profile, Service } from '@/types'
 
 interface AvailabilityRule {
     id: string
@@ -25,9 +26,9 @@ const DAYS = [
 ]
 
 export default function ServicesView({ profile, services, deletedServices, availabilityRules }: {
-    profile: any,
-    services: any[],
-    deletedServices: any[],
+    profile: Profile,
+    services: Service[],
+    deletedServices: Service[],
     availabilityRules: AvailabilityRule[]
 }) {
     const router = useRouter()
@@ -52,7 +53,7 @@ export default function ServicesView({ profile, services, deletedServices, avail
     }))
 
     // Share service link
-    const handleShare = async (e: React.MouseEvent, service: any) => {
+    const handleShare = async (e: React.MouseEvent, service: Service) => {
         e.stopPropagation() // Prevent row click
         const url = `${window.location.origin}/${profile?.username || profile?.id}?service=${service.id}`
 
@@ -144,42 +145,42 @@ export default function ServicesView({ profile, services, deletedServices, avail
                         <div className="absolute inset-0 rounded-2xl border border-white/10" />
 
                         <div className="relative z-10 divide-y divide-white/5">
-                        {localServices.length > 0 ? (
-                            localServices.map((service) => (
-                                <div
-                                    key={service.id}
-                                    onClick={() => handleServiceClick(service.id)}
-                                    className="flex items-center justify-between px-4 py-4 active:bg-gray-800/50 cursor-pointer group transition-colors"
-                                >
-                                    <div className="flex-1 min-w-0 pr-4">
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <h3 className={clsx(
-                                                "text-[17px] font-medium leading-tight",
-                                                service.is_active ? "text-white" : "text-gray-500"
-                                            )}>
-                                                {service.name}
-                                            </h3>
-                                            {!service.is_active && (
-                                                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-gray-800 text-gray-500 uppercase tracking-wide">
-                                                    Inactive
-                                                </span>
-                                            )}
+                            {localServices.length > 0 ? (
+                                localServices.map((service) => (
+                                    <div
+                                        key={service.id}
+                                        onClick={() => handleServiceClick(service.id)}
+                                        className="flex items-center justify-between px-4 py-4 active:bg-gray-800/50 cursor-pointer group transition-colors"
+                                    >
+                                        <div className="flex-1 min-w-0 pr-4">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <h3 className={clsx(
+                                                    "text-[17px] font-medium leading-tight",
+                                                    service.is_active ? "text-white" : "text-gray-500"
+                                                )}>
+                                                    {service.name}
+                                                </h3>
+                                                {!service.is_active && (
+                                                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-gray-800 text-gray-500 uppercase tracking-wide">
+                                                        Inactive
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <p className="text-[15px] text-gray-500 font-normal">
+                                                {service.duration_minutes} min • ${((service.price_cents ?? 0) / 100).toFixed(0)}
+                                            </p>
                                         </div>
-                                        <p className="text-[15px] text-gray-500 font-normal">
-                                            {service.duration_minutes} min • ${(service.price_cents / 100).toFixed(0)}
-                                        </p>
+                                        <ChevronRight className="w-5 h-5 text-gray-600 group-hover:text-gray-400 transition-colors" />
                                     </div>
-                                    <ChevronRight className="w-5 h-5 text-gray-600 group-hover:text-gray-400 transition-colors" />
+                                ))
+                            ) : (
+                                <div className="p-8 flex flex-col items-center justify-center text-center">
+                                    <p className="text-white/70 font-medium">No services yet</p>
+                                    <Link href="/app/services/new" className="mt-2 text-blue-500 text-sm font-semibold">
+                                        Create your first service
+                                    </Link>
                                 </div>
-                            ))
-                        ) : (
-                            <div className="p-8 flex flex-col items-center justify-center text-center">
-                                <p className="text-white/70 font-medium">No services yet</p>
-                                <Link href="/app/services/new" className="mt-2 text-blue-500 text-sm font-semibold">
-                                    Create your first service
-                                </Link>
-                            </div>
-                        )}
+                            )}
                         </div>
                     </div>
                 </section>
@@ -193,48 +194,48 @@ export default function ServicesView({ profile, services, deletedServices, avail
                         <div className="absolute inset-0 rounded-2xl border border-white/10" />
 
                         <div className="relative z-10 divide-y divide-white/5">
-                        <Link
-                            href="/app/settings/availability"
-                            className="block px-4 py-4 active:bg-gray-800/50 group transition-colors"
-                        >
-                            <div className="flex items-center justify-between mb-3">
-                                <span className="text-[17px] text-white font-medium">Weekly Hours</span>
-                                <ChevronRight className="w-5 h-5 text-gray-600 group-hover:text-gray-400" />
-                            </div>
-                            {/* Mini Week View */}
-                            <div className="flex gap-1.5">
-                                {DAYS.map((day) => {
-                                    const hasRules = (rulesByDay.find(d => d.id === day.id)?.rules.length ?? 0) > 0
-                                    return (
-                                        <div key={day.id} className="flex-1 flex flex-col items-center gap-1">
-                                            <span className="text-[10px] text-gray-500 font-medium">{day.short[0]}</span>
-                                            <div className={clsx(
-                                                "w-full h-8 rounded flex items-center justify-center text-[9px] font-medium transition-colors",
-                                                hasRules
-                                                    ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
-                                                    : "bg-white/5 text-gray-600 border border-white/5"
-                                            )}>
-                                                {hasRules ? '✓' : '–'}
+                            <Link
+                                href="/app/settings/availability"
+                                className="block px-4 py-4 active:bg-gray-800/50 group transition-colors"
+                            >
+                                <div className="flex items-center justify-between mb-3">
+                                    <span className="text-[17px] text-white font-medium">Weekly Hours</span>
+                                    <ChevronRight className="w-5 h-5 text-gray-600 group-hover:text-gray-400" />
+                                </div>
+                                {/* Mini Week View */}
+                                <div className="flex gap-1.5">
+                                    {DAYS.map((day) => {
+                                        const hasRules = (rulesByDay.find(d => d.id === day.id)?.rules.length ?? 0) > 0
+                                        return (
+                                            <div key={day.id} className="flex-1 flex flex-col items-center gap-1">
+                                                <span className="text-[10px] text-gray-500 font-medium">{day.short[0]}</span>
+                                                <div className={clsx(
+                                                    "w-full h-8 rounded flex items-center justify-center text-[9px] font-medium transition-colors",
+                                                    hasRules
+                                                        ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
+                                                        : "bg-white/5 text-gray-600 border border-white/5"
+                                                )}>
+                                                    {hasRules ? '✓' : '–'}
+                                                </div>
                                             </div>
-                                        </div>
-                                    )
-                                })}
-                            </div>
-                        </Link>
+                                        )
+                                    })}
+                                </div>
+                            </Link>
 
-                        {/* Booking Page */}
-                        <div
-                            onClick={() => window.open(`/${profile?.username || profile?.id}`, '_blank')}
-                            className="flex items-center justify-between px-4 py-4 active:bg-gray-800/50 cursor-pointer group transition-colors"
-                        >
-                            <span className="text-[17px] text-white font-medium">Booking Page</span>
-                            <div className="flex items-center gap-2">
-                                <span className="text-[17px] text-gray-500 truncate max-w-[150px]">
-                                    slotify.com/{profile?.username || profile?.id}
-                                </span>
-                                <Share2 className="w-5 h-5 text-blue-500" />
+                            {/* Booking Page */}
+                            <div
+                                onClick={() => window.open(`/${profile?.username || profile?.id}`, '_blank')}
+                                className="flex items-center justify-between px-4 py-4 active:bg-gray-800/50 cursor-pointer group transition-colors"
+                            >
+                                <span className="text-[17px] text-white font-medium">Booking Page</span>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-[17px] text-gray-500 truncate max-w-[150px]">
+                                        slotify.com/{profile?.username || profile?.id}
+                                    </span>
+                                    <Share2 className="w-5 h-5 text-blue-500" />
+                                </div>
                             </div>
-                        </div>
                         </div>
                     </div>
                 </section>
@@ -257,7 +258,7 @@ export default function ServicesView({ profile, services, deletedServices, avail
 
                             {showTrash && (
                                 <div className="relative z-10 border-t border-white/10">
-                                    {deletedServices.map((service: any) => (
+                                    {deletedServices.map((service: Service) => (
                                         <div
                                             key={service.id}
                                             className="flex items-center justify-between px-4 py-3 border-b border-white/5 last:border-0"
@@ -265,7 +266,7 @@ export default function ServicesView({ profile, services, deletedServices, avail
                                             <div>
                                                 <h4 className="text-[15px] text-gray-500 line-through">{service.name}</h4>
                                                 <p className="text-[13px] text-gray-600">
-                                                    Deleted {new Date(service.deleted_at).toLocaleDateString()}
+                                                    Deleted {service.deleted_at ? new Date(service.deleted_at).toLocaleDateString() : 'recently'}
                                                 </p>
                                             </div>
                                             <div className="flex items-center gap-1">

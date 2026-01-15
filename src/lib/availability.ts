@@ -1,8 +1,7 @@
 
 import { createAdminClient } from '@/utils/supabase/admin'
-import { addMinutes, isBefore, parse, format, getDay } from 'date-fns'
+import { addMinutes, isBefore, getDay } from 'date-fns'
 import { toZonedTime, fromZonedTime } from 'date-fns-tz'
-import { Database } from '@/types/supabase'
 
 type Slot = {
     start: string // ISO string
@@ -16,7 +15,7 @@ export async function getAvailableSlots(
 ): Promise<Slot[]> {
     const supabase = createAdminClient()
 
-    // 1. Get Profile
+    // 1. Get Profile first (needed for subsequent queries)
     const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('id, timezone')
@@ -28,19 +27,22 @@ export async function getAvailableSlots(
         throw new Error('Provider not found')
     }
 
-    // 2. Availability Settings
-    const { data: settings } = await supabase
-        .from('availability_settings')
-        .select('*')
-        .eq('provider_id', profile.id)
-        .single()
+    // 2. Fetch settings and service in parallel (no dependency on each other)
+    const [settingsResult, serviceResult] = await Promise.all([
+        supabase
+            .from('availability_settings')
+            .select('*')
+            .eq('provider_id', profile.id)
+            .single(),
+        supabase
+            .from('services')
+            .select('duration_minutes')
+            .eq('id', serviceId)
+            .single()
+    ])
 
-    // 3. Service
-    const { data: service } = await supabase
-        .from('services')
-        .select('duration_minutes')
-        .eq('id', serviceId)
-        .single()
+    const { data: settings } = settingsResult
+    const { data: service } = serviceResult
 
     if (!service) throw new Error('Service not found')
 
@@ -87,24 +89,26 @@ export async function getAvailableSlots(
     const queryStart = addMinutes(searchStart, -bufferBefore)
     const queryEnd = addMinutes(searchEnd, bufferAfter)
 
-    const { data: bookings } = await supabase
-        .from('bookings')
-        .select('start_at, end_at')
-        .eq('provider_id', profile.id)
-        .neq('status', 'cancelled')
-        .lt('start_at', queryEnd.toISOString())
-        .gt('end_at', queryStart.toISOString())
-
-    const { data: busy } = await supabase
-        .from('busy_blocks')
-        .select('start_at, end_at')
-        .eq('provider_id', profile.id)
-        .lt('start_at', queryEnd.toISOString())
-        .gt('end_at', queryStart.toISOString())
+    // Fetch bookings and busy blocks in parallel
+    const [bookingsResult, busyResult] = await Promise.all([
+        supabase
+            .from('bookings')
+            .select('start_at, end_at')
+            .eq('provider_id', profile.id)
+            .neq('status', 'cancelled')
+            .lt('start_at', queryEnd.toISOString())
+            .gt('end_at', queryStart.toISOString()),
+        supabase
+            .from('busy_blocks')
+            .select('start_at, end_at')
+            .eq('provider_id', profile.id)
+            .lt('start_at', queryEnd.toISOString())
+            .gt('end_at', queryStart.toISOString())
+    ])
 
     const allConflicts = [
-        ...(bookings || []).map(b => ({ start: new Date(b.start_at), end: new Date(b.end_at) })),
-        ...(busy || []).map(b => ({ start: new Date(b.start_at), end: new Date(b.end_at) }))
+        ...(bookingsResult.data || []).map(b => ({ start: new Date(b.start_at), end: new Date(b.end_at) })),
+        ...(busyResult.data || []).map(b => ({ start: new Date(b.start_at), end: new Date(b.end_at) }))
     ]
 
     // 7. Generate Slots

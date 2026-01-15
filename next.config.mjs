@@ -6,6 +6,15 @@ const nextConfig = {
   /* config options here */
   turbopack: {}, // Silence Turbopack/webpack conflict with next-pwa
   reactStrictMode: true,
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '*.supabase.co',
+        pathname: '/storage/v1/object/public/**',
+      },
+    ],
+  },
   // Allow access from local network during development
   allowedDevOrigins: [
     'http://192.168.0.57:3000',

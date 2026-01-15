@@ -6,6 +6,12 @@ import { emailService } from '@/lib/email/service'
 import { format } from 'date-fns'
 import { toZonedTime } from 'date-fns-tz'
 
+// State type for useFormState actions
+interface ActionState {
+    error?: string
+    success?: boolean
+}
+
 function generateToken() {
     // Use crypto.randomUUID() for cryptographically secure tokens
     // Remove hyphens to make it URL-friendly and compact
@@ -15,7 +21,7 @@ function generateToken() {
 /**
  * Direct reschedule - provider picks one new time and it's immediately updated
  */
-export async function directReschedule(prevState: any, formData: FormData) {
+export async function directReschedule(prevState: ActionState | null, formData: FormData) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -40,7 +46,10 @@ export async function directReschedule(prevState: any, formData: FormData) {
     }
 
     // Calculate new end time
-    const servicesData = booking.services as any
+    type ServiceData = { duration_minutes?: number; name?: string } | null
+    type ProfileData = { timezone?: string; full_name?: string } | null
+
+    const servicesData = booking.services as ServiceData | ServiceData[]
     const duration = (Array.isArray(servicesData) ? servicesData[0]?.duration_minutes : servicesData?.duration_minutes) || 30
     const serviceName = (Array.isArray(servicesData) ? servicesData[0]?.name : servicesData?.name) || 'Service'
 
@@ -65,7 +74,7 @@ export async function directReschedule(prevState: any, formData: FormData) {
     // Send confirmation email to client
     if (booking.client_email) {
         try {
-            const profilesData = booking.profiles as any
+            const profilesData = booking.profiles as ProfileData | ProfileData[]
             const timezone = (Array.isArray(profilesData) ? profilesData[0]?.timezone : profilesData?.timezone) || 'UTC'
             const providerName = (Array.isArray(profilesData) ? profilesData[0]?.full_name : profilesData?.full_name) || 'Your Provider'
 
@@ -91,7 +100,7 @@ export async function directReschedule(prevState: any, formData: FormData) {
 /**
  * Original proposal-based reschedule (kept for backward compatibility)
  */
-export async function createRescheduleProposal(prevState: any, formData: FormData) {
+export async function createRescheduleProposal(prevState: ActionState | null, formData: FormData) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -121,7 +130,8 @@ export async function createRescheduleProposal(prevState: any, formData: FormDat
     }
 
     // Supabase join weirdness: services might be array or object
-    const servicesData = booking.services as any
+    type ServiceData = { duration_minutes?: number } | null
+    const servicesData = booking.services as ServiceData | ServiceData[]
     const duration = (Array.isArray(servicesData) ? servicesData[0]?.duration_minutes : servicesData?.duration_minutes) || 30
     const token = generateToken()
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days

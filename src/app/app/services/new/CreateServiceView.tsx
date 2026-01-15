@@ -4,10 +4,11 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createService } from '../../settings/actions'
-import { MapPin, Video, ChevronRight, Check } from 'lucide-react'
+import { MapPin, Video } from 'lucide-react'
 import clsx from 'clsx'
+import type { Profile } from '@/types'
 
-export default function CreateServiceView({ profile }: { profile: any }) {
+export default function CreateServiceView({ profile }: { profile: Profile }) {
     const router = useRouter()
     const [isSaving, setIsSaving] = useState(false)
     const [locationType, setLocationType] = useState('physical')

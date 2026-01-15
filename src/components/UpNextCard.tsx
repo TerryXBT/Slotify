@@ -1,9 +1,9 @@
 'use client'
 
 import { format } from 'date-fns'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Clock, MapPin, StickyNote, Phone, CheckCircle, ChevronRight } from 'lucide-react'
+import { StickyNote, ChevronRight } from 'lucide-react'
+import { memo, useCallback, useMemo } from 'react'
 
 // Define a subset of the booking type needed for UI
 interface UpNextCardProps {
@@ -21,12 +21,15 @@ interface UpNextCardProps {
     }
 }
 
-export default function UpNextCard({ booking }: UpNextCardProps) {
+function UpNextCard({ booking }: UpNextCardProps) {
     const router = useRouter()
 
-    const handleCardClick = () => {
+    const handleCardClick = useCallback(() => {
         router.push(`/app/bookings/${booking.id}`)
-    }
+    }, [router, booking.id])
+
+    const formattedTime = useMemo(() => format(new Date(booking.start_at), 'h:mm'), [booking.start_at])
+    const formattedPeriod = useMemo(() => format(new Date(booking.start_at), 'a'), [booking.start_at])
 
     return (
         <div
@@ -55,10 +58,10 @@ export default function UpNextCard({ booking }: UpNextCardProps) {
                     {/* Time Display */}
                     <div className="flex flex-col items-center min-w-[4rem]">
                         <span className="text-4xl font-bold tracking-tighter leading-none text-white filter drop-shadow-lg">
-                            {format(new Date(booking.start_at), 'h:mm')}
+                            {formattedTime}
                         </span>
                         <span className="text-xs font-bold text-white/60 uppercase tracking-widest mt-0.5">
-                            {format(new Date(booking.start_at), 'a')}
+                            {formattedPeriod}
                         </span>
                     </div>
 
@@ -95,3 +98,5 @@ export default function UpNextCard({ booking }: UpNextCardProps) {
         </div>
     )
 }
+
+export default memo(UpNextCard)

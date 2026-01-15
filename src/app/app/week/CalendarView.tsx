@@ -1,27 +1,38 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { format, addDays, startOfWeek, isSameDay, isToday, addWeeks, subWeeks, isAfter, isBefore, endOfDay, startOfDay } from 'date-fns'
-import { ChevronLeft, ChevronRight, Settings, Calendar as CalendarIcon, List, Plus, X, Loader2 } from 'lucide-react'
+import { format, addDays, startOfWeek, isSameDay, isToday, addWeeks, subWeeks, isBefore, startOfDay } from 'date-fns'
+import { ChevronLeft, ChevronRight, List, Plus, X, Loader2 } from 'lucide-react'
 import { getCalendarEvents, createManualBooking } from './actions'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import clsx from 'clsx'
+import type { Service } from '@/types'
 
 type FilterType = 'upcoming' | 'all' | 'past'
+
+// Partial booking type for calendar display (matches getCalendarEvents return)
+interface CalendarBooking {
+    id: string
+    status: string
+    start_at: string
+    end_at: string
+    client_name: string
+    services: { name: string } | null
+}
 
 interface CalendarViewProps {
     initialDate: Date
     avatarUrl?: string | null
     displayName?: string | null
-    services: any[]
+    services: Service[]
 }
 
 export default function CalendarView({ initialDate, avatarUrl, displayName, services = [] }: CalendarViewProps) {
     const router = useRouter()
     const [date, setDate] = useState(initialDate)
     const [selectedDate, setSelectedDate] = useState(new Date())
-    const [bookings, setBookings] = useState<any[]>([])
+    const [bookings, setBookings] = useState<CalendarBooking[]>([])
     const [loading, setLoading] = useState(true)
     const [filter, setFilter] = useState<FilterType>('upcoming')
 
@@ -404,7 +415,7 @@ function generateDateOptions() {
 }
 
 interface ManualBookingModalProps {
-    services: any[]
+    services: Service[]
     onClose: () => void
     onSubmit: (formData: FormData) => void
     isSubmitting: boolean
@@ -521,7 +532,7 @@ function ManualBookingModal({ services, onClose, onSubmit, isSubmitting }: Manua
                             className="w-full bg-[#2C2C2E] border border-transparent focus:border-blue-500 rounded-xl px-4 py-3 text-white outline-none"
                         >
                             <option value="">Select a service...</option>
-                            {services.map((s: any) => (
+                            {services.map((s: Service) => (
                                 <option key={s.id} value={s.id}>{s.name} ({s.duration_minutes} min)</option>
                             ))}
                         </select>

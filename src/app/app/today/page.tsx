@@ -1,11 +1,13 @@
 import { createClient } from '@/utils/supabase/server'
-import { format, differenceInMinutes, isAfter, isBefore, addMinutes, addDays } from 'date-fns'
+import { format, addDays } from 'date-fns'
 import Link from 'next/link'
+import Image from 'next/image'
 import { redirect } from 'next/navigation'
-import { Plus, Settings as SettingsIcon, Clock, MapPin, Video, CheckCircle, MessageSquare, Phone, ChevronRight, AlertCircle, Calendar as CalendarIcon, StickyNote } from 'lucide-react'
+import { Clock, ChevronRight, Plus } from 'lucide-react'
 import ServiceCard from '@/components/ServiceCard'
 import UpNextCard from '@/components/UpNextCard'
 import ActionGrid from '@/components/ActionGrid'
+import type { BookingWithService, Service } from '@/types'
 
 export default async function TodayPage() {
     const supabase = await createClient()
@@ -76,14 +78,14 @@ export default async function TodayPage() {
 
     // 1. Needs Action: Status = 'pending_reschedule' (or other future statuses)
     // For P0 Demo: We'll pretend 'pending_reschedule' bookings need action.
-    const needsAction = bookings?.filter((b: any) => b.status === 'pending_reschedule') || []
+    const needsAction = bookings?.filter((b: BookingWithService) => b.status === 'pending_reschedule') || []
 
     // 2. Up Next: The FIRST 'confirmed' booking that hasn't ended yet
     // Filter to ensure we generally stick to "today" conceptually, but we include "tomorrow" items if they are the VERY NEXT thing?
     // User asked "All activities of the day".
     // We will trust the query order.
     // However, if we grabbed tomorrow 10am, and today is 8pm and no bookings left, UpNext = Tomorrow 10am. This is good.
-    const upcomingBookings = bookings?.filter((b: any) =>
+    const upcomingBookings = bookings?.filter((b: BookingWithService) =>
         b.status === 'confirmed' && new Date(b.end_at) > now
     ) || []
 
@@ -95,7 +97,7 @@ export default async function TodayPage() {
     // Free time calculation (rough approximation)
     // Assume work day 9-5 (8 hours = 480 mins)
     // Sum booking durations
-    const totalBookedMinutes = bookings?.reduce((acc: number, b: any) => acc + (b.services?.duration_minutes || 0), 0) || 0
+    const totalBookedMinutes = bookings?.reduce((acc: number, b: BookingWithService) => acc + (b.services?.duration_minutes || 0), 0) || 0
     const freeMinutes = 480 - totalBookedMinutes
     const freeHours = Math.max(0, Math.floor(freeMinutes / 60))
 
@@ -114,9 +116,11 @@ export default async function TodayPage() {
                 </div>
                 <Link href="/app/settings" className="relative active:opacity-70 transition-all hover:scale-105">
                     {profile.avatar_url ? (
-                        <img
+                        <Image
                             src={profile.avatar_url}
                             alt="Profile"
+                            width={40}
+                            height={40}
                             className="w-10 h-10 rounded-full object-cover ring-2 ring-zinc-800 grayscale-[0.2] transition-all"
                         />
                     ) : (
@@ -161,7 +165,7 @@ export default async function TodayPage() {
                             {/* Glassmorphism Background */}
                             <div className="absolute inset-0 bg-gradient-to-br from-white/[0.07] via-white/[0.05] to-white/[0.03] backdrop-blur-2xl" />
                             <div className="absolute inset-0 rounded-3xl border border-white/10" />
-                            {restOfToday.map((b: any, index: number) => (
+                            {restOfToday.map((b: BookingWithService, index: number) => (
                                 <Link
                                     key={b.id}
                                     href={`/app/bookings/${b.id}`}
@@ -206,7 +210,7 @@ export default async function TodayPage() {
 
                     <div className="relative">
                         <div className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 no-scrollbar snap-x">
-                            {services && services.filter((s: any) => s.is_active).map((service: any) => (
+                            {services && services.filter((s: Service) => s.is_active).map((service: Service) => (
                                 <ServiceCard
                                     key={service.id}
                                     service={service}

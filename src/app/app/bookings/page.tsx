@@ -2,6 +2,15 @@ import { createClient } from '@/utils/supabase/server'
 import { format } from 'date-fns'
 import Link from 'next/link'
 
+// Booking with partial service for list display
+interface BookingListItem {
+    id: string
+    client_name: string
+    start_at: string
+    status: string
+    services: { name: string } | null
+}
+
 export default async function BookingsListPage() {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -19,7 +28,7 @@ export default async function BookingsListPage() {
             </header>
 
             <div className="p-4 space-y-3">
-                {bookings?.map((booking: any) => (
+                {bookings?.map((booking: BookingListItem) => (
                     <Link key={booking.id} href={`/app/bookings/${booking.id}`} className="block bg-[#1C1C1E] p-4 rounded-xl border border-gray-800 shadow-sm active:scale-95 transition-transform">
                         <div className="flex justify-between items-start">
                             <div>
@@ -29,7 +38,7 @@ export default async function BookingsListPage() {
                             <div className="text-right">
                                 <div className="font-medium">{format(new Date(booking.start_at), 'MMM d, h:mm a')}</div>
                                 <div className={`text-xs uppercase font-bold mt-1 ${booking.status === 'confirmed' ? 'text-green-600' :
-                                        booking.status === 'cancelled' ? 'text-red-600' : 'text-orange-600'
+                                    booking.status === 'cancelled' ? 'text-red-600' : 'text-orange-600'
                                     }`}>
                                     {booking.status}
                                 </div>
