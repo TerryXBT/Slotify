@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { Calendar, ChevronDown, X } from 'lucide-react'
 import { downloadICS, generateGoogleCalendarUrl, generateOutlookCalendarUrl } from '@/utils/calendar'
 import { toast } from '@/utils/toast'
@@ -77,6 +78,13 @@ function DownloadIcon() {
 
 export default function AddToCalendar({ event }: AddToCalendarProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
+  const buttonRef = useRef<HTMLButtonElement>(null)
+
+  // Ensure portal only renders on client
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const handleAppleCalendar = () => {
     try {
@@ -108,10 +116,99 @@ export default function AddToCalendar({ event }: AddToCalendarProps) {
     }
   }
 
+  const modalContent = isOpen ? (
+    <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/70"
+        onClick={() => setIsOpen(false)}
+      />
+
+      {/* Modal */}
+      <div className="relative w-full max-w-sm mx-4 mb-4 sm:mb-0 bg-[#2c2c2e] rounded-2xl overflow-hidden animate-in slide-in-from-bottom-4 fade-in duration-200 shadow-2xl">
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-5 border-b border-white/10">
+          <h3 className="text-lg font-semibold text-white">Add to Calendar</h3>
+          <button
+            onClick={() => setIsOpen(false)}
+            className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+          >
+            <X className="w-4 h-4 text-gray-400" />
+          </button>
+        </div>
+
+        {/* Options */}
+        <div className="py-2">
+          {/* Apple Calendar */}
+          <button
+            onClick={handleAppleCalendar}
+            className="w-full px-5 py-4 text-left text-white hover:bg-white/[0.08] transition-colors flex items-center gap-4 active:bg-white/[0.12]"
+          >
+            <AppleCalendarIcon />
+            <div>
+              <span className="font-medium block">Apple Calendar</span>
+              <span className="text-xs text-gray-500">iPhone, iPad, Mac</span>
+            </div>
+          </button>
+
+          {/* Google Calendar */}
+          <button
+            onClick={handleGoogleCalendar}
+            className="w-full px-5 py-4 text-left text-white hover:bg-white/[0.08] transition-colors flex items-center gap-4 active:bg-white/[0.12]"
+          >
+            <GoogleCalendarIcon />
+            <div>
+              <span className="font-medium block">Google Calendar</span>
+              <span className="text-xs text-gray-500">Opens in browser</span>
+            </div>
+          </button>
+
+          {/* Outlook Calendar */}
+          <button
+            onClick={handleOutlookCalendar}
+            className="w-full px-5 py-4 text-left text-white hover:bg-white/[0.08] transition-colors flex items-center gap-4 active:bg-white/[0.12]"
+          >
+            <OutlookCalendarIcon />
+            <div>
+              <span className="font-medium block">Outlook Calendar</span>
+              <span className="text-xs text-gray-500">Opens in browser</span>
+            </div>
+          </button>
+
+          {/* Divider */}
+          <div className="mx-5 my-2 border-t border-white/10" />
+
+          {/* Download ICS */}
+          <button
+            onClick={handleDownloadICS}
+            className="w-full px-5 py-4 text-left text-gray-400 hover:bg-white/[0.08] hover:text-white transition-colors flex items-center gap-4 active:bg-white/[0.12]"
+          >
+            <DownloadIcon />
+            <div>
+              <span className="font-medium block">Download .ics file</span>
+              <span className="text-xs text-gray-500">For other calendar apps</span>
+            </div>
+          </button>
+        </div>
+
+        {/* Cancel Button */}
+        <div className="px-5 pb-5 pt-2">
+          <button
+            onClick={() => setIsOpen(false)}
+            className="w-full py-3 bg-white/10 hover:bg-white/15 text-white font-medium rounded-xl transition-colors active:scale-[0.98]"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  ) : null
+
   return (
     <>
       {/* Trigger Button */}
       <button
+        ref={buttonRef}
         onClick={() => setIsOpen(true)}
         className="flex items-center justify-center gap-2 w-full max-w-xs px-5 py-3 bg-white/[0.08] border border-white/10 rounded-xl text-white transition-all hover:bg-white/[0.12] active:scale-[0.98]"
       >
@@ -120,94 +217,8 @@ export default function AddToCalendar({ event }: AddToCalendarProps) {
         <ChevronDown className="w-4 h-4 ml-1" />
       </button>
 
-      {/* Modal Overlay */}
-      {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-          {/* Backdrop */}
-          <div
-            className="absolute inset-0 bg-black/70"
-            onClick={() => setIsOpen(false)}
-          />
-
-          {/* Modal */}
-          <div className="relative w-full max-w-sm mx-4 mb-4 sm:mb-0 bg-[#2c2c2e] rounded-2xl overflow-hidden animate-in slide-in-from-bottom-4 fade-in duration-200 shadow-2xl">
-            {/* Header */}
-            <div className="flex items-center justify-between px-5 py-5 border-b border-white/10">
-              <h3 className="text-lg font-semibold text-white">Add to Calendar</h3>
-              <button
-                onClick={() => setIsOpen(false)}
-                className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors"
-              >
-                <X className="w-4 h-4 text-gray-400" />
-              </button>
-            </div>
-
-            {/* Options */}
-            <div className="py-2">
-              {/* Apple Calendar */}
-              <button
-                onClick={handleAppleCalendar}
-                className="w-full px-5 py-4 text-left text-white hover:bg-white/[0.08] transition-colors flex items-center gap-4 active:bg-white/[0.12]"
-              >
-                <AppleCalendarIcon />
-                <div>
-                  <span className="font-medium block">Apple Calendar</span>
-                  <span className="text-xs text-gray-500">iPhone, iPad, Mac</span>
-                </div>
-              </button>
-
-              {/* Google Calendar */}
-              <button
-                onClick={handleGoogleCalendar}
-                className="w-full px-5 py-4 text-left text-white hover:bg-white/[0.08] transition-colors flex items-center gap-4 active:bg-white/[0.12]"
-              >
-                <GoogleCalendarIcon />
-                <div>
-                  <span className="font-medium block">Google Calendar</span>
-                  <span className="text-xs text-gray-500">Opens in browser</span>
-                </div>
-              </button>
-
-              {/* Outlook Calendar */}
-              <button
-                onClick={handleOutlookCalendar}
-                className="w-full px-5 py-4 text-left text-white hover:bg-white/[0.08] transition-colors flex items-center gap-4 active:bg-white/[0.12]"
-              >
-                <OutlookCalendarIcon />
-                <div>
-                  <span className="font-medium block">Outlook Calendar</span>
-                  <span className="text-xs text-gray-500">Opens in browser</span>
-                </div>
-              </button>
-
-              {/* Divider */}
-              <div className="mx-5 my-2 border-t border-white/10" />
-
-              {/* Download ICS */}
-              <button
-                onClick={handleDownloadICS}
-                className="w-full px-5 py-4 text-left text-gray-400 hover:bg-white/[0.08] hover:text-white transition-colors flex items-center gap-4 active:bg-white/[0.12]"
-              >
-                <DownloadIcon />
-                <div>
-                  <span className="font-medium block">Download .ics file</span>
-                  <span className="text-xs text-gray-500">For other calendar apps</span>
-                </div>
-              </button>
-            </div>
-
-            {/* Cancel Button */}
-            <div className="px-5 pb-5 pt-2">
-              <button
-                onClick={() => setIsOpen(false)}
-                className="w-full py-3 bg-white/10 hover:bg-white/15 text-white font-medium rounded-xl transition-colors active:scale-[0.98]"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Render modal in portal to avoid parent overflow clipping */}
+      {mounted && modalContent && createPortal(modalContent, document.body)}
     </>
   )
 }
