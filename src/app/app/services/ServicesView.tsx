@@ -210,9 +210,9 @@ export default function ServicesView({ profile, services, deletedServices, avail
                                             <div key={day.id} className="flex-1 flex flex-col items-center gap-1">
                                                 <span className="text-[10px] text-gray-500 font-medium">{day.short[0]}</span>
                                                 <div className={clsx(
-                                                    "w-full h-8 rounded flex items-center justify-center text-[9px] font-medium transition-colors",
+                                                    "w-full h-8 rounded flex items-center justify-center text-sm font-semibold transition-colors",
                                                     hasRules
-                                                        ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
+                                                        ? "bg-blue-500/30 text-white border border-blue-500/40"
                                                         : "bg-white/5 text-gray-600 border border-white/5"
                                                 )}>
                                                     {hasRules ? '✓' : '–'}
