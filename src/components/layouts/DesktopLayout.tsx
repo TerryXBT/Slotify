@@ -1,16 +1,16 @@
-'use client'
+"use client";
 
-import { ReactNode } from 'react'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { Calendar, Home, Briefcase, Settings, LogOut } from 'lucide-react'
-import clsx from 'clsx'
+import { ReactNode } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Calendar, Home, Briefcase, Settings, LogOut } from "lucide-react";
+import clsx from "clsx";
 
 interface DesktopLayoutProps {
-  children: ReactNode
-  userEmail?: string | null
-  displayName?: string | null
-  avatarUrl?: string | null
+  children: ReactNode;
+  userEmail?: string | null;
+  displayName?: string | null;
+  avatarUrl?: string | null;
 }
 
 /**
@@ -31,23 +31,23 @@ export function DesktopLayout({
   children,
   userEmail,
   displayName,
-  avatarUrl,
+  avatarUrl: _avatarUrl,
 }: DesktopLayoutProps) {
-  const pathname = usePathname()
+  const pathname = usePathname();
 
   const navItems = [
-    { href: '/app', icon: Home, label: 'Home', exact: true },
-    { href: '/app/week', icon: Calendar, label: 'Calendar', exact: false },
-    { href: '/app/services', icon: Briefcase, label: 'Services', exact: false },
-    { href: '/app/settings', icon: Settings, label: 'Settings', exact: false },
-  ]
+    { href: "/app", icon: Home, label: "Home", exact: true },
+    { href: "/app/week", icon: Calendar, label: "Calendar", exact: false },
+    { href: "/app/services", icon: Briefcase, label: "Services", exact: false },
+    { href: "/app/settings", icon: Settings, label: "Settings", exact: false },
+  ];
 
   const isActive = (href: string, exact: boolean) => {
     if (exact) {
-      return pathname === href
+      return pathname === href;
     }
-    return pathname?.startsWith(href)
-  }
+    return pathname?.startsWith(href);
+  };
 
   return (
     <div className="flex h-screen bg-[#0a0a0a] text-white">
@@ -66,29 +66,29 @@ export function DesktopLayout({
         {/* Navigation */}
         <nav className="flex-1 p-4 space-y-2">
           {navItems.map((item) => {
-            const Icon = item.icon
-            const active = isActive(item.href, item.exact)
+            const Icon = item.icon;
+            const active = isActive(item.href, item.exact);
 
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 className={clsx(
-                  'flex items-center gap-3 px-4 py-3 rounded-xl transition-all group',
+                  "flex items-center gap-3 px-4 py-3 rounded-xl transition-all group",
                   active
-                    ? 'bg-gradient-to-r from-blue-600/20 to-purple-600/20 border border-blue-500/30 text-white shadow-lg shadow-blue-900/20'
-                    : 'hover:bg-white/5 text-gray-400 hover:text-white'
+                    ? "bg-gradient-to-r from-blue-600/20 to-purple-600/20 border border-blue-500/30 text-white shadow-lg shadow-blue-900/20"
+                    : "hover:bg-white/5 text-gray-400 hover:text-white",
                 )}
               >
                 <Icon
                   className={clsx(
-                    'w-5 h-5 transition-transform group-hover:scale-110',
-                    active && 'text-blue-400'
+                    "w-5 h-5 transition-transform group-hover:scale-110",
+                    active && "text-blue-400",
                   )}
                 />
                 <span className="font-medium">{item.label}</span>
               </Link>
-            )
+            );
           })}
         </nav>
 
@@ -97,11 +97,13 @@ export function DesktopLayout({
           {/* User Info */}
           <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5">
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center font-semibold text-sm">
-              {displayName?.[0]?.toUpperCase() || userEmail?.[0]?.toUpperCase() || 'U'}
+              {displayName?.[0]?.toUpperCase() ||
+                userEmail?.[0]?.toUpperCase() ||
+                "U"}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-white truncate">
-                {displayName || 'User'}
+                {displayName || "User"}
               </p>
               <p className="text-xs text-gray-400 truncate">{userEmail}</p>
             </div>
@@ -126,15 +128,15 @@ export function DesktopLayout({
         <header className="h-16 border-b border-white/10 bg-[#1a1a1a]/80 backdrop-blur-lg px-8 flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold">
-              {pathname === '/app'
-                ? 'Dashboard'
-                : pathname?.includes('/week')
-                ? 'Calendar'
-                : pathname?.includes('/services')
-                ? 'Services'
-                : pathname?.includes('/settings')
-                ? 'Settings'
-                : 'Slotify'}
+              {pathname === "/app"
+                ? "Dashboard"
+                : pathname?.includes("/week")
+                  ? "Calendar"
+                  : pathname?.includes("/services")
+                    ? "Services"
+                    : pathname?.includes("/settings")
+                      ? "Settings"
+                      : "Slotify"}
             </h1>
           </div>
 
@@ -150,5 +152,5 @@ export function DesktopLayout({
         </main>
       </div>
     </div>
-  )
+  );
 }

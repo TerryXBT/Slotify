@@ -1,32 +1,38 @@
-'use client'
+"use client";
 
-import { useState, useEffect, useRef } from 'react'
-import { createPortal } from 'react-dom'
-import { Calendar, ChevronDown, X } from 'lucide-react'
-import { downloadICS, generateGoogleCalendarUrl, generateOutlookCalendarUrl } from '@/utils/calendar'
-import { toast } from '@/utils/toast'
+import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
+import { Calendar, ChevronDown, X } from "lucide-react";
+import {
+  downloadICS,
+  generateGoogleCalendarUrl,
+  generateOutlookCalendarUrl,
+} from "@/utils/calendar";
+import { toast } from "@/utils/toast";
 
 interface AddToCalendarProps {
   event: {
-    title: string
-    description?: string
-    location?: string
-    startTime: Date
-    endTime: Date
-  }
+    title: string;
+    description?: string;
+    location?: string;
+    startTime: Date;
+    endTime: Date;
+  };
 }
 
 // Apple Calendar Icon - Mimics the real Apple Calendar app icon
 function AppleCalendarIcon() {
-  const today = new Date().getDate()
+  const today = new Date().getDate();
   return (
     <div className="w-10 h-10 rounded-xl bg-white overflow-hidden shadow-sm flex flex-col">
       <div className="h-3 bg-red-500 flex-shrink-0" />
       <div className="flex-1 flex items-center justify-center bg-white">
-        <span className="text-[#1d1d1f] font-bold text-lg leading-none">{today}</span>
+        <span className="text-[#1d1d1f] font-bold text-lg leading-none">
+          {today}
+        </span>
       </div>
     </div>
-  )
+  );
 }
 
 // Google Calendar Icon - Mimics the real Google Calendar icon
@@ -48,7 +54,7 @@ function GoogleCalendarIcon() {
         <div className="flex-1 bg-[#EA4335]" />
       </div>
     </div>
-  )
+  );
 }
 
 // Outlook Calendar Icon - Mimics Microsoft Outlook
@@ -56,65 +62,94 @@ function OutlookCalendarIcon() {
   return (
     <div className="w-10 h-10 rounded-lg bg-[#0078D4] flex items-center justify-center shadow-sm">
       <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none">
-        <rect x="4" y="6" width="16" height="14" rx="2" fill="white" fillOpacity="0.2" />
+        <rect
+          x="4"
+          y="6"
+          width="16"
+          height="14"
+          rx="2"
+          fill="white"
+          fillOpacity="0.2"
+        />
         <rect x="5" y="7" width="14" height="12" rx="1.5" fill="white" />
         <rect x="4" y="5" width="16" height="3" fill="white" />
-        <text x="12" y="16" textAnchor="middle" fill="#0078D4" fontSize="8" fontWeight="bold">O</text>
+        <text
+          x="12"
+          y="16"
+          textAnchor="middle"
+          fill="#0078D4"
+          fontSize="8"
+          fontWeight="bold"
+        >
+          O
+        </text>
       </svg>
     </div>
-  )
+  );
 }
 
 // ICS Download Icon
 function DownloadIcon() {
   return (
     <div className="w-10 h-10 rounded-lg bg-gray-500 flex items-center justify-center shadow-sm">
-      <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <svg
+        className="w-5 h-5 text-white"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+      >
         <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
       </svg>
     </div>
-  )
+  );
 }
 
 export default function AddToCalendar({ event }: AddToCalendarProps) {
-  const [isOpen, setIsOpen] = useState(false)
-  const [mounted, setMounted] = useState(false)
-  const buttonRef = useRef<HTMLButtonElement>(null)
+  const [isOpen, setIsOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
-  // Ensure portal only renders on client
+  // Ensure portal only renders on client (hydration safety pattern)
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    setMounted(true); // eslint-disable-line react-hooks/set-state-in-effect
+  }, []);
 
   const handleAppleCalendar = () => {
     try {
-      downloadICS(event, `${event.title.replace(/\s+/g, '-').toLowerCase()}.ics`)
-      toast.success('Opening Apple Calendar...')
-      setIsOpen(false)
+      downloadICS(
+        event,
+        `${event.title.replace(/\s+/g, "-").toLowerCase()}.ics`,
+      );
+      toast.success("Opening Apple Calendar...");
+      setIsOpen(false);
     } catch {
-      toast.error('Failed to download calendar event')
+      toast.error("Failed to download calendar event");
     }
-  }
+  };
 
   const handleGoogleCalendar = () => {
-    window.open(generateGoogleCalendarUrl(event), '_blank')
-    setIsOpen(false)
-  }
+    window.open(generateGoogleCalendarUrl(event), "_blank");
+    setIsOpen(false);
+  };
 
   const handleOutlookCalendar = () => {
-    window.open(generateOutlookCalendarUrl(event), '_blank')
-    setIsOpen(false)
-  }
+    window.open(generateOutlookCalendarUrl(event), "_blank");
+    setIsOpen(false);
+  };
 
   const handleDownloadICS = () => {
     try {
-      downloadICS(event, `${event.title.replace(/\s+/g, '-').toLowerCase()}.ics`)
-      toast.success('Calendar event downloaded')
-      setIsOpen(false)
+      downloadICS(
+        event,
+        `${event.title.replace(/\s+/g, "-").toLowerCase()}.ics`,
+      );
+      toast.success("Calendar event downloaded");
+      setIsOpen(false);
     } catch {
-      toast.error('Failed to download calendar event')
+      toast.error("Failed to download calendar event");
     }
-  }
+  };
 
   const modalContent = isOpen ? (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
@@ -186,7 +221,9 @@ export default function AddToCalendar({ event }: AddToCalendarProps) {
             <DownloadIcon />
             <div>
               <span className="font-medium block">Download .ics file</span>
-              <span className="text-xs text-gray-500">For other calendar apps</span>
+              <span className="text-xs text-gray-500">
+                For other calendar apps
+              </span>
             </div>
           </button>
         </div>
@@ -202,7 +239,7 @@ export default function AddToCalendar({ event }: AddToCalendarProps) {
         </div>
       </div>
     </div>
-  ) : null
+  ) : null;
 
   return (
     <>
@@ -220,5 +257,5 @@ export default function AddToCalendar({ event }: AddToCalendarProps) {
       {/* Render modal in portal to avoid parent overflow clipping */}
       {mounted && modalContent && createPortal(modalContent, document.body)}
     </>
-  )
+  );
 }

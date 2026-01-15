@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { sendBookingReminders } from '@/app/actions/reminders'
+import { NextRequest, NextResponse } from "next/server";
+import { sendBookingReminders } from "@/app/actions/reminders";
 
 /**
  * API endpoint for sending booking reminders
@@ -19,39 +19,38 @@ import { sendBookingReminders } from '@/app/actions/reminders'
  * Security: Add CRON_SECRET to env and validate it here
  */
 export async function GET(request: NextRequest) {
-    try {
-        // Optional: Add authentication
-        const authHeader = request.headers.get('authorization')
-        const cronSecret = process.env.CRON_SECRET
+  try {
+    // Optional: Add authentication
+    const authHeader = request.headers.get("authorization");
+    const cronSecret = process.env.CRON_SECRET;
 
-        if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-            return NextResponse.json(
-                { error: 'Unauthorized' },
-                { status: 401 }
-            )
-        }
-
-        console.log('[CRON] Starting booking reminders job')
-
-        const result = await sendBookingReminders()
-
-        console.log('[CRON] Reminders job complete:', result)
-
-        return NextResponse.json({
-            success: true,
-            ...result,
-            timestamp: new Date().toISOString()
-        })
-    } catch (error) {
-        console.error('[CRON] Reminders job failed:', error)
-
-        return NextResponse.json(
-            {
-                success: false,
-                error: 'Failed to send reminders',
-                timestamp: new Date().toISOString()
-            },
-            { status: 500 }
-        )
+    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    // eslint-disable-next-line no-console
+    console.log("[CRON] Starting booking reminders job");
+
+    const result = await sendBookingReminders();
+
+    // eslint-disable-next-line no-console
+    console.log("[CRON] Reminders job complete:", result);
+
+    return NextResponse.json({
+      success: true,
+      ...result,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error("[CRON] Reminders job failed:", error);
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Failed to send reminders",
+        timestamp: new Date().toISOString(),
+      },
+      { status: 500 },
+    );
+  }
 }

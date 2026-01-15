@@ -1,19 +1,23 @@
-'use client'
+"use client";
 
-import { LucideIcon } from 'lucide-react'
-import { ReactNode } from 'react'
+import { LucideIcon } from "lucide-react";
 
 interface EmptyStateProps {
-  icon: LucideIcon
-  title: string
-  description: string
+  icon: LucideIcon;
+  title: string;
+  description: string;
   action?: {
-    label: string
-    onClick: () => void
-  }
+    label: string;
+    onClick: () => void;
+  };
 }
 
-export default function EmptyState({ icon: Icon, title, description, action }: EmptyStateProps) {
+export default function EmptyState({
+  icon: Icon,
+  title,
+  description,
+  action,
+}: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
       <div className="w-16 h-16 mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
@@ -34,5 +38,5 @@ export default function EmptyState({ icon: Icon, title, description, action }: E
         </button>
       )}
     </div>
-  )
+  );
 }

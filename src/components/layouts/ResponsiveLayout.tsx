@@ -1,16 +1,16 @@
-'use client'
+"use client";
 
-import { ReactNode, useState, useEffect } from 'react'
-import { useIsMobile } from '@/hooks/useDeviceType'
-import { MobileLayout } from './MobileLayout'
-import { DesktopLayout } from './DesktopLayout'
+import { ReactNode, useState, useEffect } from "react";
+import { useIsMobile } from "@/hooks/useDeviceType";
+import { MobileLayout } from "./MobileLayout";
+import { DesktopLayout } from "./DesktopLayout";
 
 interface ResponsiveLayoutProps {
-  children: ReactNode
-  showBottomNav?: boolean
-  userEmail?: string | null
-  displayName?: string | null
-  avatarUrl?: string | null
+  children: ReactNode;
+  showBottomNav?: boolean;
+  userEmail?: string | null;
+  displayName?: string | null;
+  avatarUrl?: string | null;
 }
 
 /**
@@ -44,22 +44,26 @@ export function ResponsiveLayout({
   displayName,
   avatarUrl,
 }: ResponsiveLayoutProps) {
-  const isMobile = useIsMobile()
-  const [mounted, setMounted] = useState(false)
+  const isMobile = useIsMobile();
+  const [mounted, setMounted] = useState(false);
 
-  // Wait for client-side hydration to complete
+  // Wait for client-side hydration to complete (hydration safety pattern)
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    setMounted(true); // eslint-disable-line react-hooks/set-state-in-effect
+  }, []);
 
   // During SSR and first render, show mobile layout to avoid hydration mismatch
   if (!mounted) {
-    return <MobileLayout showBottomNav={showBottomNav}>{children}</MobileLayout>
+    return (
+      <MobileLayout showBottomNav={showBottomNav}>{children}</MobileLayout>
+    );
   }
 
   // After hydration, switch to appropriate layout based on device
   if (isMobile) {
-    return <MobileLayout showBottomNav={showBottomNav}>{children}</MobileLayout>
+    return (
+      <MobileLayout showBottomNav={showBottomNav}>{children}</MobileLayout>
+    );
   }
 
   return (
@@ -70,5 +74,5 @@ export function ResponsiveLayout({
     >
       {children}
     </DesktopLayout>
-  )
+  );
 }

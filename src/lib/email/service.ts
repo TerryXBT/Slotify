@@ -1,60 +1,118 @@
 export interface EmailService {
-    sendBookingConfirmation(to: string, clientName: string, serviceName: string, date: string, providerName: string, cancelLink?: string, location?: string, price?: string): Promise<void>
-    sendRescheduleProposal(to: string, clientName: string, link: string): Promise<void>
-    sendRescheduleConfirmation(to: string, clientName: string, serviceName: string, date: string, providerName: string): Promise<void>
-    sendCancellationNotice(to: string, clientName: string, serviceName: string, date: string): Promise<void>
-    sendBookingReminder(to: string, clientName: string, serviceName: string, date: string, providerName: string, location?: string): Promise<void>
+  sendBookingConfirmation(
+    to: string,
+    clientName: string,
+    serviceName: string,
+    date: string,
+    providerName: string,
+    cancelLink?: string,
+    location?: string,
+    price?: string,
+  ): Promise<void>;
+  sendRescheduleProposal(
+    to: string,
+    clientName: string,
+    link: string,
+  ): Promise<void>;
+  sendRescheduleConfirmation(
+    to: string,
+    clientName: string,
+    serviceName: string,
+    date: string,
+    providerName: string,
+  ): Promise<void>;
+  sendCancellationNotice(
+    to: string,
+    clientName: string,
+    serviceName: string,
+    date: string,
+  ): Promise<void>;
+  sendBookingReminder(
+    to: string,
+    clientName: string,
+    serviceName: string,
+    date: string,
+    providerName: string,
+    location?: string,
+  ): Promise<void>;
 }
 
 export class ConsoleEmailService implements EmailService {
-    async sendBookingConfirmation(to: string, clientName: string, serviceName: string, date: string, providerName: string, cancelLink?: string, location?: string, price?: string) {
-        console.log(`
+  async sendBookingConfirmation(
+    to: string,
+    clientName: string,
+    serviceName: string,
+    date: string,
+    providerName: string,
+    cancelLink?: string,
+    location?: string,
+    price?: string,
+  ) {
+    console.log(`
       [EMAIL SEND] To: ${to}
       Subject: Booking Confirmed: ${serviceName} with ${providerName}
       Body:
         Hi ${clientName},
         Your booking for ${serviceName} on ${date} is confirmed!
-        ${location ? `Location: ${location}` : ''}
-        ${price ? `Price: ${price}` : ''}
+        ${location ? `Location: ${location}` : ""}
+        ${price ? `Price: ${price}` : ""}
         We look forward to seeing you.
-        ${cancelLink ? `Cancel: ${cancelLink}` : ''}
-    `)
-    }
+        ${cancelLink ? `Cancel: ${cancelLink}` : ""}
+    `);
+  }
 
-    async sendRescheduleProposal(to: string, clientName: string, link: string) {
-        console.log(`
+  async sendRescheduleProposal(to: string, clientName: string, link: string) {
+    console.log(`
       [EMAIL SEND] To: ${to}
       Subject: Reschedule Request
       Body:
         Hi ${clientName},
         Please click the link below to choose a new time for your appointment:
         ${link}
-    `)
-    }
+    `);
+  }
 
-    async sendRescheduleConfirmation(to: string, clientName: string, serviceName: string, date: string, providerName: string) {
-        console.log(`
+  async sendRescheduleConfirmation(
+    to: string,
+    clientName: string,
+    serviceName: string,
+    date: string,
+    providerName: string,
+  ) {
+    console.log(`
       [EMAIL SEND] To: ${to}
       Subject: Reschedule Confirmed: ${serviceName} with ${providerName}
       Body:
         Hi ${clientName},
         Your rescheduled appointment for ${serviceName} on ${date} is confirmed!
         We look forward to seeing you.
-    `)
-    }
+    `);
+  }
 
-    async sendCancellationNotice(to: string, clientName: string, serviceName: string, date: string) {
-        console.log(`
+  async sendCancellationNotice(
+    to: string,
+    clientName: string,
+    serviceName: string,
+    date: string,
+  ) {
+    console.log(`
       [EMAIL SEND] To: ${to}
       Subject: Appointment Cancelled
       Body:
         Hi ${clientName},
         Your appointment for ${serviceName} on ${date} has been cancelled.
-    `)
-    }
+    `);
+  }
 
-    async sendBookingReminder(to: string, clientName: string, serviceName: string, date: string, providerName: string, location?: string) {
-        console.log(`
+  async sendBookingReminder(
+    to: string,
+    clientName: string,
+    serviceName: string,
+    date: string,
+    providerName: string,
+    location?: string,
+  ) {
+    console.log(`
       [EMAIL SEND] To: ${to}
       Subject: Reminder: ${serviceName} Tomorrow
       Body:
@@ -63,15 +121,23 @@ export class ConsoleEmailService implements EmailService {
         Service: ${serviceName}
         Date & Time: ${date}
         Provider: ${providerName}
-        ${location ? `Location: ${location}` : ''}
+        ${location ? `Location: ${location}` : ""}
         See you soon!
-    `)
-    }
+    `);
+  }
 }
 
 // HTML Email Templates - Slotify Style (no gradients, dark theme)
-function createBookingConfirmationHTML(clientName: string, serviceName: string, date: string, providerName: string, cancelLink?: string, location?: string, price?: string): string {
-    return `
+function createBookingConfirmationHTML(
+  clientName: string,
+  serviceName: string,
+  date: string,
+  providerName: string,
+  cancelLink?: string,
+  location?: string,
+  price?: string,
+): string {
+  return `
 <!DOCTYPE html>
 <html>
 <head>
@@ -114,23 +180,31 @@ function createBookingConfirmationHTML(clientName: string, serviceName: string, 
                                             </tr>
                                         </table>
                                         
-                                        ${location ? `
+                                        ${
+                                          location
+                                            ? `
                                         <table cellpadding="0" cellspacing="0" style="margin-bottom: 8px;">
                                             <tr>
                                                 <td style="color: #a3a3a3; font-size: 14px; padding-right: 8px;">📍</td>
                                                 <td style="color: #e5e5e5; font-size: 14px;">${location}</td>
                                             </tr>
                                         </table>
-                                        ` : ''}
+                                        `
+                                            : ""
+                                        }
                                         
-                                        ${price ? `
+                                        ${
+                                          price
+                                            ? `
                                         <table cellpadding="0" cellspacing="0" style="margin-bottom: 8px;">
                                             <tr>
                                                 <td style="color: #a3a3a3; font-size: 14px; padding-right: 8px;">💰</td>
                                                 <td style="color: #e5e5e5; font-size: 14px;">${price}</td>
                                             </tr>
                                         </table>
-                                        ` : ''}
+                                        `
+                                            : ""
+                                        }
                                         
                                         <table cellpadding="0" cellspacing="0">
                                             <tr>
@@ -144,13 +218,17 @@ function createBookingConfirmationHTML(clientName: string, serviceName: string, 
                             
                             <p style="color: #a3a3a3; font-size: 16px; margin: 24px 0 0;">We look forward to seeing you!</p>
                             
-                            ${cancelLink ? `
+                            ${
+                              cancelLink
+                                ? `
                             <div style="margin-top: 32px; padding-top: 20px; border-top: 1px solid #404040;">
                                 <p style="font-size: 14px; color: #737373; margin: 0;">
                                     Need to cancel? <a href="${cancelLink}" style="color: #3b82f6; text-decoration: none;">Click here</a>
                                 </p>
                             </div>
-                            ` : ''}
+                            `
+                                : ""
+                            }
                         </td>
                     </tr>
                 </table>
@@ -168,11 +246,14 @@ function createBookingConfirmationHTML(clientName: string, serviceName: string, 
     </table>
 </body>
 </html>
-    `.trim()
+    `.trim();
 }
 
-function createRescheduleProposalHTML(clientName: string, link: string): string {
-    return `
+function createRescheduleProposalHTML(
+  clientName: string,
+  link: string,
+): string {
+  return `
 <!DOCTYPE html>
 <html>
 <head>
@@ -224,11 +305,16 @@ function createRescheduleProposalHTML(clientName: string, link: string): string 
     </table>
 </body>
 </html>
-    `.trim()
+    `.trim();
 }
 
-function createRescheduleConfirmationHTML(clientName: string, serviceName: string, date: string, providerName: string): string {
-    return `
+function createRescheduleConfirmationHTML(
+  clientName: string,
+  serviceName: string,
+  date: string,
+  providerName: string,
+): string {
+  return `
 <!DOCTYPE html>
 <html>
 <head>
@@ -299,11 +385,15 @@ function createRescheduleConfirmationHTML(clientName: string, serviceName: strin
     </table>
 </body>
 </html>
-    `.trim()
+    `.trim();
 }
 
-function createCancellationNoticeHTML(clientName: string, serviceName: string, date: string): string {
-    return `
+function createCancellationNoticeHTML(
+  clientName: string,
+  serviceName: string,
+  date: string,
+): string {
+  return `
 <!DOCTYPE html>
 <html>
 <head>
@@ -367,11 +457,17 @@ function createCancellationNoticeHTML(clientName: string, serviceName: string, d
     </table>
 </body>
 </html>
-    `.trim()
+    `.trim();
 }
 
-function createBookingReminderHTML(clientName: string, serviceName: string, date: string, providerName: string, location?: string): string {
-    return `
+function createBookingReminderHTML(
+  clientName: string,
+  serviceName: string,
+  date: string,
+  providerName: string,
+  location?: string,
+): string {
+  return `
 <!DOCTYPE html>
 <html>
 <head>
@@ -421,14 +517,18 @@ function createBookingReminderHTML(clientName: string, serviceName: string, date
                                             </tr>
                                         </table>
                                         
-                                        ${location ? `
+                                        ${
+                                          location
+                                            ? `
                                         <table cellpadding="0" cellspacing="0">
                                             <tr>
                                                 <td style="color: #a3a3a3; font-size: 14px; padding-right: 8px;">📍</td>
                                                 <td style="color: #e5e5e5; font-size: 14px;">${location}</td>
                                             </tr>
                                         </table>
-                                        ` : ''}
+                                        `
+                                            : ""
+                                        }
                                     </td>
                                 </tr>
                             </table>
@@ -452,218 +552,337 @@ function createBookingReminderHTML(clientName: string, serviceName: string, date
     </table>
 </body>
 </html>
-    `.trim()
+    `.trim();
 }
 
 export class SMTPEmailService implements EmailService {
-    private transporter: any
-    private fromEmail: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private transporter: any;
+  private fromEmail: string;
 
-    constructor() {
-        const nodemailer = require('nodemailer')
-        this.fromEmail = process.env.SMTP_FROM_EMAIL || 'noreply@slotify.com'
+  constructor() {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const nodemailer = require("nodemailer");
+    this.fromEmail = process.env.SMTP_FROM_EMAIL || "noreply@slotify.com";
 
-        const port = parseInt(process.env.SMTP_PORT || '587')
-        const isGmail = process.env.SMTP_HOST?.includes('gmail.com')
+    const port = parseInt(process.env.SMTP_PORT || "587");
+    const isGmail = process.env.SMTP_HOST?.includes("gmail.com");
 
-        this.transporter = nodemailer.createTransport({
-            host: process.env.SMTP_HOST || '127.0.0.1',
-            port: port,
-            secure: port === 465,
-            auth: process.env.SMTP_USER ? {
-                user: process.env.SMTP_USER,
-                pass: process.env.SMTP_PASS
-            } : undefined,
-            ...(isGmail && {
-                service: 'gmail'
-            })
-        })
+    this.transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || "127.0.0.1",
+      port: port,
+      secure: port === 465,
+      auth: process.env.SMTP_USER
+        ? {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS,
+          }
+        : undefined,
+      ...(isGmail && {
+        service: "gmail",
+      }),
+    });
 
-        console.log('[SMTP] Transporter created:', {
-            host: process.env.SMTP_HOST || '127.0.0.1',
-            port: port,
-            secure: port === 465,
-            from: this.fromEmail,
-            service: isGmail ? 'Gmail' : 'Custom SMTP'
-        })
+    console.log("[SMTP] Transporter created:", {
+      host: process.env.SMTP_HOST || "127.0.0.1",
+      port: port,
+      secure: port === 465,
+      from: this.fromEmail,
+      service: isGmail ? "Gmail" : "Custom SMTP",
+    });
+  }
+
+  async sendBookingConfirmation(
+    to: string,
+    clientName: string,
+    serviceName: string,
+    date: string,
+    providerName: string,
+    cancelLink?: string,
+    location?: string,
+    price?: string,
+  ): Promise<void> {
+    try {
+      const info = await this.transporter.sendMail({
+        from: this.fromEmail,
+        to,
+        subject: `Booking Confirmed: ${serviceName} with ${providerName}`,
+        html: createBookingConfirmationHTML(
+          clientName,
+          serviceName,
+          date,
+          providerName,
+          cancelLink,
+          location,
+          price,
+        ),
+      });
+      console.log("[SMTP] Email sent successfully:", info.messageId);
+    } catch (error) {
+      console.error("[SMTP] Failed to send booking confirmation email:", error);
+      throw error;
     }
+  }
 
-    async sendBookingConfirmation(to: string, clientName: string, serviceName: string, date: string, providerName: string, cancelLink?: string, location?: string, price?: string): Promise<void> {
-        try {
-            const info = await this.transporter.sendMail({
-                from: this.fromEmail,
-                to,
-                subject: `Booking Confirmed: ${serviceName} with ${providerName}`,
-                html: createBookingConfirmationHTML(clientName, serviceName, date, providerName, cancelLink, location, price)
-            })
-            console.log('[SMTP] Email sent successfully:', info.messageId)
-        } catch (error) {
-            console.error('[SMTP] Failed to send booking confirmation email:', error)
-            throw error
-        }
+  async sendRescheduleProposal(
+    to: string,
+    clientName: string,
+    link: string,
+  ): Promise<void> {
+    try {
+      const info = await this.transporter.sendMail({
+        from: this.fromEmail,
+        to,
+        subject: "Reschedule Request for Your Appointment",
+        html: createRescheduleProposalHTML(clientName, link),
+      });
+      console.log("[SMTP] Reschedule proposal sent:", info.messageId);
+    } catch (error) {
+      console.error("[SMTP] Failed to send reschedule proposal email:", error);
+      throw error;
     }
+  }
 
-    async sendRescheduleProposal(to: string, clientName: string, link: string): Promise<void> {
-        try {
-            const info = await this.transporter.sendMail({
-                from: this.fromEmail,
-                to,
-                subject: 'Reschedule Request for Your Appointment',
-                html: createRescheduleProposalHTML(clientName, link)
-            })
-            console.log('[SMTP] Reschedule proposal sent:', info.messageId)
-        } catch (error) {
-            console.error('[SMTP] Failed to send reschedule proposal email:', error)
-            throw error
-        }
+  async sendRescheduleConfirmation(
+    to: string,
+    clientName: string,
+    serviceName: string,
+    date: string,
+    providerName: string,
+  ): Promise<void> {
+    try {
+      const info = await this.transporter.sendMail({
+        from: this.fromEmail,
+        to,
+        subject: `Reschedule Confirmed: ${serviceName} with ${providerName}`,
+        html: createRescheduleConfirmationHTML(
+          clientName,
+          serviceName,
+          date,
+          providerName,
+        ),
+      });
+      console.log("[SMTP] Reschedule confirmation sent:", info.messageId);
+    } catch (error) {
+      console.error(
+        "[SMTP] Failed to send reschedule confirmation email:",
+        error,
+      );
+      throw error;
     }
+  }
 
-    async sendRescheduleConfirmation(to: string, clientName: string, serviceName: string, date: string, providerName: string): Promise<void> {
-        try {
-            const info = await this.transporter.sendMail({
-                from: this.fromEmail,
-                to,
-                subject: `Reschedule Confirmed: ${serviceName} with ${providerName}`,
-                html: createRescheduleConfirmationHTML(clientName, serviceName, date, providerName)
-            })
-            console.log('[SMTP] Reschedule confirmation sent:', info.messageId)
-        } catch (error) {
-            console.error('[SMTP] Failed to send reschedule confirmation email:', error)
-            throw error
-        }
+  async sendCancellationNotice(
+    to: string,
+    clientName: string,
+    serviceName: string,
+    date: string,
+  ): Promise<void> {
+    try {
+      const info = await this.transporter.sendMail({
+        from: this.fromEmail,
+        to,
+        subject: "Appointment Cancelled",
+        html: createCancellationNoticeHTML(clientName, serviceName, date),
+      });
+      console.log("[SMTP] Cancellation notice sent:", info.messageId);
+    } catch (error) {
+      console.error("[SMTP] Failed to send cancellation notice email:", error);
+      throw error;
     }
+  }
 
-    async sendCancellationNotice(to: string, clientName: string, serviceName: string, date: string): Promise<void> {
-        try {
-            const info = await this.transporter.sendMail({
-                from: this.fromEmail,
-                to,
-                subject: 'Appointment Cancelled',
-                html: createCancellationNoticeHTML(clientName, serviceName, date)
-            })
-            console.log('[SMTP] Cancellation notice sent:', info.messageId)
-        } catch (error) {
-            console.error('[SMTP] Failed to send cancellation notice email:', error)
-            throw error
-        }
+  async sendBookingReminder(
+    to: string,
+    clientName: string,
+    serviceName: string,
+    date: string,
+    providerName: string,
+    location?: string,
+  ): Promise<void> {
+    try {
+      const info = await this.transporter.sendMail({
+        from: this.fromEmail,
+        to,
+        subject: `Reminder: ${serviceName} Tomorrow!`,
+        html: createBookingReminderHTML(
+          clientName,
+          serviceName,
+          date,
+          providerName,
+          location,
+        ),
+      });
+      console.log("[SMTP] Booking reminder sent:", info.messageId);
+    } catch (error) {
+      console.error("[SMTP] Failed to send booking reminder email:", error);
+      throw error;
     }
-
-    async sendBookingReminder(to: string, clientName: string, serviceName: string, date: string, providerName: string, location?: string): Promise<void> {
-        try {
-            const info = await this.transporter.sendMail({
-                from: this.fromEmail,
-                to,
-                subject: `Reminder: ${serviceName} Tomorrow!`,
-                html: createBookingReminderHTML(clientName, serviceName, date, providerName, location)
-            })
-            console.log('[SMTP] Booking reminder sent:', info.messageId)
-        } catch (error) {
-            console.error('[SMTP] Failed to send booking reminder email:', error)
-            throw error
-        }
-    }
+  }
 }
 
 export class ResendEmailService implements EmailService {
-    private resend: any
-    private fromEmail: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private resend: any;
+  private fromEmail: string;
 
-    constructor() {
-        const { Resend } = require('resend')
-        this.resend = new Resend(process.env.RESEND_API_KEY)
-        this.fromEmail = process.env.RESEND_FROM_EMAIL || 'noreply@slotify.com'
+  constructor() {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { Resend } = require("resend");
+    this.resend = new Resend(process.env.RESEND_API_KEY);
+    this.fromEmail = process.env.RESEND_FROM_EMAIL || "noreply@slotify.com";
+  }
+
+  async sendBookingConfirmation(
+    to: string,
+    clientName: string,
+    serviceName: string,
+    date: string,
+    providerName: string,
+    cancelLink?: string,
+    location?: string,
+    price?: string,
+  ): Promise<void> {
+    try {
+      const result = await this.resend.emails.send({
+        from: this.fromEmail,
+        to,
+        subject: `Booking Confirmed: ${serviceName} with ${providerName}`,
+        html: createBookingConfirmationHTML(
+          clientName,
+          serviceName,
+          date,
+          providerName,
+          cancelLink,
+          location,
+          price,
+        ),
+      });
+      console.log(
+        "[RESEND] Email send result:",
+        JSON.stringify(result, null, 2),
+      );
+
+      if (result.error) {
+        throw new Error(`Resend API error: ${result.error.message}`);
+      }
+    } catch (error) {
+      console.error(
+        "[RESEND] Failed to send booking confirmation email:",
+        error,
+      );
+      throw error;
     }
+  }
 
-    async sendBookingConfirmation(to: string, clientName: string, serviceName: string, date: string, providerName: string, cancelLink?: string, location?: string, price?: string): Promise<void> {
-        try {
-            const result = await this.resend.emails.send({
-                from: this.fromEmail,
-                to,
-                subject: `Booking Confirmed: ${serviceName} with ${providerName}`,
-                html: createBookingConfirmationHTML(clientName, serviceName, date, providerName, cancelLink, location, price)
-            })
-            console.log('[RESEND] Email send result:', JSON.stringify(result, null, 2))
-
-            if (result.error) {
-                throw new Error(`Resend API error: ${result.error.message}`)
-            }
-        } catch (error) {
-            console.error('[RESEND] Failed to send booking confirmation email:', error)
-            throw error
-        }
+  async sendRescheduleProposal(
+    to: string,
+    clientName: string,
+    link: string,
+  ): Promise<void> {
+    try {
+      await this.resend.emails.send({
+        from: this.fromEmail,
+        to,
+        subject: "Reschedule Request for Your Appointment",
+        html: createRescheduleProposalHTML(clientName, link),
+      });
+    } catch (error) {
+      console.error("Failed to send reschedule proposal email:", error);
+      throw error;
     }
+  }
 
-    async sendRescheduleProposal(to: string, clientName: string, link: string): Promise<void> {
-        try {
-            await this.resend.emails.send({
-                from: this.fromEmail,
-                to,
-                subject: 'Reschedule Request for Your Appointment',
-                html: createRescheduleProposalHTML(clientName, link)
-            })
-        } catch (error) {
-            console.error('Failed to send reschedule proposal email:', error)
-            throw error
-        }
+  async sendRescheduleConfirmation(
+    to: string,
+    clientName: string,
+    serviceName: string,
+    date: string,
+    providerName: string,
+  ): Promise<void> {
+    try {
+      await this.resend.emails.send({
+        from: this.fromEmail,
+        to,
+        subject: `Reschedule Confirmed: ${serviceName} with ${providerName}`,
+        html: createRescheduleConfirmationHTML(
+          clientName,
+          serviceName,
+          date,
+          providerName,
+        ),
+      });
+    } catch (error) {
+      console.error("Failed to send reschedule confirmation email:", error);
+      throw error;
     }
+  }
 
-    async sendRescheduleConfirmation(to: string, clientName: string, serviceName: string, date: string, providerName: string): Promise<void> {
-        try {
-            await this.resend.emails.send({
-                from: this.fromEmail,
-                to,
-                subject: `Reschedule Confirmed: ${serviceName} with ${providerName}`,
-                html: createRescheduleConfirmationHTML(clientName, serviceName, date, providerName)
-            })
-        } catch (error) {
-            console.error('Failed to send reschedule confirmation email:', error)
-            throw error
-        }
+  async sendCancellationNotice(
+    to: string,
+    clientName: string,
+    serviceName: string,
+    date: string,
+  ): Promise<void> {
+    try {
+      await this.resend.emails.send({
+        from: this.fromEmail,
+        to,
+        subject: "Appointment Cancelled",
+        html: createCancellationNoticeHTML(clientName, serviceName, date),
+      });
+    } catch (error) {
+      console.error("Failed to send cancellation notice email:", error);
+      throw error;
     }
+  }
 
-    async sendCancellationNotice(to: string, clientName: string, serviceName: string, date: string): Promise<void> {
-        try {
-            await this.resend.emails.send({
-                from: this.fromEmail,
-                to,
-                subject: 'Appointment Cancelled',
-                html: createCancellationNoticeHTML(clientName, serviceName, date)
-            })
-        } catch (error) {
-            console.error('Failed to send cancellation notice email:', error)
-            throw error
-        }
+  async sendBookingReminder(
+    to: string,
+    clientName: string,
+    serviceName: string,
+    date: string,
+    providerName: string,
+    location?: string,
+  ): Promise<void> {
+    try {
+      await this.resend.emails.send({
+        from: this.fromEmail,
+        to,
+        subject: `Reminder: ${serviceName} Tomorrow!`,
+        html: createBookingReminderHTML(
+          clientName,
+          serviceName,
+          date,
+          providerName,
+          location,
+        ),
+      });
+    } catch (error) {
+      console.error("Failed to send booking reminder email:", error);
+      throw error;
     }
-
-    async sendBookingReminder(to: string, clientName: string, serviceName: string, date: string, providerName: string, location?: string): Promise<void> {
-        try {
-            await this.resend.emails.send({
-                from: this.fromEmail,
-                to,
-                subject: `Reminder: ${serviceName} Tomorrow!`,
-                html: createBookingReminderHTML(clientName, serviceName, date, providerName, location)
-            })
-        } catch (error) {
-            console.error('Failed to send booking reminder email:', error)
-            throw error
-        }
-    }
+  }
 }
 
 // Choose email service based on environment variable
-const useSmtp = !!process.env.SMTP_HOST || process.env.USE_SMTP === 'true'
-const useResend = !useSmtp && !!process.env.RESEND_API_KEY
+const useSmtp = !!process.env.SMTP_HOST || process.env.USE_SMTP === "true";
+const useResend = !useSmtp && !!process.env.RESEND_API_KEY;
 
-console.log('[EMAIL SERVICE] Initializing...', {
-    useSMTP: useSmtp,
-    hasResendKey: !!process.env.RESEND_API_KEY,
-    smtpHost: process.env.SMTP_HOST,
-    fromEmail: process.env.SMTP_FROM_EMAIL || process.env.RESEND_FROM_EMAIL,
-    service: useSmtp ? 'SMTPEmailService (Mailpit)' : useResend ? 'ResendEmailService' : 'ConsoleEmailService'
-})
+console.log("[EMAIL SERVICE] Initializing...", {
+  useSMTP: useSmtp,
+  hasResendKey: !!process.env.RESEND_API_KEY,
+  smtpHost: process.env.SMTP_HOST,
+  fromEmail: process.env.SMTP_FROM_EMAIL || process.env.RESEND_FROM_EMAIL,
+  service: useSmtp
+    ? "SMTPEmailService (Mailpit)"
+    : useResend
+      ? "ResendEmailService"
+      : "ConsoleEmailService",
+});
 
 export const emailService = useSmtp
-    ? new SMTPEmailService()
-    : useResend
-        ? new ResendEmailService()
-        : new ConsoleEmailService()
+  ? new SMTPEmailService()
+  : useResend
+    ? new ResendEmailService()
+    : new ConsoleEmailService();
