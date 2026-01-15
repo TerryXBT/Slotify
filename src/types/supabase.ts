@@ -7,6 +7,11 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.1"
+  }
   graphql_public: {
     Tables: {
       [_ in never]: never
@@ -66,6 +71,42 @@ export type Database = {
           },
         ]
       }
+      audit_logs: {
+        Row: {
+          action: string
+          changes: Json | null
+          created_at: string
+          entity_id: string
+          entity_type: string
+          id: string
+          metadata: Json | null
+          user_email: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          changes?: Json | null
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          id?: string
+          metadata?: Json | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          changes?: Json | null
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          metadata?: Json | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       availability_rules: {
         Row: {
           day_of_week: number
@@ -102,6 +143,8 @@ export type Database = {
         Row: {
           buffer_after_minutes: number | null
           buffer_before_minutes: number | null
+          default_buffer_minutes: number | null
+          default_cancellation_policy: string | null
           horizon_days: number | null
           min_notice_minutes: number | null
           provider_id: string
@@ -109,6 +152,8 @@ export type Database = {
         Insert: {
           buffer_after_minutes?: number | null
           buffer_before_minutes?: number | null
+          default_buffer_minutes?: number | null
+          default_cancellation_policy?: string | null
           horizon_days?: number | null
           min_notice_minutes?: number | null
           provider_id: string
@@ -116,6 +161,8 @@ export type Database = {
         Update: {
           buffer_after_minutes?: number | null
           buffer_before_minutes?: number | null
+          default_buffer_minutes?: number | null
+          default_cancellation_policy?: string | null
           horizon_days?: number | null
           min_notice_minutes?: number | null
           provider_id?: string
@@ -132,7 +179,7 @@ export type Database = {
       }
       bookings: {
         Row: {
-          client_email: string | null
+          client_email: string
           client_name: string
           client_phone: string
           created_at: string | null
@@ -146,7 +193,7 @@ export type Database = {
           status: string
         }
         Insert: {
-          client_email?: string | null
+          client_email: string
           client_name: string
           client_phone: string
           created_at?: string | null
@@ -160,7 +207,7 @@ export type Database = {
           status: string
         }
         Update: {
-          client_email?: string | null
+          client_email?: string
           client_name?: string
           client_phone?: string
           created_at?: string | null
@@ -340,6 +387,8 @@ export type Database = {
       }
       services: {
         Row: {
+          buffer_minutes: number | null
+          cancellation_policy: string | null
           created_at: string | null
           default_location: string | null
           deleted_at: string | null
@@ -351,9 +400,12 @@ export type Database = {
           location_type: string | null
           name: string
           price_cents: number | null
+          price_negotiable: boolean | null
           provider_id: string
         }
         Insert: {
+          buffer_minutes?: number | null
+          cancellation_policy?: string | null
           created_at?: string | null
           default_location?: string | null
           deleted_at?: string | null
@@ -365,9 +417,12 @@ export type Database = {
           location_type?: string | null
           name: string
           price_cents?: number | null
+          price_negotiable?: boolean | null
           provider_id: string
         }
         Update: {
+          buffer_minutes?: number | null
+          cancellation_policy?: string | null
           created_at?: string | null
           default_location?: string | null
           deleted_at?: string | null
@@ -379,6 +434,7 @@ export type Database = {
           location_type?: string | null
           name?: string
           price_cents?: number | null
+          price_negotiable?: boolean | null
           provider_id?: string
         }
         Relationships: [
@@ -404,7 +460,7 @@ export type Database = {
         Args: {
           p_client_email: string
           p_client_name: string
-          p_client_phone?: string
+          p_client_phone: string
           p_notes?: string
           p_provider_id: string
           p_service_id: string
@@ -412,6 +468,54 @@ export type Database = {
         }
         Returns: Json
       }
+      create_service_with_settings: {
+        Args: {
+          p_buffer_minutes: number
+          p_cancellation_policy: string
+          p_default_location: string
+          p_description: string
+          p_duration_minutes: number
+          p_location_type: string
+          p_name: string
+          p_price_cents: number
+          p_price_negotiable: boolean
+          p_provider_id: string
+        }
+        Returns: string
+      }
+      update_service_with_settings: {
+        Args: {
+          p_buffer_minutes: number
+          p_cancellation_policy: string
+          p_default_location: string
+          p_description: string
+          p_duration_minutes: number
+          p_is_active: boolean
+          p_location_type: string
+          p_name: string
+          p_price_cents: number
+          p_price_negotiable: boolean
+          p_provider_id: string
+          p_service_id: string
+        }
+        Returns: boolean
+      }
+      uuid_generate_v1: { Args: never; Returns: string }
+      uuid_generate_v1mc: { Args: never; Returns: string }
+      uuid_generate_v3: {
+        Args: { name: string; namespace: string }
+        Returns: string
+      }
+      uuid_generate_v4: { Args: never; Returns: string }
+      uuid_generate_v5: {
+        Args: { name: string; namespace: string }
+        Returns: string
+      }
+      uuid_nil: { Args: never; Returns: string }
+      uuid_ns_dns: { Args: never; Returns: string }
+      uuid_ns_oid: { Args: never; Returns: string }
+      uuid_ns_url: { Args: never; Returns: string }
+      uuid_ns_x500: { Args: never; Returns: string }
     }
     Enums: {
       [_ in never]: never
@@ -547,4 +651,3 @@ export const Constants = {
     Enums: {},
   },
 } as const
-

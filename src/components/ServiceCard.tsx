@@ -10,6 +10,7 @@ interface Service {
     name: string
     duration_minutes: number
     price_cents: number | null
+    price_negotiable?: boolean | null
     is_active: boolean | null
     description?: string | null
 }
@@ -58,12 +59,11 @@ function ServiceCard({ service, username }: ServiceCardProps) {
         }
     ], [handleCopyLink, handleEditService])
 
-    const priceDisplay = useMemo(() =>
-        service.price_cents == null || service.price_cents === 0
-            ? 'Free'
-            : `$${(service.price_cents / 100).toFixed(0)}`,
-        [service.price_cents]
-    )
+    const priceDisplay = useMemo(() => {
+        if (service.price_negotiable) return 'Price TBD'
+        if (service.price_cents == null || service.price_cents === 0) return 'Free'
+        return `$${(service.price_cents / 100).toFixed(0)}`
+    }, [service.price_cents, service.price_negotiable])
 
     return (
         <>

@@ -15,24 +15,29 @@ export default async function EditServicePage(props: PageProps) {
 
     if (!user) redirect('/login')
 
-    // Fetch Service
-    const { data: service } = await supabase
-        .from('services')
-        .select('*')
-        .eq('id', id)
-        .eq('provider_id', user.id)
-        .single()
+    // Fetch Service, Profile, and Availability Settings in parallel
+    const [{ data: service }, { data: profile }, { data: availabilitySettings }] = await Promise.all([
+        supabase
+            .from('services')
+            .select('*')
+            .eq('id', id)
+            .eq('provider_id', user.id)
+            .single(),
+        supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single(),
+        supabase
+            .from('availability_settings')
+            .select('default_buffer_minutes, default_cancellation_policy')
+            .eq('provider_id', user.id)
+            .single()
+    ])
 
     if (!service) {
         notFound()
     }
 
-    // Fetch Profile for back navigation context if needed
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single()
-
-    return <EditServiceView service={service} profile={profile} />
+    return <EditServiceView service={service} profile={profile} availabilitySettings={availabilitySettings} />
 }

@@ -8,12 +8,19 @@ export default async function SettingsPage() {
 
     if (!user) redirect('/login')
 
-    // Fetch Profile
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single()
+    // Fetch Profile and Availability Settings in parallel
+    const [{ data: profile }, { data: availabilitySettings }] = await Promise.all([
+        supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single(),
+        supabase
+            .from('availability_settings')
+            .select('default_buffer_minutes, default_cancellation_policy')
+            .eq('provider_id', user.id)
+            .single()
+    ])
 
     // If profile doesn't exist, show error
     if (!profile) {
@@ -39,5 +46,5 @@ export default async function SettingsPage() {
         )
     }
 
-    return <SettingsView profile={profile} />
+    return <SettingsView profile={profile} availabilitySettings={availabilitySettings} />
 }

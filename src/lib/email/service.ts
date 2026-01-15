@@ -1,5 +1,5 @@
 export interface EmailService {
-    sendBookingConfirmation(to: string, clientName: string, serviceName: string, date: string, providerName: string, cancelLink?: string): Promise<void>
+    sendBookingConfirmation(to: string, clientName: string, serviceName: string, date: string, providerName: string, cancelLink?: string, location?: string, price?: string): Promise<void>
     sendRescheduleProposal(to: string, clientName: string, link: string): Promise<void>
     sendRescheduleConfirmation(to: string, clientName: string, serviceName: string, date: string, providerName: string): Promise<void>
     sendCancellationNotice(to: string, clientName: string, serviceName: string, date: string): Promise<void>
@@ -7,13 +7,15 @@ export interface EmailService {
 }
 
 export class ConsoleEmailService implements EmailService {
-    async sendBookingConfirmation(to: string, clientName: string, serviceName: string, date: string, providerName: string, cancelLink?: string) {
+    async sendBookingConfirmation(to: string, clientName: string, serviceName: string, date: string, providerName: string, cancelLink?: string, location?: string, price?: string) {
         console.log(`
       [EMAIL SEND] To: ${to}
       Subject: Booking Confirmed: ${serviceName} with ${providerName}
       Body:
         Hi ${clientName},
         Your booking for ${serviceName} on ${date} is confirmed!
+        ${location ? `Location: ${location}` : ''}
+        ${price ? `Price: ${price}` : ''}
         We look forward to seeing you.
         ${cancelLink ? `Cancel: ${cancelLink}` : ''}
     `)
@@ -67,8 +69,8 @@ export class ConsoleEmailService implements EmailService {
     }
 }
 
-// HTML Email Templates
-function createBookingConfirmationHTML(clientName: string, serviceName: string, date: string, providerName: string, cancelLink?: string): string {
+// HTML Email Templates - Slotify Style (no gradients, dark theme)
+function createBookingConfirmationHTML(clientName: string, serviceName: string, date: string, providerName: string, cancelLink?: string, location?: string, price?: string): string {
     return `
 <!DOCTYPE html>
 <html>
@@ -76,25 +78,94 @@ function createBookingConfirmationHTML(clientName: string, serviceName: string, 
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
-        <h1 style="color: white; margin: 0;">Booking Confirmed!</h1>
-    </div>
-    <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
-        <p style="font-size: 16px;">Hi ${clientName},</p>
-        <p style="font-size: 16px;">Great news! Your booking has been confirmed.</p>
-        <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #667eea;">
-            <p style="margin: 5px 0;"><strong>Service:</strong> ${serviceName}</p>
-            <p style="margin: 5px 0;"><strong>Date & Time:</strong> ${date}</p>
-            <p style="margin: 5px 0;"><strong>Provider:</strong> ${providerName}</p>
-        </div>
-        <p style="font-size: 16px;">We look forward to seeing you!</p>
-        ${cancelLink ? `
-        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;">
-            <p style="font-size: 14px; color: #666;">Need to cancel? <a href="${cancelLink}" style="color: #667eea;">Click here</a></p>
-        </div>
-        ` : ''}
-    </div>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #1a1a1a;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto; padding: 20px;">
+        <tr>
+            <td>
+                <!-- Header -->
+                <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #2a2a2a; border-radius: 16px 16px 0 0; padding: 32px; text-align: center;">
+                    <tr>
+                        <td>
+                            <div style="width: 56px; height: 56px; background-color: #22c55e; border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
+                                <span style="color: white; font-size: 28px;">✓</span>
+                            </div>
+                            <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 600;">Booking Confirmed</h1>
+                        </td>
+                    </tr>
+                </table>
+                
+                <!-- Body -->
+                <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #242424; border-radius: 0 0 16px 16px; padding: 32px;">
+                    <tr>
+                        <td>
+                            <p style="color: #e5e5e5; font-size: 16px; margin: 0 0 20px;">Hi ${clientName},</p>
+                            <p style="color: #a3a3a3; font-size: 16px; margin: 0 0 24px;">Great news! Your booking has been confirmed.</p>
+                            
+                            <!-- Booking Details Card -->
+                            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #333333; border-radius: 12px; padding: 20px; border-left: 4px solid #3b82f6;">
+                                <tr>
+                                    <td>
+                                        <p style="color: #ffffff; font-size: 18px; font-weight: 600; margin: 0 0 16px;">${serviceName}</p>
+                                        
+                                        <table cellpadding="0" cellspacing="0" style="margin-bottom: 8px;">
+                                            <tr>
+                                                <td style="color: #a3a3a3; font-size: 14px; padding-right: 8px;">📅</td>
+                                                <td style="color: #e5e5e5; font-size: 14px;">${date}</td>
+                                            </tr>
+                                        </table>
+                                        
+                                        ${location ? `
+                                        <table cellpadding="0" cellspacing="0" style="margin-bottom: 8px;">
+                                            <tr>
+                                                <td style="color: #a3a3a3; font-size: 14px; padding-right: 8px;">📍</td>
+                                                <td style="color: #e5e5e5; font-size: 14px;">${location}</td>
+                                            </tr>
+                                        </table>
+                                        ` : ''}
+                                        
+                                        ${price ? `
+                                        <table cellpadding="0" cellspacing="0" style="margin-bottom: 8px;">
+                                            <tr>
+                                                <td style="color: #a3a3a3; font-size: 14px; padding-right: 8px;">💰</td>
+                                                <td style="color: #e5e5e5; font-size: 14px;">${price}</td>
+                                            </tr>
+                                        </table>
+                                        ` : ''}
+                                        
+                                        <table cellpadding="0" cellspacing="0">
+                                            <tr>
+                                                <td style="color: #a3a3a3; font-size: 14px; padding-right: 8px;">👤</td>
+                                                <td style="color: #e5e5e5; font-size: 14px;">${providerName}</td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <p style="color: #a3a3a3; font-size: 16px; margin: 24px 0 0;">We look forward to seeing you!</p>
+                            
+                            ${cancelLink ? `
+                            <div style="margin-top: 32px; padding-top: 20px; border-top: 1px solid #404040;">
+                                <p style="font-size: 14px; color: #737373; margin: 0;">
+                                    Need to cancel? <a href="${cancelLink}" style="color: #3b82f6; text-decoration: none;">Click here</a>
+                                </p>
+                            </div>
+                            ` : ''}
+                        </td>
+                    </tr>
+                </table>
+                
+                <!-- Footer -->
+                <table width="100%" cellpadding="0" cellspacing="0" style="padding: 24px; text-align: center;">
+                    <tr>
+                        <td>
+                            <p style="color: #525252; font-size: 12px; margin: 0;">Powered by Slotify</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>
     `.trim()
@@ -108,19 +179,49 @@ function createRescheduleProposalHTML(clientName: string, link: string): string 
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-    <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
-        <h1 style="color: white; margin: 0;">Reschedule Request</h1>
-    </div>
-    <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
-        <p style="font-size: 16px;">Hi ${clientName},</p>
-        <p style="font-size: 16px;">Your provider has requested to reschedule your appointment.</p>
-        <p style="font-size: 16px;">Please click the button below to choose a new time:</p>
-        <div style="text-align: center; margin: 30px 0;">
-            <a href="${link}" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">Choose New Time</a>
-        </div>
-        <p style="font-size: 14px; color: #666;">Or copy this link: <a href="${link}" style="color: #f5576c;">${link}</a></p>
-    </div>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #1a1a1a;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto; padding: 20px;">
+        <tr>
+            <td>
+                <!-- Header -->
+                <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #2a2a2a; border-radius: 16px 16px 0 0; padding: 32px; text-align: center;">
+                    <tr>
+                        <td>
+                            <div style="width: 56px; height: 56px; background-color: #f59e0b; border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
+                                <span style="color: white; font-size: 28px;">🔄</span>
+                            </div>
+                            <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 600;">Reschedule Request</h1>
+                        </td>
+                    </tr>
+                </table>
+                
+                <!-- Body -->
+                <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #242424; border-radius: 0 0 16px 16px; padding: 32px;">
+                    <tr>
+                        <td>
+                            <p style="color: #e5e5e5; font-size: 16px; margin: 0 0 20px;">Hi ${clientName},</p>
+                            <p style="color: #a3a3a3; font-size: 16px; margin: 0 0 24px;">Your provider has requested to reschedule your appointment. Please choose a new time that works for you.</p>
+                            
+                            <div style="text-align: center; margin: 32px 0;">
+                                <a href="${link}" style="background-color: #3b82f6; color: white; padding: 14px 32px; text-decoration: none; border-radius: 10px; display: inline-block; font-weight: 600; font-size: 16px;">Choose New Time</a>
+                            </div>
+                            
+                            <p style="font-size: 14px; color: #737373; text-align: center;">Or copy this link: <a href="${link}" style="color: #3b82f6;">${link}</a></p>
+                        </td>
+                    </tr>
+                </table>
+                
+                <!-- Footer -->
+                <table width="100%" cellpadding="0" cellspacing="0" style="padding: 24px; text-align: center;">
+                    <tr>
+                        <td>
+                            <p style="color: #525252; font-size: 12px; margin: 0;">Powered by Slotify</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>
     `.trim()
@@ -134,20 +235,68 @@ function createRescheduleConfirmationHTML(clientName: string, serviceName: strin
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-    <div style="background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
-        <h1 style="color: white; margin: 0;">Reschedule Confirmed!</h1>
-    </div>
-    <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
-        <p style="font-size: 16px;">Hi ${clientName},</p>
-        <p style="font-size: 16px;">Your appointment has been successfully rescheduled.</p>
-        <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #84fab0;">
-            <p style="margin: 5px 0;"><strong>Service:</strong> ${serviceName}</p>
-            <p style="margin: 5px 0;"><strong>New Date & Time:</strong> ${date}</p>
-            <p style="margin: 5px 0;"><strong>Provider:</strong> ${providerName}</p>
-        </div>
-        <p style="font-size: 16px;">We look forward to seeing you at the new time!</p>
-    </div>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #1a1a1a;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto; padding: 20px;">
+        <tr>
+            <td>
+                <!-- Header -->
+                <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #2a2a2a; border-radius: 16px 16px 0 0; padding: 32px; text-align: center;">
+                    <tr>
+                        <td>
+                            <div style="width: 56px; height: 56px; background-color: #22c55e; border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
+                                <span style="color: white; font-size: 28px;">✓</span>
+                            </div>
+                            <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 600;">Reschedule Confirmed</h1>
+                        </td>
+                    </tr>
+                </table>
+                
+                <!-- Body -->
+                <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #242424; border-radius: 0 0 16px 16px; padding: 32px;">
+                    <tr>
+                        <td>
+                            <p style="color: #e5e5e5; font-size: 16px; margin: 0 0 20px;">Hi ${clientName},</p>
+                            <p style="color: #a3a3a3; font-size: 16px; margin: 0 0 24px;">Your appointment has been successfully rescheduled.</p>
+                            
+                            <!-- Booking Details Card -->
+                            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #333333; border-radius: 12px; padding: 20px; border-left: 4px solid #22c55e;">
+                                <tr>
+                                    <td>
+                                        <p style="color: #ffffff; font-size: 18px; font-weight: 600; margin: 0 0 16px;">${serviceName}</p>
+                                        
+                                        <table cellpadding="0" cellspacing="0" style="margin-bottom: 8px;">
+                                            <tr>
+                                                <td style="color: #a3a3a3; font-size: 14px; padding-right: 8px;">📅</td>
+                                                <td style="color: #e5e5e5; font-size: 14px;"><strong>New Time:</strong> ${date}</td>
+                                            </tr>
+                                        </table>
+                                        
+                                        <table cellpadding="0" cellspacing="0">
+                                            <tr>
+                                                <td style="color: #a3a3a3; font-size: 14px; padding-right: 8px;">👤</td>
+                                                <td style="color: #e5e5e5; font-size: 14px;">${providerName}</td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <p style="color: #a3a3a3; font-size: 16px; margin: 24px 0 0;">We look forward to seeing you at the new time!</p>
+                        </td>
+                    </tr>
+                </table>
+                
+                <!-- Footer -->
+                <table width="100%" cellpadding="0" cellspacing="0" style="padding: 24px; text-align: center;">
+                    <tr>
+                        <td>
+                            <p style="color: #525252; font-size: 12px; margin: 0;">Powered by Slotify</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>
     `.trim()
@@ -161,19 +310,61 @@ function createCancellationNoticeHTML(clientName: string, serviceName: string, d
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-    <div style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
-        <h1 style="color: white; margin: 0;">Appointment Cancelled</h1>
-    </div>
-    <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
-        <p style="font-size: 16px;">Hi ${clientName},</p>
-        <p style="font-size: 16px;">Your appointment has been cancelled.</p>
-        <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ff6b6b;">
-            <p style="margin: 5px 0;"><strong>Service:</strong> ${serviceName}</p>
-            <p style="margin: 5px 0;"><strong>Date & Time:</strong> ${date}</p>
-        </div>
-        <p style="font-size: 16px;">If you'd like to book again in the future, we'd be happy to see you.</p>
-    </div>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #1a1a1a;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto; padding: 20px;">
+        <tr>
+            <td>
+                <!-- Header -->
+                <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #2a2a2a; border-radius: 16px 16px 0 0; padding: 32px; text-align: center;">
+                    <tr>
+                        <td>
+                            <div style="width: 56px; height: 56px; background-color: #ef4444; border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
+                                <span style="color: white; font-size: 28px;">✕</span>
+                            </div>
+                            <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 600;">Appointment Cancelled</h1>
+                        </td>
+                    </tr>
+                </table>
+                
+                <!-- Body -->
+                <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #242424; border-radius: 0 0 16px 16px; padding: 32px;">
+                    <tr>
+                        <td>
+                            <p style="color: #e5e5e5; font-size: 16px; margin: 0 0 20px;">Hi ${clientName},</p>
+                            <p style="color: #a3a3a3; font-size: 16px; margin: 0 0 24px;">Your appointment has been cancelled.</p>
+                            
+                            <!-- Booking Details Card -->
+                            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #333333; border-radius: 12px; padding: 20px; border-left: 4px solid #ef4444;">
+                                <tr>
+                                    <td>
+                                        <p style="color: #ffffff; font-size: 18px; font-weight: 600; margin: 0 0 16px;">${serviceName}</p>
+                                        
+                                        <table cellpadding="0" cellspacing="0">
+                                            <tr>
+                                                <td style="color: #a3a3a3; font-size: 14px; padding-right: 8px;">📅</td>
+                                                <td style="color: #737373; font-size: 14px; text-decoration: line-through;">${date}</td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <p style="color: #a3a3a3; font-size: 16px; margin: 24px 0 0;">If you'd like to book again in the future, we'd be happy to see you.</p>
+                        </td>
+                    </tr>
+                </table>
+                
+                <!-- Footer -->
+                <table width="100%" cellpadding="0" cellspacing="0" style="padding: 24px; text-align: center;">
+                    <tr>
+                        <td>
+                            <p style="color: #525252; font-size: 12px; margin: 0;">Powered by Slotify</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>
     `.trim()
@@ -187,22 +378,78 @@ function createBookingReminderHTML(clientName: string, serviceName: string, date
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-    <div style="background: linear-gradient(135deg, #ffa500 0%, #ff8c00 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
-        <h1 style="color: white; margin: 0;">⏰ Reminder: Tomorrow's Appointment</h1>
-    </div>
-    <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
-        <p style="font-size: 16px;">Hi ${clientName},</p>
-        <p style="font-size: 16px;">This is a friendly reminder about your upcoming appointment tomorrow!</p>
-        <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ffa500;">
-            <p style="margin: 5px 0;"><strong>Service:</strong> ${serviceName}</p>
-            <p style="margin: 5px 0;"><strong>Date & Time:</strong> ${date}</p>
-            <p style="margin: 5px 0;"><strong>Provider:</strong> ${providerName}</p>
-            ${location ? `<p style="margin: 5px 0;"><strong>Location:</strong> ${location}</p>` : ''}
-        </div>
-        <p style="font-size: 16px;">We're looking forward to seeing you!</p>
-        <p style="font-size: 14px; color: #666;">If you need to reschedule or cancel, please contact us as soon as possible.</p>
-    </div>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #1a1a1a;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto; padding: 20px;">
+        <tr>
+            <td>
+                <!-- Header -->
+                <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #2a2a2a; border-radius: 16px 16px 0 0; padding: 32px; text-align: center;">
+                    <tr>
+                        <td>
+                            <div style="width: 56px; height: 56px; background-color: #3b82f6; border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
+                                <span style="color: white; font-size: 28px;">⏰</span>
+                            </div>
+                            <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 600;">Appointment Reminder</h1>
+                        </td>
+                    </tr>
+                </table>
+                
+                <!-- Body -->
+                <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #242424; border-radius: 0 0 16px 16px; padding: 32px;">
+                    <tr>
+                        <td>
+                            <p style="color: #e5e5e5; font-size: 16px; margin: 0 0 20px;">Hi ${clientName},</p>
+                            <p style="color: #a3a3a3; font-size: 16px; margin: 0 0 24px;">This is a friendly reminder about your upcoming appointment tomorrow!</p>
+                            
+                            <!-- Booking Details Card -->
+                            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #333333; border-radius: 12px; padding: 20px; border-left: 4px solid #3b82f6;">
+                                <tr>
+                                    <td>
+                                        <p style="color: #ffffff; font-size: 18px; font-weight: 600; margin: 0 0 16px;">${serviceName}</p>
+                                        
+                                        <table cellpadding="0" cellspacing="0" style="margin-bottom: 8px;">
+                                            <tr>
+                                                <td style="color: #a3a3a3; font-size: 14px; padding-right: 8px;">📅</td>
+                                                <td style="color: #e5e5e5; font-size: 14px;">${date}</td>
+                                            </tr>
+                                        </table>
+                                        
+                                        <table cellpadding="0" cellspacing="0" style="margin-bottom: 8px;">
+                                            <tr>
+                                                <td style="color: #a3a3a3; font-size: 14px; padding-right: 8px;">👤</td>
+                                                <td style="color: #e5e5e5; font-size: 14px;">${providerName}</td>
+                                            </tr>
+                                        </table>
+                                        
+                                        ${location ? `
+                                        <table cellpadding="0" cellspacing="0">
+                                            <tr>
+                                                <td style="color: #a3a3a3; font-size: 14px; padding-right: 8px;">📍</td>
+                                                <td style="color: #e5e5e5; font-size: 14px;">${location}</td>
+                                            </tr>
+                                        </table>
+                                        ` : ''}
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <p style="color: #a3a3a3; font-size: 16px; margin: 24px 0 0;">We're looking forward to seeing you!</p>
+                            <p style="font-size: 14px; color: #737373; margin: 16px 0 0;">If you need to reschedule or cancel, please contact us as soon as possible.</p>
+                        </td>
+                    </tr>
+                </table>
+                
+                <!-- Footer -->
+                <table width="100%" cellpadding="0" cellspacing="0" style="padding: 24px; text-align: center;">
+                    <tr>
+                        <td>
+                            <p style="color: #525252; font-size: 12px; margin: 0;">Powered by Slotify</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>
     `.trim()
@@ -222,12 +469,11 @@ export class SMTPEmailService implements EmailService {
         this.transporter = nodemailer.createTransport({
             host: process.env.SMTP_HOST || '127.0.0.1',
             port: port,
-            secure: port === 465, // true for 465, false for other ports
+            secure: port === 465,
             auth: process.env.SMTP_USER ? {
                 user: process.env.SMTP_USER,
                 pass: process.env.SMTP_PASS
             } : undefined,
-            // Gmail specific settings
             ...(isGmail && {
                 service: 'gmail'
             })
@@ -242,13 +488,13 @@ export class SMTPEmailService implements EmailService {
         })
     }
 
-    async sendBookingConfirmation(to: string, clientName: string, serviceName: string, date: string, providerName: string, cancelLink?: string): Promise<void> {
+    async sendBookingConfirmation(to: string, clientName: string, serviceName: string, date: string, providerName: string, cancelLink?: string, location?: string, price?: string): Promise<void> {
         try {
             const info = await this.transporter.sendMail({
                 from: this.fromEmail,
                 to,
                 subject: `Booking Confirmed: ${serviceName} with ${providerName}`,
-                html: createBookingConfirmationHTML(clientName, serviceName, date, providerName, cancelLink)
+                html: createBookingConfirmationHTML(clientName, serviceName, date, providerName, cancelLink, location, price)
             })
             console.log('[SMTP] Email sent successfully:', info.messageId)
         } catch (error) {
@@ -328,17 +574,16 @@ export class ResendEmailService implements EmailService {
         this.fromEmail = process.env.RESEND_FROM_EMAIL || 'noreply@slotify.com'
     }
 
-    async sendBookingConfirmation(to: string, clientName: string, serviceName: string, date: string, providerName: string, cancelLink?: string): Promise<void> {
+    async sendBookingConfirmation(to: string, clientName: string, serviceName: string, date: string, providerName: string, cancelLink?: string, location?: string, price?: string): Promise<void> {
         try {
             const result = await this.resend.emails.send({
                 from: this.fromEmail,
                 to,
                 subject: `Booking Confirmed: ${serviceName} with ${providerName}`,
-                html: createBookingConfirmationHTML(clientName, serviceName, date, providerName, cancelLink)
+                html: createBookingConfirmationHTML(clientName, serviceName, date, providerName, cancelLink, location, price)
             })
             console.log('[RESEND] Email send result:', JSON.stringify(result, null, 2))
 
-            // Check if Resend returned an error
             if (result.error) {
                 throw new Error(`Resend API error: ${result.error.message}`)
             }

@@ -8,11 +8,18 @@ export default async function NewServicePage() {
 
     if (!user) redirect('/login')
 
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single()
+    const [{ data: profile }, { data: availabilitySettings }] = await Promise.all([
+        supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single(),
+        supabase
+            .from('availability_settings')
+            .select('default_buffer_minutes, default_cancellation_policy')
+            .eq('provider_id', user.id)
+            .single()
+    ])
 
-    return <CreateServiceView profile={profile} />
+    return <CreateServiceView profile={profile} availabilitySettings={availabilitySettings} />
 }

@@ -34,7 +34,7 @@ export default async function BookingPage({
     // If serviceId is provided, only fetch that specific service (for privacy and direct booking)
     let servicesQuery = supabase
         .from('services')
-        .select('id, name, duration_minutes, price_cents, description, location_type, default_location')
+        .select('id, name, duration_minutes, price_cents, price_negotiable, description, location_type, default_location, cancellation_policy')
         .eq('provider_id', profile.id)
         .eq('is_active', true)
         .is('deleted_at', null)

@@ -8,6 +8,7 @@ import { signOut, updateProfile } from './actions'
 import { User, Mail, Phone, MapPin, LogOut, Lock, Eye, EyeOff, Share2, Calendar as CalendarIcon, Clock, Briefcase, Camera, X } from 'lucide-react'
 import SignOutConfirmDialog from '@/components/SignOutConfirmDialog'
 import PushNotifications from '@/components/PushNotifications'
+import DefaultBookingSettings from './DefaultBookingSettings'
 import { createClient } from '@/utils/supabase/client'
 import { toast } from '@/utils/toast'
 import Cropper from 'react-easy-crop'
@@ -20,7 +21,17 @@ interface SettingsProfile extends Profile {
     location?: string | null  // UI field, may need migration
 }
 
-export default function SettingsView({ profile }: { profile: SettingsProfile }) {
+interface AvailabilitySettings {
+    default_buffer_minutes?: number | null
+    default_cancellation_policy?: string | null
+}
+
+interface SettingsViewProps {
+    profile: SettingsProfile
+    availabilitySettings?: AvailabilitySettings | null
+}
+
+export default function SettingsView({ profile, availabilitySettings }: SettingsViewProps) {
     const router = useRouter()
     const [isEditing, setIsEditing] = useState(false)
     const [isSaving, setIsSaving] = useState(false)
@@ -383,6 +394,9 @@ export default function SettingsView({ profile }: { profile: SettingsProfile }) 
             <div className="mt-4 mx-4">
                 <PushNotifications />
             </div>
+
+            {/* Default Booking Settings */}
+            <DefaultBookingSettings availabilitySettings={availabilitySettings} />
 
             {/* Quick Actions */}
             <div className="relative mt-4 mx-4 rounded-2xl overflow-hidden">

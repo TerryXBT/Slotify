@@ -70,10 +70,14 @@ export async function createService(formData: FormData) {
 
     // Extract and validate inputs
     const name = (formData.get('name') as string)?.trim()
+    const description = (formData.get('description') as string)?.trim() || null
     const durationStr = formData.get('duration') as string
     const priceStr = formData.get('price') as string
+    const priceNegotiable = formData.get('price_negotiable') === 'true'
     const location_type = formData.get('location_type') as string || 'physical'
     const default_location = formData.get('default_location') as string || ''
+    const bufferMinutesStr = formData.get('buffer_minutes') as string
+    const cancellation_policy = formData.get('cancellation_policy') as string || null
 
     // Validate required fields
     if (!name) {
@@ -86,32 +90,64 @@ export async function createService(formData: FormData) {
         return { error: 'Duration must be between 5 and 480 minutes' }
     }
 
-    // Validate price
-    const price = parseFloat(priceStr)
-    if (isNaN(price) || price < 0 || price > 10000) {
-        return { error: 'Price must be between $0 and $10,000' }
+    // Validate price (only if not negotiable)
+    let price_cents: number | null = null
+    if (!priceNegotiable) {
+        const price = parseFloat(priceStr)
+        if (isNaN(price) || price < 0 || price > 10000) {
+            return { error: 'Price must be between $0 and $10,000' }
+        }
+        price_cents = Math.round(price * 100)
     }
-    const price_cents = Math.round(price * 100)
+
+    // Parse buffer minutes
+    const buffer_minutes = bufferMinutesStr ? parseInt(bufferMinutesStr) : null
 
     const adminClient = createAdminClient()
 
-    const { error } = await (adminClient as any)
+    // First insert with only the original columns (schema cache compatible)
+    const { data: insertedService, error: insertError } = await (adminClient as any)
         .from('services')
         .insert({
             provider_id: user.id,
             name,
+            description,
             duration_minutes,
             price_cents,
             location_type,
             default_location
         })
+        .select('id')
+        .single()
 
-    if (error) {
-        console.error('Create Service Error:', error)
-        return { error: `Failed to create service: ${error.message}`, code: error.code }
+    if (insertError) {
+        console.error('Create Service Error:', insertError)
+        return { error: `Failed to create service: ${insertError.message}`, code: insertError.code }
+    }
+
+    // Then update with new columns using raw fetch to bypass schema cache
+    if (insertedService?.id && (priceNegotiable || buffer_minutes || cancellation_policy)) {
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+        const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+
+        await fetch(`${supabaseUrl}/rest/v1/services?id=eq.${insertedService.id}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'apikey': serviceKey,
+                'Authorization': `Bearer ${serviceKey}`,
+                'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify({
+                price_negotiable: priceNegotiable,
+                buffer_minutes,
+                cancellation_policy
+            })
+        }).catch(err => console.error('Update new fields error:', err))
     }
 
     revalidatePath('/app/settings')
+    revalidatePath('/app/services')
     return { success: true }
 }
 
@@ -125,11 +161,15 @@ export async function updateService(id: string, formData: FormData) {
 
     // Extract and validate inputs
     const name = (formData.get('name') as string)?.trim()
+    const description = (formData.get('description') as string)?.trim() || null
     const durationStr = formData.get('duration') as string
     const priceStr = formData.get('price') as string
+    const priceNegotiable = formData.get('price_negotiable') === 'true'
     const location_type = formData.get('location_type') as string || 'physical'
     const default_location = formData.get('default_location') as string || ''
     const is_active = formData.get('is_active') === 'on'
+    const bufferMinutesStr = formData.get('buffer_minutes') as string
+    const cancellation_policy = formData.get('cancellation_policy') as string || null
 
     // Validate required fields
     if (!name) {
@@ -142,19 +182,27 @@ export async function updateService(id: string, formData: FormData) {
         return { error: 'Duration must be between 5 and 480 minutes' }
     }
 
-    // Validate price
-    const price = parseFloat(priceStr)
-    if (isNaN(price) || price < 0 || price > 10000) {
-        return { error: 'Price must be between $0 and $10,000' }
+    // Validate price (only if not negotiable)
+    let price_cents: number | null = null
+    if (!priceNegotiable) {
+        const price = parseFloat(priceStr)
+        if (isNaN(price) || price < 0 || price > 10000) {
+            return { error: 'Price must be between $0 and $10,000' }
+        }
+        price_cents = Math.round(price * 100)
     }
-    const price_cents = Math.round(price * 100)
+
+    // Parse buffer minutes
+    const buffer_minutes = bufferMinutesStr ? parseInt(bufferMinutesStr) : null
 
     const adminClient = createAdminClient()
 
-    const { error } = await (adminClient as any)
+    // First update with original columns (schema cache compatible)
+    const { error: updateError } = await (adminClient as any)
         .from('services')
         .update({
             name,
+            description,
             duration_minutes,
             price_cents,
             location_type,
@@ -164,12 +212,32 @@ export async function updateService(id: string, formData: FormData) {
         .eq('id', id)
         .eq('provider_id', user.id)
 
-    if (error) {
-        console.error('Update Service Error:', error)
-        return { error: `Failed to update service: ${error.message}`, code: error.code }
+    if (updateError) {
+        console.error('Update Service Error:', updateError)
+        return { error: `Failed to update service: ${updateError.message}`, code: updateError.code }
     }
 
+    // Then update new columns using raw fetch to bypass schema cache
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+
+    await fetch(`${supabaseUrl}/rest/v1/services?id=eq.${id}&provider_id=eq.${user.id}`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            'apikey': serviceKey,
+            'Authorization': `Bearer ${serviceKey}`,
+            'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({
+            price_negotiable: priceNegotiable,
+            buffer_minutes,
+            cancellation_policy
+        })
+    }).catch(err => console.error('Update new fields error:', err))
+
     revalidatePath('/app/settings')
+    revalidatePath('/app/services')
     return { success: true }
 }
 
@@ -399,6 +467,68 @@ export async function deleteAvailabilityRule(id: string) {
         if (error) {
             console.error('Delete availability rule error:', error)
             return { error: error.message }
+        }
+
+        revalidatePath('/app/settings')
+        return { success: true }
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Unknown error'
+        return { error: message }
+    }
+}
+
+// ============= DEFAULT BOOKING SETTINGS =============
+
+/**
+ * Update Default Booking Settings
+ */
+export async function updateDefaultBookingSettings(formData: FormData) {
+    try {
+        const supabase = await createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+
+        if (!user) {
+            return { error: 'Not authenticated' }
+        }
+
+        const default_buffer_minutes = parseInt(formData.get('default_buffer_minutes') as string) || 0
+        const default_cancellation_policy = formData.get('default_cancellation_policy') as string || '24h'
+
+        const adminClient = createAdminClient()
+
+        // Try to update first, if no rows affected then insert
+        const { data: existing } = await (adminClient as any)
+            .from('availability_settings')
+            .select('provider_id')
+            .eq('provider_id', user.id)
+            .single()
+
+        if (existing) {
+            const { error } = await (adminClient as any)
+                .from('availability_settings')
+                .update({
+                    default_buffer_minutes,
+                    default_cancellation_policy
+                })
+                .eq('provider_id', user.id)
+
+            if (error) {
+                console.error('Update default booking settings error:', error)
+                return { error: error.message }
+            }
+        } else {
+            const { error } = await (adminClient as any)
+                .from('availability_settings')
+                .insert({
+                    provider_id: user.id,
+                    default_buffer_minutes,
+                    default_cancellation_policy
+                })
+
+            if (error) {
+                console.error('Insert default booking settings error:', error)
+                return { error: error.message }
+            }
         }
 
         revalidatePath('/app/settings')
