@@ -135,6 +135,20 @@ export default function BookingFlow({
             })
 
             if (result.error) {
+                // Handle slot already booked - reset selection and refresh slots
+                if (result.error.includes('blocked') || result.error.includes('Slot')) {
+                    toast.error('This time slot is no longer available. Please choose another time.')
+                    setSelectedSlot(null)
+                    // Refresh available slots for the selected date
+                    if (selectedDate) {
+                        const dateStr = format(selectedDate, 'yyyy-MM-dd')
+                        const res = await fetchSlots(profile.username, selectedService.id, dateStr)
+                        if (res.success && res.slots) {
+                            setSlots(res.slots)
+                        }
+                    }
+                    return
+                }
                 throw new Error(result.error)
             }
 

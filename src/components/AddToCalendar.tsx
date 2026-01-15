@@ -117,7 +117,7 @@ export default function AddToCalendar({ event }: AddToCalendarProps) {
   }
 
   const modalContent = isOpen ? (
-    <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/70"
@@ -125,7 +125,7 @@ export default function AddToCalendar({ event }: AddToCalendarProps) {
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-sm mx-4 mb-4 sm:mb-0 bg-[#2c2c2e] rounded-2xl overflow-hidden animate-in slide-in-from-bottom-4 fade-in duration-200 shadow-2xl">
+      <div className="relative w-full max-w-sm bg-[#2c2c2e] rounded-2xl overflow-hidden animate-in zoom-in-95 fade-in duration-200 shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-5 border-b border-white/10">
           <h3 className="text-lg font-semibold text-white">Add to Calendar</h3>
