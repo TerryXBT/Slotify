@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   applicationName: "Slotify",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
+    statusBarStyle: "black",
     title: "Slotify",
   },
   formatDetection: {
@@ -42,8 +42,7 @@ export const viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  userScalable: false,
-  themeColor: "#1a1a1a",
+  themeColor: "#000000",
 };
 
 export default function RootLayout({
