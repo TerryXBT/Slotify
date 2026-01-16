@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { Toaster } from 'sonner'
+import { Toaster } from "sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,7 +15,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Slotify - Booking & Scheduling",
-  description: "Professional booking and scheduling platform for services and appointments",
+  description:
+    "Professional booking and scheduling platform for services and appointments",
   applicationName: "Slotify",
   appleWebApp: {
     capable: true,
@@ -42,10 +43,7 @@ export const viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#F2F2F7" },
-    { media: "(prefers-color-scheme: dark)", color: "#1c1c1e" }
-  ],
+  themeColor: "#1a1a1a",
 };
 
 export default function RootLayout({
