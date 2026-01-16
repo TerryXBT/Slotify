@@ -30,7 +30,7 @@ export default async function TodayPage() {
   if (!profile || profileError) {
     console.error("Profile not found for user:", user.id, profileError);
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-black p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-neutral-900 p-4">
         <div className="bg-white dark:bg-zinc-900 p-8 rounded-2xl shadow-xl w-full max-w-md text-center space-y-4">
           <div className="text-red-500 text-5xl mb-4">⚠️</div>
           <h1 className="text-2xl font-bold">Profile Not Found</h1>

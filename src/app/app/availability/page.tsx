@@ -28,8 +28,8 @@ export default async function AvailabilityPage() {
     rules?.find((r) => r.day_of_week === dayId);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-black font-sans pb-24 text-gray-900 dark:text-gray-100">
-      <header className="sticky top-0 z-30 bg-white/90 dark:bg-black/90 backdrop-blur-md px-5 pt-12 pb-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-800">
+    <div className="min-h-screen bg-gray-50 dark:bg-neutral-900 font-sans pb-24 text-gray-900 dark:text-gray-100">
+      <header className="sticky top-0 z-30 bg-white/90 dark:bg-neutral-900/90 backdrop-blur-md px-5 pt-12 pb-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-800">
         <Link
           href="/app/today"
           className="text-blue-600 dark:text-blue-500 font-medium text-base"
@@ -72,14 +72,14 @@ export default async function AvailabilityPage() {
                     <input
                       name={`day_${day.id}_start`}
                       type="time"
-                      className="bg-gray-50 dark:bg-black border border-gray-200 dark:border-gray-700 rounded-lg p-2 text-center w-full"
+                      className="bg-gray-50 dark:bg-neutral-900 border border-gray-200 dark:border-gray-700 rounded-lg p-2 text-center w-full"
                       defaultValue={rule?.start_time_local || "09:00"}
                     />
                     <span className="text-gray-400">-</span>
                     <input
                       name={`day_${day.id}_end`}
                       type="time"
-                      className="bg-gray-50 dark:bg-black border border-gray-200 dark:border-gray-700 rounded-lg p-2 text-center w-full"
+                      className="bg-gray-50 dark:bg-neutral-900 border border-gray-200 dark:border-gray-700 rounded-lg p-2 text-center w-full"
                       defaultValue={rule?.end_time_local || "17:00"}
                     />
                   </div>

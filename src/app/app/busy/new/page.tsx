@@ -4,7 +4,7 @@ import Link from "next/link";
 
 export default function NewBusyBlockPage() {
   return (
-    <div className="min-h-screen bg-black text-white font-sans pb-safe">
+    <div className="min-h-screen bg-neutral-900 text-white font-sans pb-safe">
       {/* iOS Modal Header */}
       <header className="sticky top-0 z-30 bg-[#1C1C1E]/80 backdrop-blur-md border-b border-gray-800/50 pt-safe-top">
         <div className="px-5 h-[52px] flex items-center justify-between">

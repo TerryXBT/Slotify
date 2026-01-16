@@ -42,7 +42,7 @@ export const viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  themeColor: "#000000",
+  themeColor: "#1c1c1e",
 };
 
 export default function RootLayout({
@@ -56,7 +56,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning
       >
-        <main className="min-h-screen bg-[#F2F2F7] dark:bg-[#000000]">
+        <main className="min-h-screen bg-[#F2F2F7] dark:bg-[#1c1c1e]">
           {children}
         </main>
         <Toaster position="top-center" />

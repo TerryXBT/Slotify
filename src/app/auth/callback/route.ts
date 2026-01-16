@@ -35,6 +35,15 @@ export async function GET(request: Request) {
         }
       }
 
+      // Check if this is from email confirmation (no 'next' parameter usually means email link)
+      // Redirect to login with success message so user can sign in
+      const isEmailConfirmation = !searchParams.get("next");
+      if (isEmailConfirmation) {
+        return NextResponse.redirect(
+          `${origin}/login?success=${encodeURIComponent("Email confirmed! Please sign in to continue.")}`,
+        );
+      }
+
       return NextResponse.redirect(`${origin}${next}`);
     }
   }

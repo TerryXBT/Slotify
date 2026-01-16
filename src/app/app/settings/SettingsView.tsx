@@ -710,8 +710,8 @@ export default function SettingsView({
 
       {/* Crop Modal */}
       {cropModalOpen && imageSrc && (
-        <div className="fixed inset-0 bg-black z-[60] flex flex-col">
-          <div className="sticky top-0 z-10 bg-black/95 backdrop-blur-xl border-b border-gray-800/50">
+        <div className="fixed inset-0 bg-neutral-900 z-[60] flex flex-col">
+          <div className="sticky top-0 z-10 bg-neutral-900/95 backdrop-blur-xl border-b border-gray-800/50">
             <div className="px-4 py-3 flex items-center justify-between">
               <button
                 onClick={() => {
@@ -749,7 +749,7 @@ export default function SettingsView({
             />
           </div>
 
-          <div className="p-6 bg-black border-t border-gray-800/50">
+          <div className="p-6 bg-neutral-900 border-t border-gray-800/50">
             <div className="mb-2">
               <label className="block text-[13px] text-gray-400 mb-3 text-center">
                 Pinch to zoom

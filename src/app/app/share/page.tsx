@@ -19,7 +19,7 @@ export default async function SharePage() {
   const publicUrl = `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/${profile?.username}`;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-black font-sans pb-24 text-gray-900 dark:text-gray-100">
+    <div className="min-h-screen bg-gray-50 dark:bg-neutral-900 font-sans pb-24 text-gray-900 dark:text-gray-100">
       <header className="sticky top-0 z-30 bg-white/90 dark:bg-[#1C1C1E]/90 backdrop-blur-md px-5 pt-12 pb-4 flex items-center justify-between">
         <Link
           href="/app/today"
