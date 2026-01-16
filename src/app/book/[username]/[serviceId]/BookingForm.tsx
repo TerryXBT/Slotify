@@ -35,7 +35,7 @@ export default function BookingForm({
   service,
   providerId,
   providerName,
-  availability,
+  availability: _availability,
 }: BookingFormProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -137,7 +137,7 @@ export default function BookingForm({
       if (period === "am" && hours === 12) hours = 0;
 
       startAt.setHours(hours, minutes, 0);
-      const endAt = addMinutes(startAt, service.duration_minutes);
+      // endAt is calculated server side
 
       const result = await createBookingAction({
         provider_id: providerId,
@@ -157,7 +157,7 @@ export default function BookingForm({
       } else {
         alert(result.error || "Booking failed. Please try again.");
       }
-    } catch (_error) {
+    } catch {
       alert("An error occurred. Please try again.");
     } finally {
       setLoading(false);

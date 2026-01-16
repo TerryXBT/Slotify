@@ -24,3 +24,7 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
 }
+
+@utility glass {
+  @apply relative overflow-hidden bg-white/[0.08] backdrop-blur-xl border border-white/[0.08] shadow-2xl;
+}

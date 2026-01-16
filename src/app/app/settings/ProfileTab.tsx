@@ -90,7 +90,7 @@ export default function ProfileTab({
   availabilityRules: AvailabilityRule[];
 }) {
   const router = useRouter();
-  const [_showSuccess, setShowSuccess] = useState(false);
+  const [showSuccess, _setShowSuccess] = useState(false);
   const [copiedServiceId, setCopiedServiceId] = useState<string | null>(null);
   const [editingService, setEditingService] = useState<string | null>(null);
   const [isCreatingService, setIsCreatingService] = useState(false);
@@ -149,7 +149,7 @@ export default function ProfileTab({
   };
 
   // Availability state
-  const [_localRules, setLocalRules] = useState<LocalRule[]>(
+  const [localRules, _setLocalRules] = useState<LocalRule[]>(
     availabilityRules.map((r) => ({
       id: r.id,
       day_of_week: r.day_of_week,
@@ -158,8 +158,8 @@ export default function ProfileTab({
     })),
   );
 
-  const [_copyModalOpen, setCopyModalOpen] = useState(false);
-  const [_copySourceDay, setCopySourceDay] = useState<number | null>(null);
+  const [copyModalOpen, setCopyModalOpen] = useState(false);
+  const [copySourceDay, _setCopySourceDay] = useState<number | null>(null);
   const [selectedDays, setSelectedDays] = useState<number[]>([]);
 
   const handleShareService = (serviceId: string) => {

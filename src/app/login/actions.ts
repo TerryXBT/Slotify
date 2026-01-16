@@ -1,41 +1,80 @@
-'use server'
+"use server";
 
-import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
-import { createClient } from '@/utils/supabase/server'
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { createClient } from "@/utils/supabase/server";
+import { headers } from "next/headers";
 
 export async function login(formData: FormData) {
-    const supabase = await createClient()
+  const supabase = await createClient();
 
-    const data = {
-        email: formData.get('email') as string,
-        password: formData.get('password') as string,
-    }
+  const data = {
+    email: formData.get("email") as string,
+    password: formData.get("password") as string,
+  };
 
-    const { error } = await supabase.auth.signInWithPassword(data)
+  if (!data.email || !data.password) {
+    redirect("/login?error=Please enter your email and password");
+  }
 
-    if (error) {
-        redirect('/login?error=Could not authenticate user')
-    }
+  const { error } = await supabase.auth.signInWithPassword(data);
 
-    revalidatePath('/', 'layout')
-    redirect('/app/today')
+  if (error) {
+    redirect("/login?error=Invalid email or password");
+  }
+
+  revalidatePath("/", "layout");
+  redirect("/app/today");
 }
 
-export async function signup(formData: FormData) {
-    const supabase = await createClient()
+export async function signInWithGoogle() {
+  const supabase = await createClient();
+  const headersList = await headers();
+  const origin =
+    headersList.get("origin") ||
+    headersList.get("x-forwarded-host") ||
+    "http://localhost:3000";
 
-    const data = {
-        email: formData.get('email') as string,
-        password: formData.get('password') as string,
-    }
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: `${origin}/auth/callback`,
+      queryParams: {
+        access_type: "offline",
+        prompt: "consent",
+      },
+    },
+  });
 
-    const { error } = await supabase.auth.signUp(data)
+  if (error) {
+    redirect("/login?error=Could not connect to Google");
+  }
 
-    if (error) {
-        redirect('/login?error=Could not authenticate user')
-    }
+  if (data.url) {
+    redirect(data.url);
+  }
+}
 
-    revalidatePath('/', 'layout')
-    redirect('/app/today')
+export async function signInWithApple() {
+  const supabase = await createClient();
+  const headersList = await headers();
+  const origin =
+    headersList.get("origin") ||
+    headersList.get("x-forwarded-host") ||
+    "http://localhost:3000";
+
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "apple",
+    options: {
+      redirectTo: `${origin}/auth/callback`,
+    },
+  });
+
+  if (error) {
+    redirect("/login?error=Could not connect to Apple");
+  }
+
+  if (data.url) {
+    redirect(data.url);
+  }
 }

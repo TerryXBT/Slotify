@@ -45,9 +45,7 @@ export function useMediaQuery(query: string): boolean {
     }
     // Fallback for older browsers
     else {
-      // @ts-expect-error - deprecated but still needed for Safari < 14
       mediaQuery.addListener(handleChange);
-      // @ts-expect-error - deprecated but still needed for Safari < 14
       return () => mediaQuery.removeListener(handleChange);
     }
   }, [query]);

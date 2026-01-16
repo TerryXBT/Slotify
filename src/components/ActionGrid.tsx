@@ -1,56 +1,56 @@
-'use client'
+"use client";
 
-import Link from 'next/link'
-import { Plus, Clock, Settings, Calendar } from 'lucide-react'
+import Link from "next/link";
+import { Plus, Settings } from "lucide-react";
 
 export default function ActionGrid() {
-    // Defines actions: Add Slot, Reschedule, Settings/Calendar?
-    // User image showed: Add Slot, Calendar, Client List
-    // We have existing links: Busy Block (/app/busy/new), Reschedule (/app/reschedule), Settings (/app/settings)
+  // Defines actions: Add Slot, Reschedule, Settings/Calendar?
+  // User image showed: Add Slot, Calendar, Client List
+  // We have existing links: Busy Block (/app/busy/new), Reschedule (/app/reschedule), Settings (/app/settings)
 
-    // Let's make 3 buttons.
-    const actions = [
-        {
-            label: 'Add Block',
-            icon: <Plus className="w-6 h-6" />,
-            href: '/app/busy/new',
-            color: 'text-blue-500'
-        },
-        /* {
+  // Let's make 3 buttons.
+  const actions = [
+    {
+      label: "Add Block",
+      icon: <Plus className="w-6 h-6" />,
+      href: "/app/busy/new",
+      color: "text-blue-500",
+    },
+    /* {
             label: 'Reschedule',
             icon: <Clock className="w-6 h-6" />,
             href: '/app/reschedule',
             color: 'text-orange-500'
         }, */
-        {
-            label: 'Settings',
-            icon: <Settings className="w-6 h-6" />,
-            href: '/app/settings',
-            color: 'text-gray-400'
-        }
-    ]
+    {
+      label: "Settings",
+      icon: <Settings className="w-6 h-6" />,
+      href: "/app/settings",
+      color: "text-gray-400",
+    },
+  ];
 
-    return (
-        <div className="grid grid-cols-2 gap-4">
-            {actions.map((action) => (
-                <Link
-                    key={action.label}
-                    href={action.href}
-                    className="relative flex items-center gap-4 p-4 rounded-2xl active:scale-[0.98] transition-all group overflow-hidden"
-                >
-                    {/* Glassmorphism Background */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/[0.07] via-white/[0.05] to-white/[0.03] backdrop-blur-2xl" />
-                    <div className="absolute inset-0 rounded-2xl border border-white/10" />
-                    <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/[0.08] to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
+  return (
+    <div className="grid grid-cols-2 gap-4">
+      {actions.map((action) => (
+        <Link
+          key={action.label}
+          href={action.href}
+          className="relative flex items-center gap-4 p-4 rounded-2xl active:scale-[0.98] transition-all group overflow-hidden"
+        >
+          {/* Glassmorphism Background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white/[0.07] via-white/[0.05] to-white/[0.03] backdrop-blur-2xl" />
+          <div className="absolute inset-0 rounded-2xl border border-white/10" />
+          <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/[0.08] to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
 
-                    <div className="relative z-10 w-12 h-12 rounded-full bg-white/[0.08] backdrop-blur-xl border border-white/10 flex items-center justify-center group-active:scale-95 transition-transform">
-                        <div className={action.color}>{action.icon}</div>
-                    </div>
-                    <span className="relative z-10 text-sm font-semibold text-white">
-                        {action.label}
-                    </span>
-                </Link>
-            ))}
-        </div>
-    )
+          <div className="relative z-10 w-12 h-12 rounded-full bg-white/[0.08] backdrop-blur-xl border border-white/10 flex items-center justify-center group-active:scale-95 transition-transform">
+            <div className={action.color}>{action.icon}</div>
+          </div>
+          <span className="relative z-10 text-sm font-semibold text-white">
+            {action.label}
+          </span>
+        </Link>
+      ))}
+    </div>
+  );
 }

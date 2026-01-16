@@ -84,7 +84,7 @@ export default async function TodayPage() {
 
   // 1. Needs Action: Status = 'pending_reschedule' (or other future statuses)
   // For P0 Demo: We'll pretend 'pending_reschedule' bookings need action.
-  const needsAction =
+  const _needsAction =
     bookings?.filter(
       (b: BookingWithService) => b.status === "pending_reschedule",
     ) || [];
@@ -104,7 +104,7 @@ export default async function TodayPage() {
   const restOfToday =
     upcomingBookings.length > 1 ? upcomingBookings.slice(1) : [];
 
-  const totalBookingsCount = bookings?.length || 0;
+  const _totalBookingsCount = bookings?.length || 0;
 
   // Free time calculation (rough approximation)
   // Assume work day 9-5 (8 hours = 480 mins)
@@ -116,7 +116,7 @@ export default async function TodayPage() {
       0,
     ) || 0;
   const freeMinutes = 480 - totalBookedMinutes;
-  const freeHours = Math.max(0, Math.floor(freeMinutes / 60));
+  const _freeHours = Math.max(0, Math.floor(freeMinutes / 60));
 
   return (
     <div className="min-h-screen bg-[#1a1a1a] font-sans pb-32 text-white selection:bg-blue-500/30">
