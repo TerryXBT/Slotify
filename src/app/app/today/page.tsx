@@ -55,6 +55,13 @@ export default async function TodayPage() {
     );
   }
 
+  // Check if user needs to complete onboarding
+  // onboarding_completed === false means they started but didn't finish
+  // null means they're an existing user (before onboarding was added)
+  if (profile.onboarding_completed === false) {
+    redirect("/app/onboarding");
+  }
+
   const todayStr = format(new Date(), "yyyy-MM-dd");
   const now = new Date();
 

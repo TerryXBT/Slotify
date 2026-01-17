@@ -1,14 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Plus, Settings } from "lucide-react";
+import { Plus, Clock, CalendarCheck, Share2 } from "lucide-react";
 
 export default function ActionGrid() {
-  // Defines actions: Add Slot, Reschedule, Settings/Calendar?
-  // User image showed: Add Slot, Calendar, Client List
-  // We have existing links: Busy Block (/app/busy/new), Reschedule (/app/reschedule), Settings (/app/settings)
-
-  // Let's make 3 buttons.
   const actions = [
     {
       label: "Add Block",
@@ -16,17 +11,23 @@ export default function ActionGrid() {
       href: "/app/busy/new",
       color: "text-blue-500",
     },
-    /* {
-            label: 'Reschedule',
-            icon: <Clock className="w-6 h-6" />,
-            href: '/app/reschedule',
-            color: 'text-orange-500'
-        }, */
     {
-      label: "Settings",
-      icon: <Settings className="w-6 h-6" />,
-      href: "/app/settings",
-      color: "text-gray-400",
+      label: "Availability",
+      icon: <Clock className="w-6 h-6" />,
+      href: "/app/settings/availability",
+      color: "text-green-500",
+    },
+    {
+      label: "All Bookings",
+      icon: <CalendarCheck className="w-6 h-6" />,
+      href: "/app/bookings",
+      color: "text-purple-500",
+    },
+    {
+      label: "Share Link",
+      icon: <Share2 className="w-6 h-6" />,
+      href: "/app/share",
+      color: "text-orange-500",
     },
   ];
 

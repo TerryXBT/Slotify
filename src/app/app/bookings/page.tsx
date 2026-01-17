@@ -1,73 +1,76 @@
 import { createClient } from "@/utils/supabase/server";
-import { format } from "date-fns";
-import Link from "next/link";
+import { redirect } from "next/navigation";
+import BookingsView from "./BookingsView";
 
-// Booking with partial service for list display
-interface BookingListItem {
-  id: string;
-  client_name: string;
-  start_at: string;
-  status: string;
-  services: { name: string } | null;
-}
-
-export default async function BookingsListPage() {
+export default async function BookingsListPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string; search?: string; view?: string }>;
+}) {
+  const { tab, search, view } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
+  if (!user) {
+    redirect("/login");
+  }
+
+  const now = new Date().toISOString();
+
+  // Fetch all bookings with service info
   const { data: bookings } = await supabase
     .from("bookings")
-    .select("*, services(name)")
-    .eq("provider_id", user?.id)
-    .order("start_at", { ascending: false }); // Newest first
+    .select("*, services(name, duration_minutes, location_type)")
+    .eq("provider_id", user.id)
+    .order("start_at", { ascending: true });
+
+  // Categorize bookings
+  const allBookings = bookings || [];
+
+  // Upcoming: confirmed bookings in the future
+  const upcomingBookings = allBookings.filter(
+    (b) => b.start_at >= now && b.status === "confirmed",
+  );
+
+  // Past: confirmed/completed bookings in the past
+  const pastBookings = allBookings
+    .filter(
+      (b) =>
+        b.start_at < now &&
+        (b.status === "confirmed" || b.status === "completed"),
+    )
+    .reverse(); // Most recent first
+
+  // Cancelled bookings
+  const cancelledBookings = allBookings
+    .filter((b) => b.status === "cancelled")
+    .reverse();
+
+  // Pending/needs action bookings
+  const pendingBookings = allBookings.filter(
+    (b) => b.status === "pending_reschedule" || b.status === "pending",
+  );
+
+  // Fetch active services for manual booking (calendar view)
+  const { data: services } = await supabase
+    .from("services")
+    .select("*")
+    .eq("provider_id", user.id)
+    .eq("is_active", true)
+    .order("name");
 
   return (
-    <div className="min-h-screen bg-neutral-900 font-sans pb-24">
-      <header className="sticky top-0 z-30 bg-[#1C1C1E]/90 backdrop-blur-md px-5 pt-12 pb-4 border-b border-gray-800">
-        <h1 className="text-2xl font-bold">All Bookings</h1>
-      </header>
-
-      <div className="p-4 space-y-3">
-        {bookings?.map((booking: BookingListItem) => (
-          <Link
-            key={booking.id}
-            href={`/app/bookings/${booking.id}`}
-            className="block bg-[#1C1C1E] p-4 rounded-xl border border-gray-800 shadow-sm active:scale-95 transition-transform"
-          >
-            <div className="flex justify-between items-start">
-              <div>
-                <div className="font-bold text-lg">{booking.client_name}</div>
-                <div className="text-sm text-gray-500">
-                  {booking.services?.name}
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="font-medium">
-                  {format(new Date(booking.start_at), "MMM d, h:mm a")}
-                </div>
-                <div
-                  className={`text-xs uppercase font-bold mt-1 ${
-                    booking.status === "confirmed"
-                      ? "text-green-600"
-                      : booking.status === "cancelled"
-                        ? "text-red-600"
-                        : "text-orange-600"
-                  }`}
-                >
-                  {booking.status}
-                </div>
-              </div>
-            </div>
-          </Link>
-        ))}
-        {(!bookings || bookings.length === 0) && (
-          <div className="text-center text-gray-500 py-10">
-            No bookings found.
-          </div>
-        )}
-      </div>
-    </div>
+    <BookingsView
+      upcomingBookings={upcomingBookings}
+      pastBookings={pastBookings}
+      cancelledBookings={cancelledBookings}
+      pendingBookings={pendingBookings}
+      services={services || []}
+      initialTab={tab || "upcoming"}
+      initialSearch={search || ""}
+      initialView={(view as "list" | "calendar") || "list"}
+    />
   );
 }
