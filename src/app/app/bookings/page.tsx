@@ -2,12 +2,7 @@ import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import BookingsView from "./BookingsView";
 
-export default async function BookingsListPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ tab?: string; search?: string; view?: string }>;
-}) {
-  const { tab, search, view } = await searchParams;
+export default async function BookingsPage() {
   const supabase = await createClient();
   const {
     data: { user },
@@ -17,43 +12,14 @@ export default async function BookingsListPage({
     redirect("/login");
   }
 
-  const now = new Date().toISOString();
-
-  // Fetch all bookings with service info
-  const { data: bookings } = await supabase
+  // Fetch pending bookings for the attention banner
+  const { data: pendingBookings } = await supabase
     .from("bookings")
-    .select("*, services(name, duration_minutes, location_type)")
+    .select("id")
     .eq("provider_id", user.id)
-    .order("start_at", { ascending: true });
+    .in("status", ["pending_reschedule", "pending"]);
 
-  // Categorize bookings
-  const allBookings = bookings || [];
-
-  // Upcoming: confirmed bookings in the future
-  const upcomingBookings = allBookings.filter(
-    (b) => b.start_at >= now && b.status === "confirmed",
-  );
-
-  // Past: confirmed/completed bookings in the past
-  const pastBookings = allBookings
-    .filter(
-      (b) =>
-        b.start_at < now &&
-        (b.status === "confirmed" || b.status === "completed"),
-    )
-    .reverse(); // Most recent first
-
-  // Cancelled bookings
-  const cancelledBookings = allBookings
-    .filter((b) => b.status === "cancelled")
-    .reverse();
-
-  // Pending/needs action bookings
-  const pendingBookings = allBookings.filter(
-    (b) => b.status === "pending_reschedule" || b.status === "pending",
-  );
-
-  // Fetch active services for manual booking (calendar view)
+  // Fetch active services for manual booking
   const { data: services } = await supabase
     .from("services")
     .select("*")
@@ -63,14 +29,8 @@ export default async function BookingsListPage({
 
   return (
     <BookingsView
-      upcomingBookings={upcomingBookings}
-      pastBookings={pastBookings}
-      cancelledBookings={cancelledBookings}
-      pendingBookings={pendingBookings}
+      pendingBookings={pendingBookings || []}
       services={services || []}
-      initialTab={tab || "upcoming"}
-      initialSearch={search || ""}
-      initialView={(view as "list" | "calendar") || "list"}
     />
   );
 }

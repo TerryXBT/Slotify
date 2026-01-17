@@ -1,7 +1,6 @@
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
-import { headers } from "next/headers";
-import BottomNav from "@/components/BottomNav";
+import { AppLayoutWrapper } from "@/components/layouts/AppLayoutWrapper";
 
 export default async function AppLayout({
   children,
@@ -18,28 +17,20 @@ export default async function AppLayout({
     redirect("/login");
   }
 
-  // Check if we're on the onboarding page to hide BottomNav
-  const headersList = await headers();
-  const pathname =
-    headersList.get("x-pathname") || headersList.get("x-invoke-path") || "";
-  const isOnboarding = pathname.includes("/onboarding");
-
-  // If onboarding, render minimal layout without BottomNav
-  if (isOnboarding) {
-    return (
-      <div className="min-h-screen bg-[#1a1a1a] text-gray-100 font-sans">
-        {children}
-      </div>
-    );
-  }
+  // Fetch user profile for desktop layout
+  const { data: profile } = await supabase
+    .from("providers")
+    .select("display_name, avatar_url")
+    .eq("id", user.id)
+    .single();
 
   return (
-    <div className="min-h-screen bg-[#1a1a1a] pb-24 text-gray-100 font-sans">
-      {/* Main Content */}
-      <main>{children}</main>
-
-      {/* Bottom Nav */}
-      <BottomNav />
-    </div>
+    <AppLayoutWrapper
+      userEmail={user.email}
+      displayName={profile?.display_name}
+      avatarUrl={profile?.avatar_url}
+    >
+      {children}
+    </AppLayoutWrapper>
   );
 }

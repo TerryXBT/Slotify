@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
   try {
     // Rate limiting: 10 bookings per hour per IP
     const clientId = getClientIdentifier(request);
-    const rateLimit = checkRateLimit(clientId, {
+    const rateLimit = await checkRateLimit(clientId, {
       limit: 10,
       windowSeconds: 3600, // 1 hour
     });

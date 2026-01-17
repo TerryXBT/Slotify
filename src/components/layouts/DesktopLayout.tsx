@@ -3,7 +3,7 @@
 import { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Calendar, Home, Briefcase, Settings, LogOut } from "lucide-react";
+import { CalendarCheck, Home, Briefcase, Settings, LogOut } from "lucide-react";
 import clsx from "clsx";
 
 interface DesktopLayoutProps {
@@ -36,8 +36,13 @@ export function DesktopLayout({
   const pathname = usePathname();
 
   const navItems = [
-    { href: "/app", icon: Home, label: "Home", exact: true },
-    { href: "/app/week", icon: Calendar, label: "Calendar", exact: false },
+    { href: "/app/today", icon: Home, label: "Home", exact: true },
+    {
+      href: "/app/bookings",
+      icon: CalendarCheck,
+      label: "Bookings",
+      exact: false,
+    },
     { href: "/app/services", icon: Briefcase, label: "Services", exact: false },
     { href: "/app/settings", icon: Settings, label: "Settings", exact: false },
   ];
@@ -128,10 +133,10 @@ export function DesktopLayout({
         <header className="h-16 border-b border-white/10 bg-[#1a1a1a]/80 backdrop-blur-lg px-8 flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold">
-              {pathname === "/app"
-                ? "Dashboard"
-                : pathname?.includes("/week")
-                  ? "Calendar"
+              {pathname?.includes("/today")
+                ? "Home"
+                : pathname?.includes("/bookings")
+                  ? "Bookings"
                   : pathname?.includes("/services")
                     ? "Services"
                     : pathname?.includes("/settings")
