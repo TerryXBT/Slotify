@@ -2,6 +2,7 @@ import { login, signInWithGoogle, signInWithApple } from "./actions";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
+import PasswordInput from "@/components/PasswordInput";
 
 export default async function LoginPage({
   searchParams,
@@ -127,13 +128,12 @@ export default async function LoginPage({
             <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider pl-1">
               Password
             </label>
-            <input
+            <PasswordInput
               id="password"
               name="password"
-              type="password"
               required
               autoComplete="current-password"
-              className="w-full px-3 py-2.5 bg-black/20 border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:border-white/30 focus:bg-white/5 transition-all hover:border-white/20"
+              className="px-3 py-2.5 bg-black/20 border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:border-white/30 focus:bg-white/5 transition-all hover:border-white/20"
               placeholder="Enter your password"
             />
           </div>

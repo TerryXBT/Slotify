@@ -1,15 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { Plus, Clock, CalendarCheck, Share2 } from "lucide-react";
+import { CalendarOff, Clock, CalendarCheck, Share2 } from "lucide-react";
 
 export default function ActionGrid() {
   const actions = [
     {
-      label: "Add Block",
-      icon: <Plus className="w-6 h-6" />,
+      label: "Add Busy Block",
+      icon: <CalendarOff className="w-6 h-6" />,
       href: "/app/busy/new",
-      color: "text-blue-500",
+      color: "text-red-500",
     },
     {
       label: "Availability",

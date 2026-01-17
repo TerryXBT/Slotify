@@ -71,7 +71,8 @@ export async function uploadAvatarOnboarding(formData: FormData) {
   }
 
   const fileExt = "jpg";
-  const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+  // Use folder structure: {user_id}/avatar.jpg to match RLS policy
+  const fileName = `${user.id}/avatar-${Date.now()}.${fileExt}`;
 
   const { error: uploadError } = await supabase.storage
     .from("avatars")
@@ -167,6 +168,9 @@ export async function createServiceOnboarding(formData: FormData) {
     return { error: "Service name is required" };
   }
 
+  // Use the larger buffer value for buffer_minutes (DB only has single column)
+  const bufferMinutes = Math.max(bufferBefore, bufferAfter);
+
   const { error } = await supabase.from("services").insert({
     provider_id: user.id,
     name: name.trim(),
@@ -174,9 +178,8 @@ export async function createServiceOnboarding(formData: FormData) {
     price_cents: priceCents,
     description: description || null,
     location_type: locationType,
-    buffer_before_minutes: bufferBefore,
-    buffer_after_minutes: bufferAfter,
-    cancel_policy: cancelPolicy,
+    buffer_minutes: bufferMinutes,
+    cancellation_policy: cancelPolicy,
     is_active: true,
   });
 

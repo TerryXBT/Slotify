@@ -57,6 +57,7 @@ export default function ProfileStep({
     if (!imageSrc || !croppedAreaPixels) return;
 
     setIsUploading(true);
+    setError(null);
     try {
       const croppedBlob = await getCroppedImg(imageSrc, croppedAreaPixels);
 
@@ -64,6 +65,12 @@ export default function ProfileStep({
         const formData = new FormData();
         formData.append("file", croppedBlob, "avatar.jpg");
         const result = await uploadAvatarOnboarding(formData);
+        if (result.error) {
+          console.error("Avatar upload error:", result.error);
+          setError(result.error);
+          setImageSrc(null);
+          return;
+        }
         if (result.url) {
           setAvatarUrl(result.url);
         }
@@ -75,7 +82,7 @@ export default function ProfileStep({
       setImageSrc(null);
     } catch (err) {
       console.error("Error cropping image:", err);
-      setError("Failed to upload image");
+      setError("Failed to process image. Please try again.");
     } finally {
       setIsUploading(false);
     }
